@@ -20,7 +20,7 @@ func TestAutoAlgorithmModel_Gen360(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.Gen360(mainViewPath, "", "test_auto_alg_360", "main_view.png", nil, "", nil, "", nil, "", "", "")
+	modelID, err := client.Gen360(mainViewPath, "", "test_auto_alg_360", "main_view.png", nil, "", nil, "", nil, "", nil, "")
 	if err != nil {
 		t.Fatalf("Gen360 failed: %v", err)
 	}
