@@ -19,19 +19,6 @@ import (
 	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
-// cosSTSTransport implements http.RoundTripper for COS with temporary credentials
-type cosSTSTransport struct {
-	secretID     string
-	secretKey    string
-	sessionToken string
-}
-
-func (t *cosSTSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Add session token header for temporary credentials
-	req.Header.Set("x-cos-security-token", t.sessionToken)
-	return http.DefaultTransport.RoundTrip(req)
-}
-
 // FileInput represents the input file type
 type FileInput interface{}
 
@@ -43,8 +30,8 @@ type BytesFileInput []byte
 
 // Client is the main entry point for the VISVISE Weaver SDK
 type Client struct {
-	http  *HTTPClient
-	api   *VisviseAPI
+	http *HTTPClient
+	api  *VisviseAPI
 }
 
 // NewClient creates a new VISVISE client
@@ -125,10 +112,10 @@ func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename st
 	baseURL := &cos.BaseURL{BucketURL: bucketURL}
 
 	httpClient := &http.Client{
-		Transport: &cosSTSTransport{
-			secretID:     cred.Cred.TmpSecretID,
-			secretKey:    cred.Cred.TmpSecretKey,
-			sessionToken: cred.Cred.SessionToken,
+		Transport: &cos.AuthorizationTransport{
+			SecretID:     cred.Cred.TmpSecretID,
+			SecretKey:    cred.Cred.TmpSecretKey,
+			SessionToken: cred.Cred.SessionToken,
 		},
 	}
 
@@ -598,9 +585,9 @@ func (c *Client) GenHighModel(
 	}
 
 	imgParams := map[string]interface{}{
-		"algorithm_model":      resolvedModel,
-		"output_model_format":   outputModelFormat,
-		"face_type":             faceType,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": outputModelFormat,
+		"face_type":           faceType,
 	}
 	if faceNum != nil {
 		imgParams["face_num"] = *faceNum
@@ -667,9 +654,9 @@ func (c *Client) GenMidModel(
 	}
 
 	imgParams := map[string]interface{}{
-		"algorithm_model":      resolvedModel,
-		"output_model_format":   outputModelFormat,
-		"face_type":             faceType,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": outputModelFormat,
+		"face_type":           faceType,
 	}
 	if segmentModelID != "" {
 		imgParams["segment_model_id"] = segmentModelID
@@ -741,9 +728,9 @@ func (c *Client) GenLowModel(
 	}
 
 	imgParams := map[string]interface{}{
-		"algorithm_model":      resolvedModel,
-		"output_model_format":   outputModelFormat,
-		"face_type":             faceType,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": outputModelFormat,
+		"face_type":           faceType,
 	}
 
 	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeImgTo3DLow),
@@ -781,8 +768,8 @@ func (c *Client) GenMeshRefine(
 	}
 
 	params := map[string]interface{}{
-		"algorithm_model":       resolvedModel,
-		"input_model_format":    inputModelFormat,
+		"algorithm_model":    resolvedModel,
+		"input_model_format": inputModelFormat,
 	}
 	if mode != nil {
 		params["mode"] = *mode
@@ -830,9 +817,9 @@ func (c *Client) GenRetopology(
 	}
 
 	params := map[string]interface{}{
-		"algorithm_model":      resolvedModel,
-		"output_model_format":   outputModelFormat,
-		"face_type":             faceType,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": outputModelFormat,
+		"face_type":           faceType,
 	}
 	if detailLevel != nil {
 		params["detail_level"] = *detailLevel
@@ -881,10 +868,10 @@ func (c *Client) GenLOD(
 
 	return c.api.Gen3DModel(name, int(NodeTypeLOD),
 		map[string]interface{}{"lod_params": map[string]interface{}{
-			"algorithm_model":      resolvedModel,
-			"output_model_format":   outputModelFormat,
-			"reduce_faces":          reduceFacesData,
-			"gen_times":             genTimes,
+			"algorithm_model":     resolvedModel,
+			"output_model_format": outputModelFormat,
+			"reduce_faces":        reduceFacesData,
+			"gen_times":           genTimes,
 		}},
 		nil, cosURL, "", "")
 }
@@ -1148,8 +1135,8 @@ func (c *Client) GenVideoMotion(
 	}
 
 	framing := map[string]interface{}{
-		"algorithm_model":      resolvedModel,
-		"output_model_format":   outputModelFormat,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": outputModelFormat,
 	}
 	if withHand != nil {
 		framing["with_hand"] = *withHand
@@ -1196,9 +1183,9 @@ func (c *Client) GenTextMotion(
 
 	return c.api.Gen3DModel(name, int(NodeTypeAnimation),
 		map[string]interface{}{"framing_ai_params": map[string]interface{}{
-			"algorithm_model":      resolvedModel,
-			"output_model_format":   outputModelFormat,
-			"prompt":                prompt,
+			"algorithm_model":     resolvedModel,
+			"output_model_format": outputModelFormat,
+			"prompt":              prompt,
 		}},
 		nil, modelURL, "", "")
 }
@@ -1237,8 +1224,8 @@ func (c *Client) GenPose(
 	}
 
 	return c.api.BatchGenPose(name, modelURL, uploadedImages, map[string]interface{}{
-		"algorithm_model":      resolvedModel,
-		"output_model_format":   outputModelFormat,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": outputModelFormat,
 	})
 }
 
