@@ -1,6 +1,6 @@
 module github.com/visvise/visvise-sdk-go
 
-go 1.21
+go 1.18
 
 require github.com/tencentyun/cos-go-sdk-v5 v0.7.45
 
