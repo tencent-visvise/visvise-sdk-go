@@ -2,7 +2,10 @@ module github.com/visvise/visvise-sdk-go
 
 go 1.18
 
-require github.com/tencentyun/cos-go-sdk-v5 v0.7.45
+require (
+	github.com/google/uuid v1.1.1
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.45
+)
 
 require (
 	github.com/clbanning/mxj v1.8.4 // indirect

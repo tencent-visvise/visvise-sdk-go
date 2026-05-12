@@ -666,6 +666,7 @@ type GenVideoMotionOptions struct {
 	AlgorithmModel    string     // optional, algorithm model name
 	OutputModelFormat string     // optional, output format (default fbx)
 	ModelFilename     string     // optional, model filename
+	VideoFilename     string     // optional, video filename
 	WithHand          *bool      // optional, enable hand capture
 	MultipleTrack     *bool      // optional, enable multi-person capture
 	RotateAxisAngle   []float64  // optional, rotation axis-angle [x, y, z] (radians)

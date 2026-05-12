@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
@@ -27,6 +28,125 @@ type StringFileInput string
 
 // BytesFileInput is raw bytes content
 type BytesFileInput []byte
+
+// isCosURL checks if a string is a VISVISE platform COS URL
+func isCosURL(s string) bool {
+	return strings.HasPrefix(s, "https://") && strings.Contains(s, ".myqcloud.com") && strings.Contains(s, ".cos.")
+}
+
+// isLocalFile checks if a string is an existing local file path
+func isLocalFile(s string) bool {
+	info, err := os.Stat(s)
+	return err == nil && !info.IsDir()
+}
+
+// sniffExtension detects file type from binary content using magic bytes
+func sniffExtension(data []byte, defaultExt string) string {
+	if len(data) == 0 {
+		if !strings.HasPrefix(defaultExt, ".") {
+			defaultExt = "." + defaultExt
+		}
+		return defaultExt
+	}
+
+	// PNG image
+	if len(data) >= 8 && bytes.Equal(data[:8], []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}) {
+		return ".png"
+	}
+	// JPEG image
+	if len(data) >= 3 && bytes.Equal(data[:3], []byte{0xFF, 0xD8, 0xFF}) {
+		return ".jpg"
+	}
+	// GIF image
+	if len(data) >= 6 && (bytes.Equal(data[:6], []byte("GIF87a")) || bytes.Equal(data[:6], []byte("GIF89a"))) {
+		return ".gif"
+	}
+	// BMP image
+	if len(data) >= 2 && bytes.Equal(data[:2], []byte("BM")) {
+		return ".bmp"
+	}
+	// WebP image
+	if len(data) >= 12 && bytes.Equal(data[:4], []byte("RIFF")) && bytes.Equal(data[8:12], []byte("WEBP")) {
+		return ".webp"
+	}
+	// TIFF image
+	if len(data) >= 4 && (bytes.Equal(data[:4], []byte{0x49, 0x49, 0x2A, 0x00}) || bytes.Equal(data[:4], []byte{0x4D, 0x4D, 0x00, 0x2A})) {
+		return ".tiff"
+	}
+
+	// FBX binary (Kaydara FBX Binary first 16 chars: "Kaydara FBX Bina")
+	if len(data) >= 16 && string(data[:16]) == "Kaydara FBX Bina" {
+		return ".fbx"
+	}
+	// GLB (binary glTF)
+	if len(data) >= 4 && bytes.Equal(data[:4], []byte("glTF")) {
+		return ".glb"
+	}
+	// FBX ASCII (starts with comment or FBXHeaderExtension)
+	if len(data) >= 1 && data[0] == ';' && bytes.Contains(data[:200], []byte("FBX")) {
+		return ".fbx"
+	}
+	if len(data) >= 18 && string(data[:18]) == "FBXHeaderExtension" {
+		return ".fbx"
+	}
+	// OBJ text format
+	head := bytes.TrimLeft(data[:64], " \t\r\n")
+	if bytes.HasPrefix(head, []byte("v ")) ||
+		bytes.HasPrefix(head, []byte("vn ")) ||
+		bytes.HasPrefix(head, []byte("vt ")) ||
+		bytes.HasPrefix(head, []byte("f ")) ||
+		bytes.HasPrefix(head, []byte("o ")) ||
+		bytes.HasPrefix(head, []byte("g ")) ||
+		bytes.HasPrefix(head, []byte("mtllib ")) {
+		return ".obj"
+	}
+
+	// MP4/MOV video (ftyp box at offset 4)
+	if len(data) >= 12 && bytes.Equal(data[4:8], []byte("ftyp")) {
+		brand := data[8:12]
+		if bytes.Equal(brand, []byte("qt  ")) || bytes.Equal(brand, []byte("moov")) {
+			return ".mov"
+		}
+		return ".mp4"
+	}
+	// WebM video
+	if len(data) >= 4 && bytes.Equal(data[:4], []byte{0x1A, 0x45, 0xDF, 0xA3}) {
+		return ".webm"
+	}
+	// AVI video
+	if len(data) >= 12 && bytes.Equal(data[:4], []byte("RIFF")) && bytes.Equal(data[8:12], []byte("AVI ")) {
+		return ".avi"
+	}
+
+	// ZIP archive
+	if isZip(data) {
+		return ".zip"
+	}
+
+	// glTF JSON text
+	stripped := bytes.TrimLeft(data[:128], " \t\r\n")
+	if bytes.HasPrefix(stripped, []byte("{")) && bytes.Contains(data[:256], []byte(`"asset"`)) && bytes.Contains(data[:512], []byte(`"version"`)) {
+		return ".gltf"
+	}
+	// OBJ comment line
+	if bytes.HasPrefix(stripped, []byte("#")) && (bytes.Contains(data[:512], []byte("\nv ")) || bytes.Contains(data[:512], []byte("\no "))) {
+		return ".obj"
+	}
+
+	// Fallback to default
+	if !strings.HasPrefix(defaultExt, ".") {
+		defaultExt = "." + defaultExt
+	}
+	return defaultExt
+}
+
+// genRandomFilename generates a unique filename with given extension
+func genRandomFilename(suffix string) string {
+	if !strings.HasPrefix(suffix, ".") {
+		suffix = "." + suffix
+	}
+	return uuid.New().String() + suffix
+}
 
 // Client is the main entry point for the VISVISE Weaver SDK
 type Client struct {
@@ -56,21 +176,44 @@ func (c *Client) GetAPI() *VisviseAPI {
 
 // resolveFile resolves a file input to a COS URL
 func (c *Client) resolveFile(source FileInput, filename string, isTemp bool) (string, error) {
-	// If source is already a COS URL, return directly
+	// If source is a string
 	if s, ok := source.(string); ok {
-		if strings.HasPrefix(s, "https://") && strings.Contains(s, ".myqcloud.com") && strings.Contains(s, ".cos.") {
-			return s, nil
-		}
-		// If it's a local file path, upload it
-		if _, err := os.Stat(s); err == nil {
+		// Check if it's a local file path
+		if isLocalFile(s) {
+			// If filename not provided, use the source file's basename
+			if filename == "" {
+				filename = filepath.Base(s)
+			}
 			return c.uploadFile(s, filename, isTemp)
 		}
-		return "", fmt.Errorf("file not found: %s", s)
+		// Not a local file, check if it's a COS URL
+		if isCosURL(s) {
+			return s, nil
+		}
+		// Not a local file and not a COS URL
+		return "", fmt.Errorf("local file not found: %s. If passing a COS URL, it must be a VISVISE platform COS URL (format: https://{bucket}.cos.{region}.myqcloud.com/...)", s)
 	}
 
 	// If source is bytes
 	if b, ok := source.([]byte); ok {
+		// Auto-detect extension for bytes input
+		if filename == "" {
+			filename = genRandomFilename(sniffExtension(b, ".bin"))
+		}
 		return c.uploadBytes(b, filename, isTemp)
+	}
+
+	// If source is io.Reader
+	if r, ok := source.(io.Reader); ok {
+		data, err := io.ReadAll(r)
+		if err != nil {
+			return "", fmt.Errorf("failed to read data: %w", err)
+		}
+		// Auto-detect extension for reader input
+		if filename == "" {
+			filename = genRandomFilename(sniffExtension(data, ".bin"))
+		}
+		return c.uploadBytes(data, filename, isTemp)
 	}
 
 	return "", fmt.Errorf("unsupported file input type")
@@ -140,43 +283,44 @@ func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename st
 
 // resolveModelFile resolves a model file to a COS URL, handling zip packaging automatically
 func (c *Client) resolveModelFile(source FileInput, filename string, isTemp bool) (string, error) {
-	// If source is already a COS URL, return directly
+	// If source is a string
 	if s, ok := source.(string); ok {
-		if strings.HasPrefix(s, "https://") && strings.Contains(s, ".myqcloud.com") && strings.Contains(s, ".cos.") {
+		// Check if it's a local file path
+		if isLocalFile(s) {
+			ext := strings.ToLower(filepath.Ext(s))
+			modelExtensions := map[string]bool{".fbx": true, ".obj": true, ".glb": true, ".gltf": true}
+
+			if modelExtensions[ext] {
+				// Model file needs to be zipped
+				data, err := os.ReadFile(s)
+				if err != nil {
+					return "", fmt.Errorf("failed to read file: %w", err)
+				}
+				srcFilename := filepath.Base(s)
+				stem := strings.TrimSuffix(srcFilename, filepath.Ext(srcFilename))
+				zipFilename := stem + ".zip"
+				return c.uploadZip(data, srcFilename, zipFilename, isTemp)
+			}
+			// .zip or other format, upload directly
+			// If filename not provided, use the source file's basename
+			if filename == "" {
+				filename = filepath.Base(s)
+			}
+			return c.uploadFile(s, filename, isTemp)
+		}
+		// Not a local file, check if it's a COS URL
+		if isCosURL(s) {
 			return s, nil
 		}
+		// Not a local file and not a COS URL
+		return "", fmt.Errorf("local file not found: %s. If passing a COS URL, it must be a VISVISE platform COS URL (format: https://{bucket}.cos.{region}.myqcloud.com/...)", s)
 	}
 
 	var data []byte
-	var srcFilename string
 
 	switch v := source.(type) {
-	case string:
-		// Local file path
-		ext := strings.ToLower(filepath.Ext(v))
-		modelExtensions := map[string]bool{".fbx": true, ".obj": true, ".glb": true, ".gltf": true}
-
-		if modelExtensions[ext] {
-			// Model file needs to be zipped
-			var err error
-			data, err = os.ReadFile(v)
-			if err != nil {
-				return "", fmt.Errorf("failed to read file: %w", err)
-			}
-			srcFilename = filepath.Base(v)
-			stem := strings.TrimSuffix(srcFilename, filepath.Ext(srcFilename))
-			zipFilename := stem + ".zip"
-			return c.uploadZip(data, srcFilename, zipFilename, isTemp)
-		}
-
-		// .zip or other format, upload directly
-		return c.uploadFile(v, filename, isTemp)
-
 	case []byte:
 		data = v
-		if filename == "" {
-			filename = fmt.Sprintf("model_%d.zip", time.Now().UnixNano()%1000000)
-		}
 
 	case io.Reader:
 		var err error
@@ -184,23 +328,23 @@ func (c *Client) resolveModelFile(source FileInput, filename string, isTemp bool
 		if err != nil {
 			return "", fmt.Errorf("failed to read data: %w", err)
 		}
-		if filename == "" {
-			filename = fmt.Sprintf("model_%d.zip", time.Now().UnixNano()%1000000)
-		}
 	}
 
 	// Check if data is already a zip
 	if isZip(data) {
+		if filename == "" {
+			filename = genRandomFilename(".zip")
+		}
 		return c.uploadBytes(data, filename, isTemp)
 	}
 
-	// Need to package as zip
-	if filename != "" {
-		stem := strings.TrimSuffix(filename, filepath.Ext(filename))
-		return c.uploadZip(data, filename, stem+".zip", isTemp)
+	// Not a zip: detect extension (fbx/obj/glb etc), default to .fbx and package
+	if filename == "" {
+		filename = genRandomFilename(sniffExtension(data, ".fbx"))
 	}
-
-	return c.uploadZip(data, "model.fbx", "model.zip", isTemp)
+	stem := strings.TrimSuffix(filename, filepath.Ext(filename))
+	zipFilename := stem + ".zip"
+	return c.uploadZip(data, filename, zipFilename, isTemp)
 }
 
 func isZip(data []byte) bool {
@@ -240,7 +384,7 @@ func (c *Client) buildModelZip(source FileInput, jsonData map[string]interface{}
 
 	switch v := source.(type) {
 	case string:
-		if _, err := os.Stat(v); err != nil {
+		if !isLocalFile(v) {
 			return nil, "", fmt.Errorf("model_path only accepts local file path or binary content, not COS URL: %s", v)
 		}
 		var err error
@@ -257,7 +401,8 @@ func (c *Client) buildModelZip(source FileInput, jsonData map[string]interface{}
 		data = v
 		srcFilename = filename
 		if srcFilename == "" {
-			srcFilename = fmt.Sprintf("model_%d.fbx", time.Now().UnixNano()%1000000)
+			// Auto-detect extension for bytes input
+			srcFilename = genRandomFilename(sniffExtension(data, ".fbx"))
 		}
 
 	default:
@@ -273,7 +418,8 @@ func (c *Client) buildModelZip(source FileInput, jsonData map[string]interface{}
 			}
 		}
 		if srcFilename == "" {
-			srcFilename = fmt.Sprintf("model_%d.fbx", time.Now().UnixNano()%1000000)
+			// Auto-detect extension for reader input
+			srcFilename = genRandomFilename(sniffExtension(data, ".fbx"))
 		}
 	}
 
@@ -471,15 +617,8 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 		opts = NewGen360Options()
 	}
 
-	mainViewFilename := opts.MainViewFilename
-	if mainViewFilename == "" {
-		if s, ok := mainView.(string); ok {
-			mainViewFilename = filepath.Base(s)
-		}
-	}
-
 	// Upload views
-	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
 	if err != nil {
 		return "", err
 	}
@@ -539,16 +678,9 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 		opts = NewGenHighModelOptions()
 	}
 
-	mainViewFilename := opts.MainViewFilename
-	if mainViewFilename == "" {
-		if s, ok := mainView.(string); ok {
-			mainViewFilename = filepath.Base(s)
-		}
-	}
-
 	view := &View{}
 
-	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
 	if err != nil {
 		return "", err
 	}
@@ -615,52 +747,28 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	view := &View{}
 
 	// Resolve main view
-	mainViewFilename := opts.MainViewFilename
-	if mainViewFilename == "" {
-		if s, ok := mainView.(string); ok {
-			mainViewFilename = filepath.Base(s)
-		}
-	}
-	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	// Resolve back view (required)
-	backViewFilename := opts.BackViewFilename
-	if backViewFilename == "" {
-		if s, ok := backView.(string); ok {
-			backViewFilename = filepath.Base(s)
-		}
-	}
-	backURL, err := c.resolveFile(backView, backViewFilename, false)
+	backURL, err := c.resolveFile(backView, opts.BackViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.BackView = backURL
 
 	// Resolve left view (required)
-	leftViewFilename := opts.LeftViewFilename
-	if leftViewFilename == "" {
-		if s, ok := leftView.(string); ok {
-			leftViewFilename = filepath.Base(s)
-		}
-	}
-	leftURL, err := c.resolveFile(leftView, leftViewFilename, false)
+	leftURL, err := c.resolveFile(leftView, opts.LeftViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.LeftView = leftURL
 
 	// Resolve right view (required)
-	rightViewFilename := opts.RightViewFilename
-	if rightViewFilename == "" {
-		if s, ok := rightView.(string); ok {
-			rightViewFilename = filepath.Base(s)
-		}
-	}
-	rightURL, err := c.resolveFile(rightView, rightViewFilename, false)
+	rightURL, err := c.resolveFile(rightView, opts.RightViewFilename, false)
 	if err != nil {
 		return "", err
 	}
@@ -700,16 +808,9 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 		opts = NewGenLowModelOptions()
 	}
 
-	mainViewFilename := opts.MainViewFilename
-	if mainViewFilename == "" {
-		if s, ok := mainView.(string); ok {
-			mainViewFilename = filepath.Base(s)
-		}
-	}
-
 	view := &View{}
 
-	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
 	if err != nil {
 		return "", err
 	}
@@ -770,14 +871,7 @@ func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) 
 		opts = NewGenMeshRefineOptions()
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
-	cosURL, err := c.resolveModelFile(modelPath, filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
 	if err != nil {
 		return "", err
 	}
@@ -821,14 +915,8 @@ func (c *Client) GenRetopology(modelPath FileInput, opts *GenRetopologyOptions) 
 	if opts == nil {
 		opts = NewGenRetopologyOptions()
 	}
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
 
-	cosURL, err := c.resolveModelFile(modelPath, filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
 	if err != nil {
 		return "", err
 	}
@@ -870,14 +958,7 @@ func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, opts *Gen
 		opts = NewGenLODOptions()
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
-	cosURL, err := c.resolveModelFile(modelPath, filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
 	if err != nil {
 		return nil, err
 	}
@@ -909,14 +990,7 @@ func (c *Client) GenUV(modelPath FileInput, opts *GenUVOptions) (string, error) 
 		opts = NewGenUVOptions()
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
-	cosURL, err := c.resolveModelFile(modelPath, filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
 	if err != nil {
 		return "", err
 	}
@@ -953,13 +1027,6 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 		opts = NewGenTextureOptions()
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
 	mainViewURL := ""
 	if opts.InputView != nil {
 		mainViewURL = opts.InputView.MainView
@@ -968,7 +1035,7 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 		return "", errors.New("gen_texture requires either input_view.main_view or prompt")
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
 	if err != nil {
 		return "", err
 	}
@@ -1044,13 +1111,6 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 		opts = NewGenRiggingOptions()
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
 	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeRigging, nil)
 	if err != nil {
 		return "", err
@@ -1063,7 +1123,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 		},
 	}
 
-	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, filename)
+	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, opts.Filename)
 	if err != nil {
 		return "", err
 	}
@@ -1108,13 +1168,6 @@ func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (str
 		return "", errors.New("gen_skinning requires mesh_names and joint_names")
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
 	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSkinning, nil)
 	if err != nil {
 		return "", err
@@ -1130,7 +1183,7 @@ func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (str
 		},
 	}
 
-	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, filename)
+	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, opts.Filename)
 	if err != nil {
 		return "", err
 	}
@@ -1160,24 +1213,12 @@ func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, opts *GenVideoMo
 		opts = NewGenVideoMotionOptions()
 	}
 
-	modelFilename := opts.ModelFilename
-	if modelFilename == "" {
-		if s, ok := modelPath.(string); ok {
-			modelFilename = filepath.Base(s)
-		}
-	}
-
-	videoFilename := ""
-	if s, ok := videoPath.(string); ok {
-		videoFilename = filepath.Base(s)
-	}
-
-	modelURL, err := c.resolveModelFile(modelPath, modelFilename, false)
+	modelURL, err := c.resolveModelFile(modelPath, opts.ModelFilename, false)
 	if err != nil {
 		return "", err
 	}
 
-	videoURL, err := c.resolveFile(videoPath, videoFilename, false)
+	videoURL, err := c.resolveFile(videoPath, opts.VideoFilename, false)
 	if err != nil {
 		return "", err
 	}
@@ -1222,14 +1263,7 @@ func (c *Client) GenTextMotion(modelPath FileInput, prompt string, opts *GenText
 		opts = NewGenTextMotionOptions()
 	}
 
-	filename := opts.Filename
-	if filename == "" {
-		if s, ok := modelPath.(string); ok {
-			filename = filepath.Base(s)
-		}
-	}
-
-	modelURL, err := c.resolveModelFile(modelPath, filename, false)
+	modelURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1256,14 +1290,7 @@ func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, opts *Gen
 		opts = NewGenPoseOptions()
 	}
 
-	modelFilename := opts.ModelFilename
-	if modelFilename == "" {
-		if s, ok := modelPath.(string); ok {
-			modelFilename = filepath.Base(s)
-		}
-	}
-
-	modelURL, err := c.resolveModelFile(modelPath, modelFilename, false)
+	modelURL, err := c.resolveModelFile(modelPath, opts.ModelFilename, false)
 	if err != nil {
 		return nil, err
 	}
