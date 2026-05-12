@@ -20,7 +20,9 @@ func TestAutoAlgorithmModel_Gen360(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.Gen360(mainViewPath, "", "test_auto_alg_360", "main_view.png", nil, "", nil, "", nil, "", nil, "")
+	opts := visvise.NewGen360Options()
+
+	modelID, err := client.Gen360(mainViewPath, opts)
 	if err != nil {
 		t.Fatalf("Gen360 failed: %v", err)
 	}
@@ -41,7 +43,11 @@ func TestAutoAlgorithmModel_GenHighModel(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenHighModel(mainViewPath, "", string(visvise.OutputModelFormatFBX), 1, "test_auto_alg_high", "main_view.png", nil, nil, "", nil, "", nil, "")
+	opts := visvise.NewGenHighModelOptions().
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeTriangle))
+
+	modelID, err := client.GenHighModel(mainViewPath, opts)
 	if err != nil {
 		t.Fatalf("GenHighModel failed: %v", err)
 	}
@@ -66,7 +72,11 @@ func TestAutoAlgorithmModel_GenMidModel(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenMidModel(mainViewPath, backViewPath, leftViewPath, rightViewPath, "", string(visvise.OutputModelFormatFBX), 1, "test_auto_alg_mid", "main_view.png", "back_view.png", "left_view.png", "right_view.png", "")
+	opts := visvise.NewGenMidModelOptions().
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeTriangle))
+
+	modelID, err := client.GenMidModel(mainViewPath, backViewPath, leftViewPath, rightViewPath, opts)
 	if err != nil {
 		t.Fatalf("GenMidModel failed: %v", err)
 	}
@@ -87,7 +97,11 @@ func TestAutoAlgorithmModel_GenLowModel(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenLowModel(mainViewPath, "", string(visvise.OutputModelFormatFBX), 1, "test_auto_alg_low", "main_view.png", nil, "", nil, "", nil, "")
+	opts := visvise.NewGenLowModelOptions().
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeTriangle))
+
+	modelID, err := client.GenLowModel(mainViewPath, opts)
 	if err != nil {
 		t.Fatalf("GenLowModel failed: %v", err)
 	}
@@ -108,7 +122,9 @@ func TestAutoAlgorithmModel_GenMeshRefine(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenMeshRefine(modelPath, "", "test_auto_alg_mesh_refine", "", "", nil, nil, "")
+	opts := visvise.NewGenMeshRefineOptions()
+
+	modelID, err := client.GenMeshRefine(modelPath, opts)
 	if err != nil {
 		t.Fatalf("GenMeshRefine failed: %v", err)
 	}
@@ -129,7 +145,12 @@ func TestAutoAlgorithmModel_GenRetopology(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenRetopology(modelPath, "", string(visvise.OutputModelFormatFBX), 2, "test_auto_alg_retopology", "", intPtr(2), nil)
+	opts := visvise.NewGenRetopologyOptions().
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeQuad)).
+		SetDetailLevel(int(visvise.DetailLevelMedium))
+
+	modelID, err := client.GenRetopology(modelPath, opts)
 	if err != nil {
 		t.Fatalf("GenRetopology failed: %v", err)
 	}
@@ -151,7 +172,11 @@ func TestAutoAlgorithmModel_GenLOD(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
-	modelIDs, err := client.GenLOD(modelPath, reduceFaces, "", string(visvise.OutputModelFormatFBX), "test_auto_alg_lod", "", 1)
+	opts := visvise.NewGenLODOptions().
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetGenTimes(1)
+
+	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts)
 	if err != nil {
 		t.Fatalf("GenLOD failed: %v", err)
 	}
@@ -172,7 +197,10 @@ func TestAutoAlgorithmModel_GenUV(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenUV(modelPath, "", "test_auto_alg_uv", "", boolPtr(false))
+	opts := visvise.NewGenUVOptions().
+		SetEnableAutoSmoothing(false)
+
+	modelID, err := client.GenUV(modelPath, opts)
 	if err != nil {
 		t.Fatalf("GenUV failed: %v", err)
 	}
@@ -195,7 +223,10 @@ func TestAutoAlgorithmModel_GenTexture(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	view := &visvise.View{MainView: mainViewPath}
-	modelID, err := client.GenTexture(modelPath, "", "test_auto_alg_texture", "", view, intPtr(0), nil, "")
+	opts := visvise.NewGenTextureOptions().
+		SetInputView(view)
+
+	modelID, err := client.GenTexture(modelPath, opts)
 	if err != nil {
 		t.Fatalf("GenTexture failed: %v", err)
 	}
@@ -216,7 +247,9 @@ func TestAutoAlgorithmModel_GenRigging(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenRigging(modelPath, "", "", "test_auto_alg_rigging", "", nil, "")
+	opts := visvise.NewGenRiggingOptions()
+
+	modelID, err := client.GenRigging(modelPath, opts)
 	if err != nil {
 		t.Fatalf("GenRigging failed: %v", err)
 	}
@@ -237,7 +270,9 @@ func TestAutoAlgorithmModel_GenSkinning(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenSkinning(modelPath, []string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"}, "", "test_auto_alg_skinning", "")
+	opts := visvise.NewGenSkinningOptions([]string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"})
+
+	modelID, err := client.GenSkinning(modelPath, opts)
 	if err != nil {
 		t.Fatalf("GenSkinning failed: %v", err)
 	}
@@ -259,7 +294,12 @@ func TestAutoAlgorithmModel_GenVideoMotion(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenVideoMotion(modelPath, videoPath, "", string(visvise.OutputModelFormatFBX), "test_auto_alg_video_motion", "", "", boolPtr(false), boolPtr(false), nil)
+	opts := visvise.NewGenVideoMotionOptions().
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetWithHand(false).
+		SetMultipleTrack(false)
+
+	modelID, err := client.GenVideoMotion(modelPath, videoPath, opts)
 	if err != nil {
 		t.Fatalf("GenVideoMotion failed: %v", err)
 	}
@@ -280,7 +320,9 @@ func TestAutoAlgorithmModel_GenTextMotion(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelIDs, err := client.GenTextMotion(modelPath, "一个人在原地踏步", "", "", "test_auto_alg_text_motion", "")
+	opts := visvise.NewGenTextMotionOptions()
+
+	modelIDs, err := client.GenTextMotion(modelPath, "一个人在原地踏步", opts)
 	if err != nil {
 		t.Fatalf("GenTextMotion failed: %v", err)
 	}
@@ -302,7 +344,10 @@ func TestAutoAlgorithmModel_GenPose(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelIDs, err := client.GenPose(modelPath, []visvise.FileInput{mainViewPath}, "", "", "test_auto_alg_pose", "", []string{"main_view.png"})
+	opts := visvise.NewGenPoseOptions().
+		SetImageFilenames([]string{"main_view.png"})
+
+	modelIDs, err := client.GenPose(modelPath, []visvise.FileInput{mainViewPath}, opts)
 	if err != nil {
 		t.Fatalf("GenPose failed: %v", err)
 	}

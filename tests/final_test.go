@@ -23,7 +23,7 @@ func TestFinal_QueryYesterdayModels(t *testing.T) {
 	}{
 		{"mid face_type=1 fbx", "Model2026042300225326"},
 		{"rtp detail=2 face=2", "Model2026042300225337"},
-		{"mr preserve=True", "Model2026042300225347"},
+		{"mr mode=optimize", "Model2026042300225347"},
 		{"uv smooth=True", "Model2026042300226324"},
 		{"tex res=1024", "Model2026042300225360"},
 	}
@@ -50,8 +50,13 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenMidModel(mv["main"], mv["back"], mv["left"], mv["right"],
-		"VISVISE-MeshGen-V1.0.0", string(visvise.OutputModelFormatFBX), 2, "opt_mid_b_final", "", "", "", "", "")
+	opts := visvise.NewGenMidModelOptions().
+		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeQuad)).
+		SetName("opt_mid_b_final")
+
+	modelID, err := client.GenMidModel(mv["main"], mv["back"], mv["left"], mv["right"], opts)
 	if err != nil {
 		t.Fatalf("GenMidModel face_type=2 fbx failed: %v", err)
 	}
@@ -62,13 +67,25 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	modelID, err = client.GenRetopology(modelPath, "hunyuan3D-RTP-v1.5", string(visvise.OutputModelFormatFBX), 1, "opt_rtp_b_final", "obj", intPtr(3), nil)
+	opts2 := visvise.NewGenRetopologyOptions().
+		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetName("opt_rtp_b_final").
+		SetDetailLevel(int(visvise.DetailLevelHigh))
+
+	modelID, err = client.GenRetopology(modelPath, opts2)
 	if err != nil {
 		t.Fatalf("GenRetopology detail_level=3 face_type=1 failed: %v", err)
 	}
 	fmt.Printf("Submitted [rtp detail=3 face=1] -> %s\n", modelID)
 
-	modelID, err = client.GenUV(modelPath, "hunyuan3D-UV-v2.0", "opt_uv_b_final", "", boolPtr(false))
+	opts3 := visvise.NewGenUVOptions().
+		SetAlgorithmModel("hunyuan3D-UV-v2.0").
+		SetName("opt_uv_b_final").
+		SetEnableAutoSmoothing(false)
+
+	modelID, err = client.GenUV(modelPath, opts3)
 	if err != nil {
 		t.Fatalf("GenUV smooth=False failed: %v", err)
 	}
@@ -76,14 +93,27 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 
 	refFrontPath := assetsDir + "/tex_ref_front.jpg"
 	view := &visvise.View{MainView: refFrontPath}
-	modelID, err = client.GenTexture(modelPath, "hunyuan3D-TEX-v2.0", "opt_tex_b_final", "", view, intPtr(2048), boolPtr(true), "")
+	opts4 := visvise.NewGenTextureOptions().
+		SetAlgorithmModel("hunyuan3D-TEX-v2.0").
+		SetName("opt_tex_b_final").
+		SetInputView(view).
+		SetResolution(2048).
+		SetUnwarpUV(true)
+
+	modelID, err = client.GenTexture(modelPath, opts4)
 	if err != nil {
 		t.Fatalf("GenTexture res=2048 unwarp_uv=True failed: %v", err)
 	}
 	fmt.Printf("Submitted [tex res=2048 uv=True] -> %s\n", modelID)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
-	modelIDs, err := client.GenLOD(modelPath, reduceFaces, "VISVISE-LOD-V1.0.0", string(visvise.OutputModelFormatFBX), "opt_lod_a_final", "", 1)
+	opts5 := visvise.NewGenLODOptions().
+		SetAlgorithmModel("VISVISE-LOD-V1.0.0").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetName("opt_lod_a_final").
+		SetGenTimes(1)
+
+	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts5)
 	if err != nil {
 		t.Fatalf("GenLOD gen_times=1 failed: %v", err)
 	}
@@ -104,25 +134,46 @@ func TestFinal_AnimationTests(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenVideoMotion(animModelPath, videoPath, "VISVISE-FramingAI-Base-V1.5.0", string(visvise.OutputModelFormatFBX), "opt_vm_a_final", "", "", boolPtr(true), boolPtr(false), nil)
+	opts := visvise.NewGenVideoMotionOptions().
+		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
+		SetName("opt_vm_a_final").
+		SetWithHand(true).
+		SetMultipleTrack(false)
+
+	modelID, err := client.GenVideoMotion(animModelPath, videoPath, opts)
 	if err != nil {
 		t.Fatalf("GenVideoMotion with_hand=True failed: %v", err)
 	}
 	fmt.Printf("Submitted [vm with_hand=True] -> %s\n", modelID)
 
-	modelID, err = client.GenVideoMotion(animModelPath, videoPath, "VISVISE-FramingAI-Base-V1.5.0", string(visvise.OutputModelFormatFBX), "opt_vm_b_final", "", "", boolPtr(false), boolPtr(false), nil)
+	opts2 := visvise.NewGenVideoMotionOptions().
+		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
+		SetName("opt_vm_b_final").
+		SetWithHand(false).
+		SetMultipleTrack(false)
+
+	modelID, err = client.GenVideoMotion(animModelPath, videoPath, opts2)
 	if err != nil {
 		t.Fatalf("GenVideoMotion hand=False multi=False failed: %v", err)
 	}
 	fmt.Printf("Submitted [vm hand=False multi=False] -> %s\n", modelID)
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", "VISVISE-TextMotion-V1.1.0", string(visvise.OutputModelFormatFBX), "opt_tm_a_final", "")
+	opts3 := visvise.NewGenTextMotionOptions().
+		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
+		SetName("opt_tm_a_final")
+
+	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", opts3)
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=挥手 failed: %v", err)
 	}
 	fmt.Printf("Submitted [tm prompt=挥手] -> %v\n", modelIDs)
 
-	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", "VISVISE-TextMotion-V1.1.0", string(visvise.OutputModelFormatGLB), "opt_tm_b_final", "")
+	opts4 := visvise.NewGenTextMotionOptions().
+		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
+		SetOutputModelFormat(string(visvise.OutputModelFormatGLB)).
+		SetName("opt_tm_b_final")
+
+	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", opts4)
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=踏步 glb failed: %v", err)
 	}

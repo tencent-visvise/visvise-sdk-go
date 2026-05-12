@@ -29,15 +29,19 @@ func TestBatch1_Gen360APose(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.Gen360(mainViewPath, "VISVISE-MultiView-V1.0.0", "opt_360a", "", boolPtr(true), "", nil, "", nil, "", nil, "")
+	opts := visvise.NewGen360Options().
+		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
+		SetEnableAPose(true)
+
+	modelID, err := client.Gen360(mainViewPath, opts)
 	if err != nil {
 		t.Fatalf("Gen360 a_pose=True failed: %v", err)
 	}
 
 	t.Logf("PASS: gen_360 a_pose=True - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 3, Timeout: 600}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 3, Timeout: 600}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -58,15 +62,19 @@ func TestBatch1_Gen360NoAPose(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.Gen360(mainViewPath, "VISVISE-MultiView-V1.0.0", "opt_360b", "", boolPtr(false), "", nil, "", nil, "", nil, "")
+	opts := visvise.NewGen360Options().
+		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
+		SetEnableAPose(false)
+
+	modelID, err := client.Gen360(mainViewPath, opts)
 	if err != nil {
 		t.Fatalf("Gen360 a_pose=False failed: %v", err)
 	}
 
 	t.Logf("PASS: gen_360 a_pose=False - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 3, Timeout: 600}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 3, Timeout: 600}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -82,15 +90,21 @@ func TestBatch1_HighModelFaceNum(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenHighModel(mv["main"], "Tripo-v3.1-ultra", string(visvise.OutputModelFormatFBX), 1, "opt_hm_a", "", intPtr(100000), nil, "", nil, "", "", "")
+	opts := visvise.NewGenHighModelOptions().
+		SetAlgorithmModel("Tripo-v3.1-ultra").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetFaceNum(100000)
+
+	modelID, err := client.GenHighModel(mv["main"], opts)
 	if err != nil {
 		t.Fatalf("GenHighModel face_num=100000 failed: %v", err)
 	}
 
 	t.Logf("PASS: high face_num=100000 - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -106,15 +120,20 @@ func TestBatch1_HighModelFaceType2(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenHighModel(mv["main"], "Tripo-v3.1-ultra", string(visvise.OutputModelFormatGLB), 2, "opt_hm_b", "", nil, nil, "", nil, "", "", "")
+	opts := visvise.NewGenHighModelOptions().
+		SetAlgorithmModel("Tripo-v3.1-ultra").
+		SetOutputModelFormat(string(visvise.OutputModelFormatGLB)).
+		SetFaceType(int(visvise.FaceTypeQuad))
+
+	modelID, err := client.GenHighModel(mv["main"], opts)
 	if err != nil {
 		t.Fatalf("GenHighModel face_type=2 glb failed: %v", err)
 	}
 
 	t.Logf("PASS: high face_type=2 glb - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -130,15 +149,21 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenLowModel(mv["main"], "Tripo-v1.0-快速生成", string(visvise.OutputModelFormatFBX), 1, "opt_lm_a", "", nil, mv["back"], "", "", nil, "")
+	opts := visvise.NewGenLowModelOptions().
+		SetAlgorithmModel("Tripo-v1.0-快速生成").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetBackView(mv["back"], "")
+
+	modelID, err := client.GenLowModel(mv["main"], opts)
 	if err != nil {
 		t.Fatalf("GenLowModel face_type=1 back failed: %v", err)
 	}
 
 	t.Logf("PASS: low face_type=1 back - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -154,15 +179,20 @@ func TestBatch1_LowModelFaceType2(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenLowModel(mv["main"], "Tripo-v1.0-快速生成", string(visvise.OutputModelFormatFBX), 2, "opt_lm_b", "", nil, "", "", "", nil, "")
+	opts := visvise.NewGenLowModelOptions().
+		SetAlgorithmModel("Tripo-v1.0-快速生成").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetFaceType(int(visvise.FaceTypeQuad))
+
+	modelID, err := client.GenLowModel(mv["main"], opts)
 	if err != nil {
 		t.Fatalf("GenLowModel face_type=2 fbx failed: %v", err)
 	}
 
 	t.Logf("PASS: low face_type=2 fbx - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -184,15 +214,20 @@ func TestBatch1_LODGenTimes(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
-	modelIDs, err := client.GenLOD(modelPath, reduceFaces, "VISVISE-LOD-V1.0.0", string(visvise.OutputModelFormatFBX), "opt_lod_a", "", 1)
+	opts := visvise.NewGenLODOptions().
+		SetAlgorithmModel("VISVISE-LOD-V1.0.0").
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetGenTimes(1)
+
+	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts)
 	if err != nil {
 		t.Fatalf("GenLOD gen_times=1 failed: %v", err)
 	}
 
 	t.Logf("PASS: lod gen_times=1 - model_ids=%v", modelIDs)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelIDs[0], opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelIDs[0], waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {

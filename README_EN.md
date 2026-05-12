@@ -69,20 +69,10 @@ func main() {
     )
 
     // 1) Image-to-360: upload local image, generate multi-views
-    mvModelID, err := client.Gen360(
-        "character.png", // local path, SDK uploads automatically
-        "",
-        "my_360",
-        "character.png",
-        nil,
-        "",
-        nil,
-        "",
-        nil,
-        "",
-        nil,
-        "",
-    )
+    // name is set in Options (optional, auto-generated if omitted)
+    opts := visvise.NewGen360Options().
+        SetEnableAPose(true)  // optional
+    mvModelID, err := client.Gen360("character.png", opts)
     if err != nil {
         panic(err)
     }
@@ -95,21 +85,11 @@ func main() {
     outputView := mvInfo.ImageGen360Output.OutputView
 
     // 3) Image-to-high-poly (pass COS URLs directly)
-    highModelID, err := client.GenHighModel(
-        outputView.MainView,
-        "",
-        visvise.OutputModelFormatFBX,
-        1, // FaceType.TRIANGLE
-        "high_model",
-        "",
-        nil,
-        outputView.BackView,
-        "",
-        outputView.LeftView,
-        "",
-        outputView.RightView,
-        "",
-    )
+    opts = visvise.NewGenHighModelOptions().
+        SetBackView(outputView.BackView, "").
+        SetLeftView(outputView.LeftView, "").
+        SetRightView(outputView.RightView, "")
+    highModelID, err := client.GenHighModel(outputView.MainView, opts)
     if err != nil {
         panic(err)
     }
@@ -175,8 +155,8 @@ visvise.MeshRefineModeOptimize // 1 - mesh optimization
 visvise.MeshRefineModeDensify  // 2 - mesh densification
 
 // 2D segmentation split type
-visvise.SegmentSplitTypeFrontView // 1 - front-view split (default)
-visvise.SegmentSplitTypeFourView  // 2 - four-view split
+visvise.SegmentSplitFrontView // 1 - front-view split (default)
+visvise.SegmentSplitFourView  // 2 - four-view split
 
 // 2D segmentation granularity
 visvise.SegmentGranularityCoarse  // 1 - coarse
@@ -190,6 +170,10 @@ visvise.SegmentGranularityFine    // 3 - fine
 
 High-level methods bundle "COS upload + async task creation" into a single call. Pass either a local file path or a VISVISE COS URL; each method returns a `model_id`.
 
+All `Gen*()` methods use **Options struct** pattern with fluent API for cleaner optional parameter handling:
+
+> **About `name`:** Every `Gen*` method's `name` is optional. Default values are set in `New*Options()` (e.g., `gen_360`, `gen_high_model`, etc.). Customize via `SetName()`.
+>
 > **About `algorithmModel`:** Every `Gen*` method's `algorithmModel` is optional. When omitted, the SDK calls `ListAlgorithmModel` and uses the first available model for the current account.
 
 ### Gen360 — Image to 360
@@ -197,20 +181,20 @@ High-level methods bundle "COS upload + async task creation" into a single call.
 Generate 360-degree multi-views from a single image.
 
 ```go
-modelID, err := client.Gen360(
-    "path/to/character.png",  // required, main view (local path or VISVISE COS URL)
-    "",                       // optional, e.g. "hunyuan3D-MultiView-v3.0"; auto-selected if omitted
-    "gen_360",                // optional, task name
-    "character.png",          // required, filename
-    nil,                      // optional, enable A-Pose (True/False)
-    "",                       // optional, style (VISVISE proprietary models only)
-    nil,                      // optional, back view to improve quality
-    "",                       // optional, back_view filename
-    nil,                      // optional, left view
-    "",                       // optional, left_view filename
-    nil,                      // optional, right view
-    "",                       // optional, right_view filename
-)
+// Optional params via Options struct, supports fluent API
+// Default name="gen_360", output format is fbx, face type is triangle
+opts := visvise.NewGen360Options().
+    SetName("my_360").                                    // optional, default "gen_360"
+    SetAlgorithmModel("hunyuan3D-MultiView-v3.0").        // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // optional, output format (default fbx)
+    SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
+    SetEnableAPose(true).                                 // optional, enable A-Pose
+    SetStyle("anime").                                    // optional, style type
+    SetBackView("path/to/back.png", "back.png").          // optional, back view
+    SetLeftView("path/to/left.png", "left.png").          // optional, left view
+    SetRightView("path/to/right.png", "right.png")        // optional, right view
+
+modelID, err := client.Gen360("path/to/character.png", opts)
 ```
 
 ---
@@ -220,21 +204,17 @@ modelID, err := client.Gen360(
 Generate a high-poly 3D model from images / multi-views (node_type=3).
 
 ```go
-modelID, err := client.GenHighModel(
-    "path/to/main.png",                  // required, main view
-    "",                                   // optional, e.g. "hunyuan3D-v3.1"; auto-selected if omitted
-    visvise.OutputModelFormatFBX,         // optional, output format (default fbx)
-    visvise.FaceTypeTriangle,             // optional, face type (default triangle)
-    "gen_high_model",                     // optional, task name
-    "main.png",                           // required, filename
-    nil,                                  // optional, target face count (1000-1500000); auto-tuned if omitted
-    nil,                                  // optional, back view to improve quality
-    "",
-    nil,                                  // optional, left view
-    "",
-    nil,                                  // optional, right view
-    "",
-)
+opts := visvise.NewGenHighModelOptions().
+    SetName("my_high_model").                            // optional, default "gen_high_model"
+    SetAlgorithmModel("hunyuan3D-v3.1").                 // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format (default fbx)
+    SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
+    SetFaceNum(500000).                                  // optional, target face count (1000-1500000)
+    SetBackView(outputView.BackView, "").                 // optional, back view
+    SetLeftView(outputView.LeftView, "").                 // optional, left view
+    SetRightView(outputView.RightView, "")                // optional, right view
+
+modelID, err := client.GenHighModel("path/to/main.png", opts)
 ```
 
 ---
@@ -244,20 +224,20 @@ modelID, err := client.GenHighModel(
 Mid-poly generation requires all four views (node_type=11).
 
 ```go
+opts := visvise.NewGenMidModelOptions().
+    SetName("my_mid_model").                             // optional, default "gen_mid_model"
+    SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").          // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
+    SetFaceType(visvise.FaceTypeTriangle).               // optional, face type
+    SetSegmentModelID("Model2026...")                    // optional, 2D segmentation asset ID
+
+// mainView, backView, leftView, rightView are all required
 modelID, err := client.GenMidModel(
-    "path/to/main.png",                  // required (all four views are required)
-    "path/to/back.png",                   // required
-    "path/to/left.png",                   // required
-    "path/to/right.png",                  // required
-    "",                                   // optional, e.g. "VISVISE-MeshGen-V1.0.0"
-    visvise.OutputModelFormatFBX,         // optional, output format
-    visvise.FaceTypeTriangle,             // optional, face type
-    "gen_mid_model",                      // optional, task name
-    "main.png",                           // required, filename
-    "back.png",
-    "left.png",
-    "right.png",
-    "",                                   // optional, 2D segmentation asset ID (mid-poly only)
+    "path/to/main.png",
+    "path/to/back.png",
+    "path/to/left.png",
+    "path/to/right.png",
+    opts,
 )
 ```
 
@@ -268,20 +248,16 @@ modelID, err := client.GenMidModel(
 Low-poly only needs the main view (node_type=13).
 
 ```go
-modelID, err := client.GenLowModel(
-    "path/to/main.png",                  // required, main view
-    "",                                   // optional, e.g. "Tripo-v1.0-fast"
-    visvise.OutputModelFormatFBX,         // optional, output format
-    visvise.FaceTypeTriangle,             // optional, face type
-    "gen_low_model",                      // optional, task name
-    "main.png",                           // required, filename
-    nil,                                  // optional, back view
-    "",
-    nil,                                  // optional, left view
-    "",
-    nil,                                  // optional, right view
-    "",
-)
+opts := visvise.NewGenLowModelOptions().
+    SetName("my_low_model").                             // optional, default "gen_low_model"
+    SetAlgorithmModel("Tripo-v1.0-fast").                // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
+    SetFaceType(visvise.FaceTypeTriangle).               // optional, face type
+    SetBackView("path/to/back.png", "back.png").         // optional, back view
+    SetLeftView("path/to/left.png", "left.png").         // optional, left view
+    SetRightView("path/to/right.png", "right.png")       // optional, right view
+
+modelID, err := client.GenLowModel("path/to/main.png", opts)
 ```
 
 ---
@@ -291,13 +267,14 @@ modelID, err := client.GenLowModel(
 Mesh-line refinement (node_type=10).
 
 ```go
-modelID, err := client.GenMeshRefine(
-    "path/to/model.fbx",               // required, input model
-    "",                                 // optional, e.g. "VISVISE-MeshRefine-V1.0.0"
-    visvise.OutputModelFormatFBX,       // optional, input format (default fbx)
-    "gen_mesh_refine",                  // optional, task name
-    "model.fbx",                        // required, filename
-)
+opts := visvise.NewGenMeshRefineOptions().
+    SetName("my_mesh_refine").                          // optional, default "gen_mesh_refine"
+    SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").      // optional
+    SetInputModelFormat(visvise.OutputModelFormatFBX).  // optional, input format (default fbx)
+    SetMode(visvise.MeshRefineModeOptimize).            // optional, refine mode
+    SetColorModel("path/to/color.fbx", "color.fbx")      // optional, color model
+
+modelID, err := client.GenMeshRefine("path/to/model.fbx", opts)
 ```
 
 ---
@@ -306,41 +283,44 @@ modelID, err := client.GenMeshRefine(
 
 Retopology of high-poly models (node_type=1).
 
-> Note: pass `detailLevel` for Hunyuan models, `faceNum` for VISVISE proprietary models — choose one.
+> Note: pass `DetailLevel` for Hunyuan models, `FaceNum` for VISVISE proprietary models — choose one.
 
 ```go
-modelID, err := client.GenRetopology(
-    "path/to/model.fbx",               // required, input model
-    "",                                 // optional, e.g. "hunyuan3D-RTP-v1.5"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    visvise.FaceTypeQuad,               // optional, face type (default quad)
-    "gen_retopology",                    // optional, task name
-    "model.fbx",                         // required, filename
-    nil,                                 // optional (Hunyuan): DetailLevel.LOW/MEDIUM/HIGH
-    nil,                                 // optional (VISVISE): target face count
-)
+// Hunyuan model example
+opts := visvise.NewGenRetopologyOptions().
+    SetName("my_retopo").                               // optional, default "gen_retopology"
+    SetAlgorithmModel("hunyuan3D-RTP-v1.5").             // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
+    SetFaceType(visvise.FaceTypeQuad).                  // optional, face type (default quad)
+    SetDetailLevel(visvise.DetailLevelMedium)           // optional, for Hunyuan models
+
+// VISVISE proprietary model example
+opts := visvise.NewGenRetopologyOptions().
+    SetAlgorithmModel("VISVISE-RTP-V1.0.0").
+    SetFaceNum(50000)                                   // optional, for VISVISE models
+
+modelID, err := client.GenRetopology("path/to/model.fbx", opts)
 ```
 
 ---
 
 ### GenLOD — LOD
 
-Generate level-of-detail meshes (node_type=2), with multi-shot support.
+Generate level-of-detail meshes (node_type=2), with multi-shot support. Default generation times is 3.
 
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
 }
 
-modelIDs, err := client.GenLOD(
-    "path/to/model.fbx",               // required, input model
-    "",                                 // optional, e.g. "VISVISE-LOD-V1.0.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_lod",                           // optional, task name
-    "model.fbx",                         // required, filename
-    reduceFaces,                         // required, reduction config list
-)
+opts := visvise.NewGenLODOptions().
+    SetName("my_lod").                                  // optional, default "gen_lod"
+    SetAlgorithmModel("VISVISE-LOD-V1.0.0").             // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // optional, output format (default fbx)
+    SetGenTimes(3)                                       // optional, number of generations (default 3)
+
+modelIDs, err := client.GenLOD("path/to/model.fbx", reduceFaces, opts)
 ```
 
 ---
@@ -350,14 +330,12 @@ modelIDs, err := client.GenLOD(
 Automatic UV unwrap (node_type=9).
 
 ```go
-modelID, err := client.GenUV(
-    "path/to/model.fbx",               // required, input model
-    "",                                 // optional, e.g. "hunyuan3D-UV-v2.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_uv",                            // optional, task name
-    "model.fbx",                         // required, filename
-    nil,                                 // optional, enable auto-smoothing
-)
+opts := visvise.NewGenUVOptions().
+    SetName("my_uv").                                    // optional, default "gen_uv"
+    SetAlgorithmModel("hunyuan3D-UV-v2.0").              // optional
+    SetEnableAutoSmoothing(true)                         // optional, enable auto-smoothing
+
+modelID, err := client.GenUV("path/to/model.fbx", opts)
 ```
 
 ---
@@ -366,22 +344,20 @@ modelID, err := client.GenUV(
 
 Generate textures for a model (node_type=8).
 
-> At least one of `inputView.MainView` or `prompt` is required; both can be supplied together.
+> At least one of `InputView.MainView` or `Prompt` is required; both can be supplied together.
 
 ```go
 view := &visvise.View{MainView: "path/to/ref.png"}
 
-modelID, err := client.GenTexture(
-    "path/to/model.fbx",               // required, input model
-    "",                                 // optional, e.g. "hunyuan3D-TEX-v2.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_texture",                       // optional, task name
-    "model.fbx",                         // required, filename
-    view,                                // optional, reference view (or use prompt instead)
-    nil,                                 // optional, resolution (e.g. 1024 / 2048)
-    nil,                                 // optional, also unwrap UV
-    "",                                  // optional, text prompt for the texture
-)
+opts := visvise.NewGenTextureOptions().
+    SetName("my_texture").                              // optional, default "gen_texture"
+    SetAlgorithmModel("hunyuan3D-TEX-v2.0").            // optional
+    SetInputView(view).                                 // optional, reference view (or use prompt)
+    SetResolution(2048).                                // optional, resolution
+    SetUnwarpUV(true).                                  // optional, also unwrap UV
+    SetPrompt("high quality, realistic")                  // optional, text prompt
+
+modelID, err := client.GenTexture("path/to/model.fbx", opts)
 ```
 
 ---
@@ -391,15 +367,13 @@ modelID, err := client.GenTexture(
 Auto-rigging (node_type=5). The SDK packages the raw model + JSON parameters into a zip automatically — no manual zipping required.
 
 ```go
-modelID, err := client.GenRigging(
-    "path/to/model.fbx",               // required, raw model (auto-zipped by SDK)
-    "",                                 // optional, e.g. "VISVISE-GoRigging-V1.0.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_rigging",                       // optional, task name
-    "model.fbx",                         // required, filename
-    "humanoid",                          // optional, "humanoid" (default) or "tetrapod"
-    "",                                  // optional, template skeleton
-)
+opts := visvise.NewGenRiggingOptions().
+    SetName("my_rigging").                              // optional, default "gen_rigging"
+    SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").      // optional
+    SetMeshCategory("humanoid").                        // optional, "humanoid" (default) or "tetrapod"
+    SetTemplateSkeleton("path/to/skeleton.fbx", "skeleton.fbx") // optional, template skeleton
+
+modelID, err := client.GenRigging("path/to/model.fbx", opts)
 ```
 
 ---
@@ -412,15 +386,11 @@ Auto-skinning (node_type=6). The SDK packages the rigged model + selection JSON 
 meshNames := []string{"Body_Mesh", "Hair_Mesh"}
 jointNames := []string{"Bip001", "Bip001 Pelvis"}
 
-modelID, err := client.GenSkinning(
-    "path/to/rigged_model.fbx",        // required, rigged model
-    "",                                 // optional, e.g. "VISVISE-GoSkinning-V1.0.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_skinning",                      // optional, task name
-    "rigged_model.fbx",                 // required, filename
-    meshNames,                           // required, meshes to skin
-    jointNames,                          // required, joints to skin
-)
+opts := visvise.NewGenSkinningOptions(meshNames, jointNames).
+    SetName("my_skinning").                             // optional, default "gen_skinning"
+    SetAlgorithmModel("VISVISE-GoSkinning-V1.0.0")      // optional
+
+modelID, err := client.GenSkinning("path/to/rigged_model.fbx", opts)
 ```
 
 ---
@@ -430,17 +400,15 @@ modelID, err := client.GenSkinning(
 Drive a 3D model from motion extracted from a video (node_type=4).
 
 ```go
-modelID, err := client.GenVideoMotion(
-    "path/to/model.fbx",               // required, input model
-    "",                                 // optional, e.g. "VISVISE-FramingAI-Base-V1.5.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_video_motion",                  // optional, task name
-    "model.fbx",                         // required, filename
-    "path/to/dance.mp4",                 // required, source video
-    nil,                                 // optional, enable hand capture
-    nil,                                 // optional, enable multi-person capture
-    nil,                                 // optional, rotation axis-angle [x, y, z] (radians)
-)
+opts := visvise.NewGenVideoMotionOptions().
+    SetName("my_video_motion").                         // optional, default "gen_video_motion"
+    SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0"). // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format (default fbx)
+    SetWithHand(true).                                  // optional, enable hand capture
+    SetMultipleTrack(false).                            // optional, enable multi-person capture
+    SetRotateAxisAngle(0, 0, 0)                         // optional, rotation axis-angle [x, y, z] (radians)
+
+modelID, err := client.GenVideoMotion("path/to/model.fbx", "path/to/dance.mp4", opts)
 ```
 
 ---
@@ -450,14 +418,12 @@ modelID, err := client.GenVideoMotion(
 Generate animation from a text prompt; returns 4 candidate models (node_type=4).
 
 ```go
-modelIDs, err := client.GenTextMotion(
-    "path/to/model.fbx",               // required, input model
-    "a person breakdancing",            // required, animation prompt
-    "",                                 // optional, e.g. "VISVISE-TextMotion-V1.1.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_text_motion",                   // optional, task name
-    "model.fbx",                         // required, filename
-)
+opts := visvise.NewGenTextMotionOptions().
+    SetName("my_text_motion").                          // optional, default "gen_text_motion"
+    SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").     // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
+
+modelIDs, err := client.GenTextMotion("path/to/model.fbx", "a person breakdancing", opts)
 // modelIDs contains 4 IDs, wait for whichever you prefer
 ```
 
@@ -472,17 +438,14 @@ inputImages := []visvise.FileInput{
     "path/to/pose_ref_1.png",
     "path/to/pose_ref_2.png",
 }
-imageFilenames := []string{"pose_ref_1.png", "pose_ref_2.png"}
 
-modelIDs, err := client.GenPose(
-    "path/to/model.fbx",               // required, FBX model
-    inputImages,                        // required, reference images (1-10)
-    "",                                 // optional, e.g. "VISVISE-PosingAI-V1.0.0"
-    visvise.OutputModelFormatFBX,       // optional, output format
-    "gen_pose",                          // optional, task name
-    "model.fbx",                         // required, model filename
-    imageFilenames,                      // optional, filenames for each input_images entry
-)
+opts := visvise.NewGenPoseOptions().
+    SetName("my_pose").                                 // optional, default "gen_pose"
+    SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").       // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
+    SetImageFilenames([]string{"pose_ref_1.png", "pose_ref_2.png"}) // optional
+
+modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, opts)
 ```
 
 ---
@@ -496,17 +459,16 @@ onThinking := func(content string) {
     fmt.Println("[thinking]", content)
 }
 
-segModelID, err := client.GenSegment2D(
-    "Model202604xxxxxx",               // required (or pass input_view), the Gen360 model_id
-    "",                                 // optional, e.g. "VISVISE-Seg2D-V1.0.0"
-    "gen_segment_2d",                   // optional, task name
-    nil,                                // optional (or pass model_id_360), input view
-    nil,                                // optional, SegmentSplitTypeFrontView(1, default) / FourView(2)
-    nil,                                // optional, SegmentGranularityCoarse(1) / Medium(2, default) / Fine(3)
-    "",                                 // optional, natural-language splitting rule (max 200 chars)
-    nil,                                // optional, callback for thinking events
-)
-// Use the result as segmentModelID for GenMidModel / GenLowModel
+opts := visvise.NewGenSegment2DOptions().
+    SetName("my_segment").                              // optional, default "gen_segment_2d"
+    SetAlgorithmModel("VISVISE-Seg2D-V1.0.0").          // optional
+    SetSplitType(int(visvise.SegmentSplitFrontView)).   // optional, split type
+    SetGranularity(int(visvise.SegmentGranularityMedium)). // optional, granularity
+    SetPrompt("segment by body parts").                 // optional, natural language prompt
+    SetOnThinking(onThinking)                            // optional, thinking callback
+
+segModelID, err := client.GenSegment2D("Model2026...", opts)
+// Use the result as segmentModelID for GenMidModel
 ```
 
 ---
@@ -558,7 +520,7 @@ models, total, err := api.GetModelList(
 )
 
 // Fetch algorithm models for a node type
-algModels, err := api.ListAlgorithmModel(&visvise.ListAlgorithmModelParams{NodeType: 4, SubType: 1})
+algModels, err := api.ListAlgorithmModel(int(visvise.NodeTypeAnimation), nil)
 
 // Get download URL
 url, err := api.DownloadModel("Model2026...")
@@ -570,7 +532,7 @@ err = api.DeleteModel("Model2026...")
 err = api.BatchDeleteModel([]string{"Model2026...", "Model2026..."})
 
 // Remove background
-outURL, err := api.RemoveBg("https://cos.../image.png")
+outURL, err := api.RemoveBackground("https://cos.../image.png")
 
 // Text-to-motion prompt suggestions
 prompts, err := api.GetText2MotionPromptList("en")
@@ -606,7 +568,7 @@ import (
 
 client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
 
-modelID, err := client.Gen360("image.png", "", "test", "image.png", nil, "", nil, "", nil, "", nil, "")
+modelID, err := client.Gen360("image.png", visvise.NewGen360Options())
 if err != nil {
     if _, ok := err.(*visvise.QuotaExceededError); ok {
         fmt.Println("Daily quota exceeded; please try again tomorrow")
@@ -637,17 +599,18 @@ func main() {
 
     // Step 1: Image-to-360
     fmt.Println("Step 1: generating multi-views...")
-    mvID, _ := client.Gen360("character.png", "", "gen_360", "character.png", nil, "", nil, "", nil, "", nil, "")
+    opts := visvise.NewGen360Options()
+    mvID, _ := client.Gen360("character.png", opts)
     mv, _ := client.WaitModel(mvID, &visvise.WaitOptions{Interval: 3, Timeout: 300})
     views := mv.ImageGen360Output.OutputView
 
     // Step 2: High-poly model
     fmt.Println("Step 2: generating high-poly model...")
-    highID, _ := client.GenHighModel(
-        views.MainView, "", visvise.OutputModelFormatFBX,
-        visvise.FaceTypeTriangle, "gen_high_model", "",
-        nil, views.BackView, "", views.LeftView, "", views.RightView, "",
-    )
+    opts = visvise.NewGenHighModelOptions().
+        SetBackView(views.BackView, "").
+        SetLeftView(views.LeftView, "").
+        SetRightView(views.RightView, "")
+    highID, _ := client.GenHighModel(views.MainView, opts)
     highModel, _ := client.WaitModel(highID, &visvise.WaitOptions{Timeout: 900})
     fmt.Println("High-poly download URL:", highModel.OutputModel)
 }
@@ -669,26 +632,19 @@ func main() {
     client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
 
     // Step 1: Rigging
-    rigID, _ := client.GenRigging(
-        "character.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_rigging", "character.fbx", "humanoid", "",
-    )
+    opts := visvise.NewGenRiggingOptions()
+    rigID, _ := client.GenRigging("character.fbx", opts)
     rig, _ := client.WaitModel(rigID, &visvise.WaitOptions{Timeout: 600})
     fmt.Println("Rigged model:", rig.OutputModel)
 
     // Step 2: Skinning
-    skinID, _ := client.GenSkinning(
-        "rigged_character.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_skinning", "rigged_character.fbx",
-        []string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"},
-    )
+    opts = visvise.NewGenSkinningOptions([]string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"})
+    skinID, _ := client.GenSkinning("rigged_character.fbx", opts)
     client.WaitModel(skinID, &visvise.WaitOptions{Timeout: 600})
 
     // Step 3: Video-to-animation
-    animID, _ := client.GenVideoMotion(
-        "skinned_model.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_video_motion", "skinned_model.fbx", "dance.mp4", nil, nil, nil,
-    )
+    opts = visvise.NewGenVideoMotionOptions()
+    animID, _ := client.GenVideoMotion("skinned_model.fbx", "dance.mp4", opts)
     anim, _ := client.WaitModel(animID, &visvise.WaitOptions{Timeout: 900})
     fmt.Println("Animation download URL:", anim.OutputModel)
 }
@@ -710,14 +666,12 @@ func main() {
     client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
 
     reduceFaces := []visvise.ReduceFace{
-        {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-        {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
+        {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
+        {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
     }
 
-    modelIDs, _ := client.GenLOD(
-        "high_model.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_lod", "high_model.fbx", reduceFaces,
-    )
+    opts := visvise.NewGenLODOptions()
+    modelIDs, _ := client.GenLOD("high_model.fbx", reduceFaces, opts)
 
     // Wait for all variants
     for _, mid := range modelIDs {

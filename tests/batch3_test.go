@@ -21,15 +21,20 @@ func TestBatch3_VideoMotionWithHand(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenVideoMotion(animModelPath, videoPath, "VISVISE-FramingAI-Base-V1.5.0", string(visvise.OutputModelFormatFBX), "opt_vm_a", "", "", boolPtr(true), boolPtr(false), nil)
+	opts := visvise.NewGenVideoMotionOptions().
+		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
+		SetWithHand(true).
+		SetMultipleTrack(false)
+
+	modelID, err := client.GenVideoMotion(animModelPath, videoPath, opts)
 	if err != nil {
 		t.Fatalf("GenVideoMotion with_hand=True failed: %v", err)
 	}
 
 	t.Logf("PASS: vm with_hand=True - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -51,15 +56,20 @@ func TestBatch3_VideoMotionNoHandNoMulti(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelID, err := client.GenVideoMotion(animModelPath, videoPath, "VISVISE-FramingAI-Base-V1.5.0", string(visvise.OutputModelFormatFBX), "opt_vm_b", "", "", boolPtr(false), boolPtr(false), nil)
+	opts := visvise.NewGenVideoMotionOptions().
+		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
+		SetWithHand(false).
+		SetMultipleTrack(false)
+
+	modelID, err := client.GenVideoMotion(animModelPath, videoPath, opts)
 	if err != nil {
 		t.Fatalf("GenVideoMotion hand=False multi=False failed: %v", err)
 	}
 
 	t.Logf("PASS: vm hand=False multi=False - model_id=%s", modelID)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelID, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -80,15 +90,18 @@ func TestBatch3_TextMotionWave(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", "VISVISE-TextMotion-V1.1.0", string(visvise.OutputModelFormatFBX), "opt_tm_a", "")
+	opts := visvise.NewGenTextMotionOptions().
+		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0")
+
+	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", opts)
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=挥手 failed: %v", err)
 	}
 
 	t.Logf("PASS: tm prompt=挥手 - model_ids=%v", modelIDs)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelIDs[0], opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelIDs[0], waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -109,15 +122,19 @@ func TestBatch3_TextMotionStep(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在原地踏步", "VISVISE-TextMotion-V1.1.0", string(visvise.OutputModelFormatGLB), "opt_tm_b", "")
+	opts := visvise.NewGenTextMotionOptions().
+		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
+		SetOutputModelFormat(string(visvise.OutputModelFormatGLB))
+
+	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在原地踏步", opts)
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=踏步 glb failed: %v", err)
 	}
 
 	t.Logf("PASS: tm prompt=踏步 glb - model_ids=%v", modelIDs)
 
-	opts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelIDs[0], opts)
+	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
+	model, err := client.WaitModel(modelIDs[0], waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {

@@ -461,24 +461,23 @@ func (c *Client) WaitModel(modelID string, opts *WaitOptions) (*ModelInfo, error
 }
 
 // ════════════════════════════════════════════════════════════════════
-// High-level methods: gen_xxx
+// High-level methods: gen_xxx (simplified with Options)
 // ════════════════════════════════════════════════════════════════════
 
 // Gen360 generates multi-view images from an image
-func (c *Client) Gen360(
-	mainView FileInput,
-	algorithmModel string,
-	name string,
-	mainViewFilename string,
-	enableAPose *bool,
-	style string,
-	backView FileInput,
-	backViewFilename string,
-	leftView FileInput,
-	leftViewFilename string,
-	rightView FileInput,
-	rightViewFilename string,
-) (string, error) {
+// Simplified version using Gen360Options
+func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error) {
+	if opts == nil {
+		opts = NewGen360Options()
+	}
+
+	mainViewFilename := opts.MainViewFilename
+	if mainViewFilename == "" {
+		if s, ok := mainView.(string); ok {
+			mainViewFilename = filepath.Base(s)
+		}
+	}
+
 	// Upload views
 	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
 	if err != nil {
@@ -487,66 +486,66 @@ func (c *Client) Gen360(
 
 	view := &View{MainView: mainURL}
 
-	if backView != nil {
-		backURL, err := c.resolveFile(backView, backViewFilename, false)
+	if opts.BackView != nil {
+		backURL, err := c.resolveFile(opts.BackView, opts.BackViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.BackView = backURL
 	}
 
-	if leftView != nil {
-		leftURL, err := c.resolveFile(leftView, leftViewFilename, false)
+	if opts.LeftView != nil {
+		leftURL, err := c.resolveFile(opts.LeftView, opts.LeftViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.LeftView = leftURL
 	}
 
-	if rightView != nil {
-		rightURL, err := c.resolveFile(rightView, rightViewFilename, false)
+	if opts.RightView != nil {
+		rightURL, err := c.resolveFile(opts.RightView, opts.RightViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.RightView = rightURL
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeImgTo360, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo360, nil)
 	if err != nil {
 		return "", err
 	}
 
 	img360 := map[string]interface{}{
-		"algorithm_model": resolvedModel,
+		"algorithm_model":     resolvedModel,
+		"output_model_format": opts.OutputModelFormat,
+		"face_type":           opts.FaceType,
 	}
-	if enableAPose != nil {
-		img360["enable_a_pose"] = *enableAPose
+	if opts.EnableAPose != nil {
+		img360["enable_a_pose"] = *opts.EnableAPose
 	}
-	if style != "" {
-		img360["style"] = style
+	if opts.Style != "" {
+		img360["style"] = opts.Style
 	}
 
-	return c.api.GenMultiViews(name, view, map[string]interface{}{
+	return c.api.GenMultiViews(opts.Name, view, map[string]interface{}{
 		"image_gen_360_params": img360,
 	})
 }
 
 // GenHighModel generates a high-detail 3D model from images
-func (c *Client) GenHighModel(
-	mainView FileInput,
-	algorithmModel string,
-	outputModelFormat string,
-	faceType int,
-	name string,
-	mainViewFilename string,
-	faceNum *int,
-	backView FileInput,
-	backViewFilename string,
-	leftView FileInput,
-	leftViewFilename string,
-	rightView FileInput,
-	rightViewFilename string,
-) (string, error) {
+// Simplified version using GenHighModelOptions
+func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenHighModelOptions()
+	}
+
+	mainViewFilename := opts.MainViewFilename
+	if mainViewFilename == "" {
+		if s, ok := mainView.(string); ok {
+			mainViewFilename = filepath.Base(s)
+		}
+	}
+
 	view := &View{}
 
 	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
@@ -555,45 +554,45 @@ func (c *Client) GenHighModel(
 	}
 	view.MainView = mainURL
 
-	if backView != nil {
-		backURL, err := c.resolveFile(backView, backViewFilename, false)
+	if opts.BackView != nil {
+		backURL, err := c.resolveFile(opts.BackView, opts.BackViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.BackView = backURL
 	}
 
-	if leftView != nil {
-		leftURL, err := c.resolveFile(leftView, leftViewFilename, false)
+	if opts.LeftView != nil {
+		leftURL, err := c.resolveFile(opts.LeftView, opts.LeftViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.LeftView = leftURL
 	}
 
-	if rightView != nil {
-		rightURL, err := c.resolveFile(rightView, rightViewFilename, false)
+	if opts.RightView != nil {
+		rightURL, err := c.resolveFile(opts.RightView, opts.RightViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.RightView = rightURL
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeImgTo3DHigh, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DHigh, nil)
 	if err != nil {
 		return "", err
 	}
 
 	imgParams := map[string]interface{}{
 		"algorithm_model":     resolvedModel,
-		"output_model_format": outputModelFormat,
-		"face_type":           faceType,
+		"output_model_format": opts.OutputModelFormat,
+		"face_type":           opts.FaceType,
 	}
-	if faceNum != nil {
-		imgParams["face_num"] = *faceNum
+	if opts.FaceNum != nil {
+		imgParams["face_num"] = *opts.FaceNum
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeImgTo3DHigh),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DHigh),
 		map[string]interface{}{"image_gen_model_params": imgParams},
 		view, "", "", "")
 	if err != nil {
@@ -606,63 +605,82 @@ func (c *Client) GenHighModel(
 	return "", nil
 }
 
-// GenMidModel generates a mid-detail 3D model from four views
-func (c *Client) GenMidModel(
-	mainView FileInput,
-	backView FileInput,
-	leftView FileInput,
-	rightView FileInput,
-	algorithmModel string,
-	outputModelFormat string,
-	faceType int,
-	name string,
-	mainViewFilename string,
-	backViewFilename string,
-	leftViewFilename string,
-	rightViewFilename string,
-	segmentModelID string,
-) (string, error) {
+// GenMidModel generates a mid-detail 3D model from images
+// Simplified version using GenMidModelOptions
+func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, opts *GenMidModelOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenMidModelOptions()
+	}
+
 	view := &View{}
 
+	// Resolve main view
+	mainViewFilename := opts.MainViewFilename
+	if mainViewFilename == "" {
+		if s, ok := mainView.(string); ok {
+			mainViewFilename = filepath.Base(s)
+		}
+	}
 	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
+	// Resolve back view (required)
+	backViewFilename := opts.BackViewFilename
+	if backViewFilename == "" {
+		if s, ok := backView.(string); ok {
+			backViewFilename = filepath.Base(s)
+		}
+	}
 	backURL, err := c.resolveFile(backView, backViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.BackView = backURL
 
+	// Resolve left view (required)
+	leftViewFilename := opts.LeftViewFilename
+	if leftViewFilename == "" {
+		if s, ok := leftView.(string); ok {
+			leftViewFilename = filepath.Base(s)
+		}
+	}
 	leftURL, err := c.resolveFile(leftView, leftViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.LeftView = leftURL
 
+	// Resolve right view (required)
+	rightViewFilename := opts.RightViewFilename
+	if rightViewFilename == "" {
+		if s, ok := rightView.(string); ok {
+			rightViewFilename = filepath.Base(s)
+		}
+	}
 	rightURL, err := c.resolveFile(rightView, rightViewFilename, false)
 	if err != nil {
 		return "", err
 	}
 	view.RightView = rightURL
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeImgTo3DMid, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DMid, nil)
 	if err != nil {
 		return "", err
 	}
 
 	imgParams := map[string]interface{}{
 		"algorithm_model":     resolvedModel,
-		"output_model_format": outputModelFormat,
-		"face_type":           faceType,
+		"output_model_format": opts.OutputModelFormat,
+		"face_type":           opts.FaceType,
 	}
-	if segmentModelID != "" {
-		imgParams["segment_model_id"] = segmentModelID
+	if opts.SegmentModelID != "" {
+		imgParams["segment_model_id"] = opts.SegmentModelID
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeImgTo3DMid),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DMid),
 		map[string]interface{}{"image_gen_model_params": imgParams},
 		view, "", "", "")
 	if err != nil {
@@ -676,20 +694,19 @@ func (c *Client) GenMidModel(
 }
 
 // GenLowModel generates a low-detail 3D model from images
-func (c *Client) GenLowModel(
-	mainView FileInput,
-	algorithmModel string,
-	outputModelFormat string,
-	faceType int,
-	name string,
-	mainViewFilename string,
-	backView FileInput,
-	backViewFilename string,
-	leftView FileInput,
-	leftViewFilename string,
-	rightView FileInput,
-	rightViewFilename string,
-) (string, error) {
+// Simplified version using GenLowModelOptions
+func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenLowModelOptions()
+	}
+
+	mainViewFilename := opts.MainViewFilename
+	if mainViewFilename == "" {
+		if s, ok := mainView.(string); ok {
+			mainViewFilename = filepath.Base(s)
+		}
+	}
+
 	view := &View{}
 
 	mainURL, err := c.resolveFile(mainView, mainViewFilename, false)
@@ -698,42 +715,42 @@ func (c *Client) GenLowModel(
 	}
 	view.MainView = mainURL
 
-	if backView != nil {
-		backURL, err := c.resolveFile(backView, backViewFilename, false)
+	if opts.BackView != nil {
+		backURL, err := c.resolveFile(opts.BackView, opts.BackViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.BackView = backURL
 	}
 
-	if leftView != nil {
-		leftURL, err := c.resolveFile(leftView, leftViewFilename, false)
+	if opts.LeftView != nil {
+		leftURL, err := c.resolveFile(opts.LeftView, opts.LeftViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.LeftView = leftURL
 	}
 
-	if rightView != nil {
-		rightURL, err := c.resolveFile(rightView, rightViewFilename, false)
+	if opts.RightView != nil {
+		rightURL, err := c.resolveFile(opts.RightView, opts.RightViewFilename, false)
 		if err != nil {
 			return "", err
 		}
 		view.RightView = rightURL
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeImgTo3DLow, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DLow, nil)
 	if err != nil {
 		return "", err
 	}
 
 	imgParams := map[string]interface{}{
 		"algorithm_model":     resolvedModel,
-		"output_model_format": outputModelFormat,
-		"face_type":           faceType,
+		"output_model_format": opts.OutputModelFormat,
+		"face_type":           opts.FaceType,
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeImgTo3DLow),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DLow),
 		map[string]interface{}{"image_gen_model_params": imgParams},
 		view, "", "", "")
 	if err != nil {
@@ -747,42 +764,45 @@ func (c *Client) GenLowModel(
 }
 
 // GenMeshRefine performs mesh refinement/optimization
-func (c *Client) GenMeshRefine(
-	modelPath FileInput,
-	algorithmModel string,
-	inputModelFormat string,
-	name string,
-	filename string,
-	mode *int,
-	colorModel FileInput,
-	colorModelFilename string,
-) (string, error) {
+// Simplified version using GenMeshRefineOptions
+func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenMeshRefineOptions()
+	}
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
 	cosURL, err := c.resolveModelFile(modelPath, filename, false)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeMeshRefine, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeMeshRefine, nil)
 	if err != nil {
 		return "", err
 	}
 
 	params := map[string]interface{}{
 		"algorithm_model":    resolvedModel,
-		"input_model_format": inputModelFormat,
+		"input_model_format": opts.InputModelFormat,
 	}
-	if mode != nil {
-		params["mode"] = *mode
+	if opts.Mode != nil {
+		params["mode"] = *opts.Mode
 	}
-	if colorModel != nil {
-		colorURL, err := c.resolveModelFile(colorModel, colorModelFilename, false)
+	if opts.ColorModel != nil {
+		colorURL, err := c.resolveModelFile(opts.ColorModel, opts.ColorModelFilename, false)
 		if err != nil {
 			return "", err
 		}
 		params["color_model"] = colorURL
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeMeshRefine),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeMeshRefine),
 		map[string]interface{}{"mesh_refine_params": params},
 		nil, cosURL, "", "")
 	if err != nil {
@@ -796,39 +816,41 @@ func (c *Client) GenMeshRefine(
 }
 
 // GenRetopology performs re-topology on a model
-func (c *Client) GenRetopology(
-	modelPath FileInput,
-	algorithmModel string,
-	outputModelFormat string,
-	faceType int,
-	name string,
-	filename string,
-	detailLevel *int,
-	faceNum *int,
-) (string, error) {
+// Simplified version using GenRetopologyOptions
+func (c *Client) GenRetopology(modelPath FileInput, opts *GenRetopologyOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenRetopologyOptions()
+	}
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
 	cosURL, err := c.resolveModelFile(modelPath, filename, false)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeReTopology, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeReTopology, nil)
 	if err != nil {
 		return "", err
 	}
 
 	params := map[string]interface{}{
 		"algorithm_model":     resolvedModel,
-		"output_model_format": outputModelFormat,
-		"face_type":           faceType,
+		"output_model_format": opts.OutputModelFormat,
+		"face_type":           opts.FaceType,
 	}
-	if detailLevel != nil {
-		params["detail_level"] = *detailLevel
+	if opts.DetailLevel != nil {
+		params["detail_level"] = *opts.DetailLevel
 	}
-	if faceNum != nil {
-		params["face_num"] = *faceNum
+	if opts.FaceNum != nil {
+		params["face_num"] = *opts.FaceNum
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeReTopology),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeReTopology),
 		map[string]interface{}{"re_topology_params": params},
 		nil, cosURL, "", "")
 	if err != nil {
@@ -842,21 +864,25 @@ func (c *Client) GenRetopology(
 }
 
 // GenLOD generates LOD (Level of Detail) models
-func (c *Client) GenLOD(
-	modelPath FileInput,
-	reduceFaces []ReduceFace,
-	algorithmModel string,
-	outputModelFormat string,
-	name string,
-	filename string,
-	genTimes int,
-) ([]string, error) {
+// Simplified version using GenLODOptions
+func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, opts *GenLODOptions) ([]string, error) {
+	if opts == nil {
+		opts = NewGenLODOptions()
+	}
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
 	cosURL, err := c.resolveModelFile(modelPath, filename, false)
 	if err != nil {
 		return nil, err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeLOD, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeLOD, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -866,30 +892,36 @@ func (c *Client) GenLOD(
 		reduceFacesData[i] = rf.ToMap()
 	}
 
-	return c.api.Gen3DModel(name, int(NodeTypeLOD),
+	return c.api.Gen3DModel(opts.Name, int(NodeTypeLOD),
 		map[string]interface{}{"lod_params": map[string]interface{}{
 			"algorithm_model":     resolvedModel,
-			"output_model_format": outputModelFormat,
+			"output_model_format": opts.OutputModelFormat,
 			"reduce_faces":        reduceFacesData,
-			"gen_times":           genTimes,
+			"gen_times":           opts.GenTimes,
 		}},
 		nil, cosURL, "", "")
 }
 
 // GenUV performs UV unwrapping on a model
-func (c *Client) GenUV(
-	modelPath FileInput,
-	algorithmModel string,
-	name string,
-	filename string,
-	enableAutoSmoothing *bool,
-) (string, error) {
+// Simplified version using GenUVOptions
+func (c *Client) GenUV(modelPath FileInput, opts *GenUVOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenUVOptions()
+	}
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
 	cosURL, err := c.resolveModelFile(modelPath, filename, false)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeUV, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeUV, nil)
 	if err != nil {
 		return "", err
 	}
@@ -897,11 +929,11 @@ func (c *Client) GenUV(
 	uvParams := map[string]interface{}{
 		"algorithm_model": resolvedModel,
 	}
-	if enableAutoSmoothing != nil {
-		uvParams["enable_auto_smoothing"] = *enableAutoSmoothing
+	if opts.EnableAutoSmoothing != nil {
+		uvParams["enable_auto_smoothing"] = *opts.EnableAutoSmoothing
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeUV),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeUV),
 		map[string]interface{}{"uv_params": uvParams},
 		nil, cosURL, "", "")
 	if err != nil {
@@ -915,21 +947,24 @@ func (c *Client) GenUV(
 }
 
 // GenTexture generates textures for a model
-func (c *Client) GenTexture(
-	modelPath FileInput,
-	algorithmModel string,
-	name string,
-	filename string,
-	inputView *View,
-	resolution *int,
-	unwarpUV *bool,
-	prompt string,
-) (string, error) {
-	mainViewURL := ""
-	if inputView != nil {
-		mainViewURL = inputView.MainView
+// Simplified version using GenTextureOptions
+func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenTextureOptions()
 	}
-	if mainViewURL == "" && prompt == "" {
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
+	mainViewURL := ""
+	if opts.InputView != nil {
+		mainViewURL = opts.InputView.MainView
+	}
+	if mainViewURL == "" && opts.Prompt == "" {
 		return "", errors.New("gen_texture requires either input_view.main_view or prompt")
 	}
 
@@ -938,7 +973,7 @@ func (c *Client) GenTexture(
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeTexture, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeTexture, nil)
 	if err != nil {
 		return "", err
 	}
@@ -946,42 +981,42 @@ func (c *Client) GenTexture(
 	texParams := map[string]interface{}{
 		"algorithm_model": resolvedModel,
 	}
-	if resolution != nil {
-		texParams["resolution"] = *resolution
+	if opts.Resolution != nil {
+		texParams["resolution"] = *opts.Resolution
 	}
-	if unwarpUV != nil {
-		texParams["unwarp_uv"] = *unwarpUV
+	if opts.UnwarpUV != nil {
+		texParams["unwarp_uv"] = *opts.UnwarpUV
 	}
-	if prompt != "" {
-		texParams["prompt"] = prompt
+	if opts.Prompt != "" {
+		texParams["prompt"] = opts.Prompt
 	}
 
 	var resolvedView *View
-	if inputView != nil {
+	if opts.InputView != nil {
 		resolvedView = &View{}
-		if inputView.MainView != "" {
-			url, err := c.resolveFile(inputView.MainView, "", false)
+		if opts.InputView.MainView != "" {
+			url, err := c.resolveFile(opts.InputView.MainView, "", false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.MainView = url
 		}
-		if inputView.BackView != "" {
-			url, err := c.resolveFile(inputView.BackView, "", false)
+		if opts.InputView.BackView != "" {
+			url, err := c.resolveFile(opts.InputView.BackView, "", false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.BackView = url
 		}
-		if inputView.LeftView != "" {
-			url, err := c.resolveFile(inputView.LeftView, "", false)
+		if opts.InputView.LeftView != "" {
+			url, err := c.resolveFile(opts.InputView.LeftView, "", false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.LeftView = url
 		}
-		if inputView.RightView != "" {
-			url, err := c.resolveFile(inputView.RightView, "", false)
+		if opts.InputView.RightView != "" {
+			url, err := c.resolveFile(opts.InputView.RightView, "", false)
 			if err != nil {
 				return "", err
 			}
@@ -989,7 +1024,7 @@ func (c *Client) GenTexture(
 		}
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeTexture),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeTexture),
 		map[string]interface{}{"tex_params": texParams},
 		resolvedView, cosURL, "", "")
 	if err != nil {
@@ -1003,23 +1038,27 @@ func (c *Client) GenTexture(
 }
 
 // GenRigging performs skeleton rigging on a model
-func (c *Client) GenRigging(
-	modelPath FileInput,
-	algorithmModel string,
-	meshCategory string,
-	name string,
-	filename string,
-	templateSkeleton FileInput,
-	templateSkeletonFilename string,
-) (string, error) {
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeRigging, nil)
+// Simplified version using GenRiggingOptions
+func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenRiggingOptions()
+	}
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeRigging, nil)
 	if err != nil {
 		return "", err
 	}
 
 	jsonData := map[string]interface{}{
 		"config": map[string]interface{}{
-			"mesh_category": meshCategory,
+			"mesh_category": opts.MeshCategory,
 			"algo_name":     resolvedModel,
 		},
 	}
@@ -1037,15 +1076,15 @@ func (c *Client) GenRigging(
 	goRiggingParams := map[string]interface{}{
 		"algorithm_model": resolvedModel,
 	}
-	if templateSkeleton != nil {
-		skeletonURL, err := c.resolveModelFile(templateSkeleton, templateSkeletonFilename, false)
+	if opts.TemplateSkeleton != nil {
+		skeletonURL, err := c.resolveModelFile(opts.TemplateSkeleton, opts.TemplateSkeletonFilename, false)
 		if err != nil {
 			return "", err
 		}
 		goRiggingParams["template_skeleton"] = skeletonURL
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeRigging),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeRigging),
 		map[string]interface{}{"go_rigging_params": goRiggingParams},
 		nil, cosURL, "", "")
 	if err != nil {
@@ -1059,15 +1098,24 @@ func (c *Client) GenRigging(
 }
 
 // GenSkinning performs skinning on a rigged model
-func (c *Client) GenSkinning(
-	modelPath FileInput,
-	meshNames []string,
-	jointNames []string,
-	algorithmModel string,
-	name string,
-	filename string,
-) (string, error) {
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeSkinning, nil)
+// Simplified version using GenSkinningOptions
+func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (string, error) {
+	if opts == nil {
+		return "", errors.New("gen_skinning requires opts with mesh_names and joint_names")
+	}
+
+	if len(opts.MeshNames) == 0 || len(opts.JointNames) == 0 {
+		return "", errors.New("gen_skinning requires mesh_names and joint_names")
+	}
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSkinning, nil)
 	if err != nil {
 		return "", err
 	}
@@ -1077,8 +1125,8 @@ func (c *Client) GenSkinning(
 			"algo_name": resolvedModel,
 		},
 		"selection": map[string]interface{}{
-			"mesh_names":  meshNames,
-			"joint_names": jointNames,
+			"mesh_names":  opts.MeshNames,
+			"joint_names": opts.JointNames,
 		},
 	}
 
@@ -1092,7 +1140,7 @@ func (c *Client) GenSkinning(
 		return "", err
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeSkinning),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeSkinning),
 		map[string]interface{}{},
 		nil, cosURL, "", "")
 	if err != nil {
@@ -1106,18 +1154,24 @@ func (c *Client) GenSkinning(
 }
 
 // GenVideoMotion generates animation from video
-func (c *Client) GenVideoMotion(
-	modelPath FileInput,
-	videoPath FileInput,
-	algorithmModel string,
-	outputModelFormat string,
-	name string,
-	modelFilename string,
-	videoFilename string,
-	withHand *bool,
-	multipleTrack *bool,
-	rotateAxisAngle []float64,
-) (string, error) {
+// Simplified version using GenVideoMotionOptions
+func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, opts *GenVideoMotionOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenVideoMotionOptions()
+	}
+
+	modelFilename := opts.ModelFilename
+	if modelFilename == "" {
+		if s, ok := modelPath.(string); ok {
+			modelFilename = filepath.Base(s)
+		}
+	}
+
+	videoFilename := ""
+	if s, ok := videoPath.(string); ok {
+		videoFilename = filepath.Base(s)
+	}
+
 	modelURL, err := c.resolveModelFile(modelPath, modelFilename, false)
 	if err != nil {
 		return "", err
@@ -1129,26 +1183,26 @@ func (c *Client) GenVideoMotion(
 	}
 
 	subType := int(AnimationSubTypeVideo)
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeAnimation, &subType)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeAnimation, &subType)
 	if err != nil {
 		return "", err
 	}
 
 	framing := map[string]interface{}{
 		"algorithm_model":     resolvedModel,
-		"output_model_format": outputModelFormat,
+		"output_model_format": opts.OutputModelFormat,
 	}
-	if withHand != nil {
-		framing["with_hand"] = *withHand
+	if opts.WithHand != nil {
+		framing["with_hand"] = *opts.WithHand
 	}
-	if multipleTrack != nil {
-		framing["multiple_track"] = *multipleTrack
+	if opts.MultipleTrack != nil {
+		framing["multiple_track"] = *opts.MultipleTrack
 	}
-	if len(rotateAxisAngle) == 3 {
-		framing["rotate_axis_angle"] = rotateAxisAngle
+	if len(opts.RotateAxisAngle) == 3 {
+		framing["rotate_axis_angle"] = opts.RotateAxisAngle
 	}
 
-	modelIDs, err := c.api.Gen3DModel(name, int(NodeTypeAnimation),
+	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeAnimation),
 		map[string]interface{}{"framing_ai_params": framing},
 		nil, modelURL, "", videoURL)
 	if err != nil {
@@ -1162,44 +1216,53 @@ func (c *Client) GenVideoMotion(
 }
 
 // GenTextMotion generates animation from text prompts
-func (c *Client) GenTextMotion(
-	modelPath FileInput,
-	prompt string,
-	algorithmModel string,
-	outputModelFormat string,
-	name string,
-	filename string,
-) ([]string, error) {
+// Simplified version using GenTextMotionOptions
+func (c *Client) GenTextMotion(modelPath FileInput, prompt string, opts *GenTextMotionOptions) ([]string, error) {
+	if opts == nil {
+		opts = NewGenTextMotionOptions()
+	}
+
+	filename := opts.Filename
+	if filename == "" {
+		if s, ok := modelPath.(string); ok {
+			filename = filepath.Base(s)
+		}
+	}
+
 	modelURL, err := c.resolveModelFile(modelPath, filename, false)
 	if err != nil {
 		return nil, err
 	}
 
 	subType := int(AnimationSubTypeText)
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeAnimation, &subType)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeAnimation, &subType)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.api.Gen3DModel(name, int(NodeTypeAnimation),
+	return c.api.Gen3DModel(opts.Name, int(NodeTypeAnimation),
 		map[string]interface{}{"framing_ai_params": map[string]interface{}{
 			"algorithm_model":     resolvedModel,
-			"output_model_format": outputModelFormat,
+			"output_model_format": opts.OutputModelFormat,
 			"prompt":              prompt,
 		}},
 		nil, modelURL, "", "")
 }
 
 // GenPose generates poses from reference images
-func (c *Client) GenPose(
-	modelPath FileInput,
-	inputImages []FileInput,
-	algorithmModel string,
-	outputModelFormat string,
-	name string,
-	modelFilename string,
-	imageFilenames []string,
-) ([]string, error) {
+// Simplified version using GenPoseOptions
+func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, opts *GenPoseOptions) ([]string, error) {
+	if opts == nil {
+		opts = NewGenPoseOptions()
+	}
+
+	modelFilename := opts.ModelFilename
+	if modelFilename == "" {
+		if s, ok := modelPath.(string); ok {
+			modelFilename = filepath.Base(s)
+		}
+	}
+
 	modelURL, err := c.resolveModelFile(modelPath, modelFilename, false)
 	if err != nil {
 		return nil, err
@@ -1208,8 +1271,8 @@ func (c *Client) GenPose(
 	uploadedImages := make([]string, len(inputImages))
 	for i, img := range inputImages {
 		var fname string
-		if imageFilenames != nil && i < len(imageFilenames) {
-			fname = imageFilenames[i]
+		if opts.ImageFilenames != nil && i < len(opts.ImageFilenames) {
+			fname = opts.ImageFilenames[i]
 		}
 		url, err := c.resolveFile(img, fname, false)
 		if err != nil {
@@ -1218,14 +1281,14 @@ func (c *Client) GenPose(
 		uploadedImages[i] = url
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeImgToPose, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgToPose, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.api.BatchGenPose(name, modelURL, uploadedImages, map[string]interface{}{
+	return c.api.BatchGenPose(opts.Name, modelURL, uploadedImages, map[string]interface{}{
 		"algorithm_model":     resolvedModel,
-		"output_model_format": outputModelFormat,
+		"output_model_format": opts.OutputModelFormat,
 	})
 }
 
@@ -1233,46 +1296,42 @@ func (c *Client) GenPose(
 type ThinkingCallback func(string)
 
 // GenSegment2D performs 2D segmentation (SSE streaming interface)
-func (c *Client) GenSegment2D(
-	modelID360 string,
-	algorithmModel string,
-	name string,
-	inputView *View,
-	splitType *int,
-	granularity *int,
-	prompt string,
-	onThinking ThinkingCallback,
-) (string, error) {
-	if modelID360 == "" && inputView == nil {
+// Simplified version using GenSegment2DOptions
+func (c *Client) GenSegment2D(modelID360 string, opts *GenSegment2DOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenSegment2DOptions()
+	}
+
+	if modelID360 == "" && opts.InputView == nil {
 		return "", errors.New("gen_segment_2d requires either model_id_360 or input_view")
 	}
 
 	var resolvedView *View
-	if inputView != nil {
+	if opts.InputView != nil {
 		resolvedView = &View{}
-		if inputView.MainView != "" {
-			url, err := c.resolveFile(inputView.MainView, "", false)
+		if opts.InputView.MainView != "" {
+			url, err := c.resolveFile(opts.InputView.MainView, "", false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.MainView = url
 		}
-		if inputView.BackView != "" {
-			url, err := c.resolveFile(inputView.BackView, "", false)
+		if opts.InputView.BackView != "" {
+			url, err := c.resolveFile(opts.InputView.BackView, "", false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.BackView = url
 		}
-		if inputView.LeftView != "" {
-			url, err := c.resolveFile(inputView.LeftView, "", false)
+		if opts.InputView.LeftView != "" {
+			url, err := c.resolveFile(opts.InputView.LeftView, "", false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.LeftView = url
 		}
-		if inputView.RightView != "" {
-			url, err := c.resolveFile(inputView.RightView, "", false)
+		if opts.InputView.RightView != "" {
+			url, err := c.resolveFile(opts.InputView.RightView, "", false)
 			if err != nil {
 				return "", err
 			}
@@ -1280,12 +1339,12 @@ func (c *Client) GenSegment2D(
 		}
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeSegment2D, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSegment2D, nil)
 	if err != nil {
 		return "", err
 	}
 
-	iter, err := c.api.InitSegment(name, resolvedModel, modelID360, resolvedView, splitType, granularity, prompt)
+	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, opts.Granularity, opts.Prompt)
 	if err != nil {
 		return "", err
 	}
@@ -1314,8 +1373,8 @@ func (c *Client) GenSegment2D(
 			if event.Data != nil {
 				if s, ok := event.Data.(string); ok {
 					log.Printf("gen_segment_2d thinking: %s", s)
-					if onThinking != nil {
-						onThinking(s)
+					if opts.OnThinking != nil {
+						opts.OnThinking(s)
 					}
 				}
 			}

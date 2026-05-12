@@ -69,20 +69,10 @@ func main() {
     )
 
     // ① 图生360：上传本地图片，生成多视图
-    mvModelID, err := client.Gen360(
-        "character.png", // 本地文件路径，SDK 自动上传
-        "",
-        "my_360",
-        "character.png",
-        nil,
-        "",
-        nil,
-        "",
-        nil,
-        "",
-        nil,
-        "",
-    )
+    // name 在 Options 中设置（可选，默认自动生成）
+    opts := visvise.NewGen360Options().
+        SetEnableAPose(true)  // 可选
+    mvModelID, err := client.Gen360("character.png", opts)
     if err != nil {
         panic(err)
     }
@@ -95,21 +85,11 @@ func main() {
     outputView := mvInfo.ImageGen360Output.OutputView
 
     // ③ 图生高模（多视图输出的 COS URL 直接传入）
-    highModelID, err := client.GenHighModel(
-        outputView.MainView,
-        "",
-        visvise.OutputModelFormatFBX,
-        1, // FaceType.TRIANGLE
-        "high_model",
-        "",
-        nil,
-        outputView.BackView,
-        "",
-        outputView.LeftView,
-        "",
-        outputView.RightView,
-        "",
-    )
+    opts = visvise.NewGenHighModelOptions().
+        SetBackView(outputView.BackView, "").
+        SetLeftView(outputView.LeftView, "").
+        SetRightView(outputView.RightView, "")
+    highModelID, err := client.GenHighModel(outputView.MainView, opts)
     if err != nil {
         panic(err)
     }
@@ -175,8 +155,8 @@ visvise.MeshRefineModeOptimize // 1 - 布线优化
 visvise.MeshRefineModeDensify  // 2 - 布线加密
 
 // 2D 拆分方式
-visvise.SegmentSplitTypeFrontView // 1 - 生成正视图拆分（默认）
-visvise.SegmentSplitTypeFourView  // 2 - 生成四视图拆分
+visvise.SegmentSplitFrontView // 1 - 生成正视图拆分（默认）
+visvise.SegmentSplitFourView  // 2 - 生成四视图拆分
 
 // 2D 拆分颗粒度
 visvise.SegmentGranularityCoarse  // 1 - 粗
@@ -190,6 +170,10 @@ visvise.SegmentGranularityFine    // 3 - 细
 
 高阶方法封装了「COS 文件上传 + 创建异步任务」两步，传入文件路径（本地）或 COS URL 均可，返回 `model_id`。
 
+所有 `Gen*()` 方法采用 **Options 结构体** 模式，通过链式调用设置可选参数，使用更简洁：
+
+> **关于 `name` 参数：** 所有 Gen* 方法的 `name` 参数均为可选，默认值在 `New*Options()` 中设置（如 `gen_360`、`gen_high_model` 等）。可通过 `SetName()` 自定义。
+>
 > **关于 `algorithmModel` 参数：** 所有 Gen* 方法的 `algorithmModel` 参数均为可选。若不传，SDK 将自动调用 `ListAlgorithmModel` 获取当前账号可用的第一个算法模型。
 
 ### Gen360 — 图生360
@@ -197,20 +181,20 @@ visvise.SegmentGranularityFine    // 3 - 细
 从单张图片生成 360 度多视图。
 
 ```go
-modelID, err := client.Gen360(
-    "path/to/character.png",  // 必填，主视图（本地路径或 VISVISE 平台 COS URL）
-    "",                       // 可选，算法模型名（如 "hunyuan3D-MultiView-v3.0"）；不传则自动选首个可用模型
-    "gen_360",                // 可选，任务名称
-    "character.png",          // 必填，文件名
-    nil,                      // 可选，是否开启 A-Pose（True/False）
-    "",                       // 可选，风格类型（仅 VISVISE 自研模型支持）
-    nil,                      // 可选，背视图，提升生成质量
-    "",                       // 可选，back_view 文件名
-    nil,                      // 可选，左视图
-    "",                       // 可选，left_view 文件名
-    nil,                      // 可选，右视图
-    "",                       // 可选，right_view 文件名
-)
+// 可选参数通过 Options 结构体传递，支持链式调用
+// 默认 name="gen_360"，输出格式为 fbx，面数类型为三角面
+opts := visvise.NewGen360Options().
+    SetName("my_360").                                    // 可选，默认 "gen_360"
+    SetAlgorithmModel("hunyuan3D-MultiView-v3.0").        // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式（默认 fbx）
+    SetFaceType(visvise.FaceTypeTriangle).                // 可选，面数类型（默认三角面）
+    SetEnableAPose(true).                                 // 可选，是否开启 A-Pose
+    SetStyle("anime").                                    // 可选，风格类型
+    SetBackView("path/to/back.png", "back.png").          // 可选，背视图
+    SetLeftView("path/to/left.png", "left.png").          // 可选，左视图
+    SetRightView("path/to/right.png", "right.png")        // 可选，右视图
+
+modelID, err := client.Gen360("path/to/character.png", opts)
 ```
 
 ---
@@ -220,21 +204,17 @@ modelID, err := client.Gen360(
 从图片/多视图生成高精度 3D 模型（node_type=3）。
 
 ```go
-modelID, err := client.GenHighModel(
-    "path/to/main.png",                  // 必填，主视图
-    "",                                   // 可选，如 "hunyuan3D-v3.1"；不传则自动选首个可用模型
-    visvise.OutputModelFormatFBX,         // 可选，输出格式（默认 fbx）
-    visvise.FaceTypeTriangle,             // 可选，面数类型（默认三角面）
-    "gen_high_model",                     // 可选，任务名称
-    "main.png",                           // 必填，文件名
-    nil,                                  // 可选，目标面数（1000~1500000），不传则自动配置
-    nil,                                  // 可选，背视图，提升质量
-    "",
-    nil,                                  // 可选，左视图
-    "",
-    nil,                                  // 可选，右视图
-    "",
-)
+opts := visvise.NewGenHighModelOptions().
+    SetName("my_high_model").                            // 可选，默认 "gen_high_model"
+    SetAlgorithmModel("hunyuan3D-v3.1").                 // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式（默认 fbx）
+    SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型（默认三角面）
+    SetFaceNum(500000).                                  // 可选，目标面数（1000~1500000）
+    SetBackView(outputView.BackView, "").                 // 可选，背视图
+    SetLeftView(outputView.LeftView, "").                 // 可选，左视图
+    SetRightView(outputView.RightView, "")                 // 可选，右视图
+
+modelID, err := client.GenHighModel("path/to/main.png", opts)
 ```
 
 ---
@@ -244,20 +224,20 @@ modelID, err := client.GenHighModel(
 中模要求四视图全部必传（node_type=11）。
 
 ```go
+opts := visvise.NewGenMidModelOptions().
+    SetName("my_mid_model").                             // 可选，默认 "gen_mid_model"
+    SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").         // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
+    SetFaceType(visvise.FaceTypeTriangle).              // 可选，面数类型
+    SetSegmentModelID("Model2026...")                    // 可选，2D 分割资产 ID
+
+// mainView, backView, leftView, rightView 四个视图必填
 modelID, err := client.GenMidModel(
-    "path/to/main.png",                  // 必填，四视图全部必传
-    "path/to/back.png",                   // 必填
-    "path/to/left.png",                   // 必填
-    "path/to/right.png",                  // 必填
-    "",                                   // 可选，如 "VISVISE-MeshGen-V1.0.0"
-    visvise.OutputModelFormatFBX,         // 可选，输出格式
-    visvise.FaceTypeTriangle,             // 可选，面数类型
-    "gen_mid_model",                      // 可选，任务名称
-    "main.png",                           // 必填，文件名
-    "back.png",
-    "left.png",
-    "right.png",
-    "",                                   // 可选，2D 分割资产 ID（仅中模有效）
+    "path/to/main.png",
+    "path/to/back.png",
+    "path/to/left.png",
+    "path/to/right.png",
+    opts,
 )
 ```
 
@@ -268,20 +248,16 @@ modelID, err := client.GenMidModel(
 低模只需主视图（node_type=13）。
 
 ```go
-modelID, err := client.GenLowModel(
-    "path/to/main.png",                  // 必填，主视图
-    "",                                   // 可选，如 "Tripo-v1.0-快速生成"
-    visvise.OutputModelFormatFBX,         // 可选，输出格式
-    visvise.FaceTypeTriangle,             // 可选，面数类型
-    "gen_low_model",                      // 可选，任务名称
-    "main.png",                           // 必填，文件名
-    nil,                                  // 可选，背视图
-    "",
-    nil,                                  // 可选，左视图
-    "",
-    nil,                                  // 可选，右视图
-    "",
-)
+opts := visvise.NewGenLowModelOptions().
+    SetName("my_low_model").                             // 可选，默认 "gen_low_model"
+    SetAlgorithmModel("Tripo-v1.0-快速生成").             // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
+    SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型
+    SetBackView("path/to/back.png", "back.png").          // 可选，背视图
+    SetLeftView("path/to/left.png", "left.png").          // 可选，左视图
+    SetRightView("path/to/right.png", "right.png")        // 可选，右视图
+
+modelID, err := client.GenLowModel("path/to/main.png", opts)
 ```
 
 ---
@@ -291,13 +267,14 @@ modelID, err := client.GenLowModel(
 对模型进行布线优化（node_type=10）。
 
 ```go
-modelID, err := client.GenMeshRefine(
-    "path/to/model.fbx",               // 必填，输入模型
-    "",                                 // 可选，如 "VISVISE-MeshRefine-V1.0.0"
-    visvise.OutputModelFormatFBX,       // 可选，输入模型格式（默认 fbx）
-    "gen_mesh_refine",                  // 可选，任务名称
-    "model.fbx",                        // 必填，文件名
-)
+opts := visvise.NewGenMeshRefineOptions().
+    SetName("my_mesh_refine").                           // 可选，默认 "gen_mesh_refine"
+    SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").      // 可选
+    SetInputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输入模型格式（默认 fbx）
+    SetMode(visvise.MeshRefineModeOptimize).             // 可选，布线优化模式
+    SetColorModel("path/to/color.fbx", "color.fbx")      // 可选，色彩模型
+
+modelID, err := client.GenMeshRefine("path/to/model.fbx", opts)
 ```
 
 ---
@@ -306,41 +283,44 @@ modelID, err := client.GenMeshRefine(
 
 对高面数模型进行拓扑优化（node_type=1）。
 
-> 注意：混元模型传 `detailLevel`，VISVISE 自研模型传 `faceNum`，二选一。
+> 注意：混元模型传 `DetailLevel`，VISVISE 自研模型传 `FaceNum`，二选一。
 
 ```go
-modelID, err := client.GenRetopology(
-    "path/to/model.fbx",               // 必填，输入模型
-    "",                                 // 可选，如 "hunyuan3D-RTP-v1.5"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    visvise.FaceTypeQuad,               // 可选，面数类型（默认四边面）
-    "gen_retopology",                    // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-    nil,                                 // 可选，混元模型：DetailLevel.LOW/MEDIUM/HIGH
-    nil,                                 // 可选，VISVISE 自研模型：指定输出面数
-)
+// 混元模型示例
+opts := visvise.NewGenRetopologyOptions().
+    SetName("my_retopo").                                // 可选，默认 "gen_retopology"
+    SetAlgorithmModel("hunyuan3D-RTP-v1.5").             // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式
+    SetFaceType(visvise.FaceTypeQuad).                   // 可选，面数类型（默认四边面）
+    SetDetailLevel(visvise.DetailLevelMedium)            // 可选，混元模型
+
+// VISVISE 自研模型示例
+opts := visvise.NewGenRetopologyOptions().
+    SetAlgorithmModel("VISVISE-RTP-V1.0.0").
+    SetFaceNum(50000)                                    // 可选，VISVISE 自研模型
+
+modelID, err := client.GenRetopology("path/to/model.fbx", opts)
 ```
 
 ---
 
 ### GenLOD — LOD
 
-生成多级细节模型（node_type=2），支持抽卡。
+生成多级细节模型（node_type=2），支持抽卡。默认抽卡次数为 3。
 
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
 }
 
-modelIDs, err := client.GenLOD(
-    "path/to/model.fbx",               // 必填，输入模型
-    "",                                 // 可选，如 "VISVISE-LOD-V1.0.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_lod",                           // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-    reduceFaces,                         // 必填，减面配置列表
-)
+opts := visvise.NewGenLODOptions().
+    SetName("my_lod").                                   // 可选，默认 "gen_lod"
+    SetAlgorithmModel("VISVISE-LOD-V1.0.0").              // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式（默认 fbx）
+    SetGenTimes(3)                                       // 可选，抽卡次数（默认 3）
+
+modelIDs, err := client.GenLOD("path/to/model.fbx", reduceFaces, opts)
 ```
 
 ---
@@ -350,14 +330,12 @@ modelIDs, err := client.GenLOD(
 自动 UV 展开（node_type=9）。
 
 ```go
-modelID, err := client.GenUV(
-    "path/to/model.fbx",               // 必填，输入模型
-    "",                                 // 可选，如 "hunyuan3D-UV-v2.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_uv",                            // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-    nil,                                 // 可选，是否启用自动平滑
-)
+opts := visvise.NewGenUVOptions().
+    SetName("my_uv").                                     // 可选，默认 "gen_uv"
+    SetAlgorithmModel("hunyuan3D-UV-v2.0").              // 可选
+    SetEnableAutoSmoothing(true)                          // 可选，是否启用自动平滑
+
+modelID, err := client.GenUV("path/to/model.fbx", opts)
 ```
 
 ---
@@ -366,22 +344,20 @@ modelID, err := client.GenUV(
 
 为模型生成贴图纹理（node_type=8）。
 
-> `inputView.MainView` 与 `prompt` 至少传一个，可同时传入。
+> `InputView.MainView` 与 `Prompt` 至少传一个，可同时传入。
 
 ```go
 view := &visvise.View{MainView: "path/to/ref.png"}
 
-modelID, err := client.GenTexture(
-    "path/to/model.fbx",               // 必填，输入模型
-    "",                                 // 可选，如 "hunyuan3D-TEX-v2.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_texture",                       // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-    view,                                // 可选，原画视图（与 prompt 至少传一个）
-    nil,                                 // 可选，分辨率（如 1024 / 2048）
-    nil,                                 // 可选，是否同时展开 UV
-    "",                                  // 可选，贴图文本提示词
-)
+opts := visvise.NewGenTextureOptions().
+    SetName("my_texture").                               // 可选，默认 "gen_texture"
+    SetAlgorithmModel("hunyuan3D-TEX-v2.0").              // 可选
+    SetInputView(view).                                   // 可选，原画视图（与 prompt 至少传一个）
+    SetResolution(2048).                                  // 可选，分辨率
+    SetUnwarpUV(true).                                    // 可选，是否同时展开 UV
+    SetPrompt("high quality, realistic")                   // 可选，贴图文本提示词
+
+modelID, err := client.GenTexture("path/to/model.fbx", opts)
 ```
 
 ---
@@ -391,15 +367,13 @@ modelID, err := client.GenTexture(
 自动为模型生成骨骼（node_type=5）。SDK 自动将模型文件与参数 JSON 打包成 zip 上传，无需手动准备 zip 包。
 
 ```go
-modelID, err := client.GenRigging(
-    "path/to/model.fbx",               // 必填，裸模型文件即可，SDK 自动打包
-    "",                                 // 可选，如 "VISVISE-GoRigging-V1.0.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_rigging",                       // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-    "humanoid",                          // 可选，"humanoid"（人形，默认）或 "tetrapod"（四足）
-    "",                                  // 可选，模板骨骼
-)
+opts := visvise.NewGenRiggingOptions().
+    SetName("my_rigging").                                // 可选，默认 "gen_rigging"
+    SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").       // 可选
+    SetMeshCategory("humanoid").                          // 可选，"humanoid"（人形，默认）或 "tetrapod"（四足）
+    SetTemplateSkeleton("path/to/skeleton.fbx", "skeleton.fbx") // 可选，模板骨骼
+
+modelID, err := client.GenRigging("path/to/model.fbx", opts)
 ```
 
 ---
@@ -412,15 +386,11 @@ modelID, err := client.GenRigging(
 meshNames := []string{"Body_Mesh", "Hair_Mesh"}
 jointNames := []string{"Bip001", "Bip001 Pelvis"}
 
-modelID, err := client.GenSkinning(
-    "path/to/rigged_model.fbx",        // 必填，带骨骼的模型文件
-    "",                                 // 可选，如 "VISVISE-GoSkinning-V1.0.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_skinning",                      // 可选，任务名称
-    "rigged_model.fbx",                 // 必填，文件名
-    meshNames,                           // 必填，需要蒙皮的网格名称列表
-    jointNames,                          // 必填，需要蒙皮的骨骼名称列表
-)
+opts := visvise.NewGenSkinningOptions(meshNames, jointNames).
+    SetName("my_skinning").                               // 可选，默认 "gen_skinning"
+    SetAlgorithmModel("VISVISE-GoSkinning-V1.0.0")        // 可选
+
+modelID, err := client.GenSkinning("path/to/rigged_model.fbx", opts)
 ```
 
 ---
@@ -430,17 +400,15 @@ modelID, err := client.GenSkinning(
 从视频中提取动作驱动 3D 模型（node_type=4）。
 
 ```go
-modelID, err := client.GenVideoMotion(
-    "path/to/model.fbx",               // 必填，输入模型
-    "",                                 // 可选，如 "VISVISE-FramingAI-Base-V1.5.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_video_motion",                  // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-    "path/to/dance.mp4",                 // 必填，驱动视频
-    nil,                                 // 可选，是否开启手部捕捉
-    nil,                                 // 可选，是否开启多人捕捉
-    nil,                                 // 可选，旋转轴角 [x, y, z]（弧度）
-)
+opts := visvise.NewGenVideoMotionOptions().
+    SetName("my_video_motion").                           // 可选，默认 "gen_video_motion"
+    SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").  // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式
+    SetWithHand(true).                                    // 可选，是否开启手部捕捉
+    SetMultipleTrack(false).                              // 可选，是否开启多人捕捉
+    SetRotateAxisAngle(0, 0, 0)                           // 可选，旋转轴角 [x, y, z]（弧度）
+
+modelID, err := client.GenVideoMotion("path/to/model.fbx", "path/to/dance.mp4", opts)
 ```
 
 ---
@@ -450,14 +418,12 @@ modelID, err := client.GenVideoMotion(
 通过提示词生成动画，一次返回 4 个模型供抽卡（node_type=4）。
 
 ```go
-modelIDs, err := client.GenTextMotion(
-    "path/to/model.fbx",               // 必填，输入模型
-    "一个人在跳街舞",                     // 必填，动画提示词
-    "",                                 // 可选，如 "VISVISE-TextMotion-V1.1.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_text_motion",                   // 可选，任务名称
-    "model.fbx",                         // 必填，文件名
-)
+opts := visvise.NewGenTextMotionOptions().
+    SetName("my_text_motion").                            // 可选，默认 "gen_text_motion"
+    SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").       // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式
+
+modelIDs, err := client.GenTextMotion("path/to/model.fbx", "一个人在跳街舞", opts)
 // modelIDs 包含 4 个 ID，等待其中你需要的那个即可
 ```
 
@@ -472,17 +438,14 @@ inputImages := []visvise.FileInput{
     "path/to/pose_ref_1.png",
     "path/to/pose_ref_2.png",
 }
-imageFilenames := []string{"pose_ref_1.png", "pose_ref_2.png"}
 
-modelIDs, err := client.GenPose(
-    "path/to/model.fbx",               // 必填，FBX 模型
-    inputImages,                        // 必填，参考图片列表（1~10 张）
-    "",                                 // 可选，如 "VISVISE-PosingAI-V1.0.0"
-    visvise.OutputModelFormatFBX,       // 可选，输出格式
-    "gen_pose",                          // 可选，任务名称
-    "model.fbx",                         // 必填，模型文件名
-    imageFilenames,                      // 可选，与 input_images 一一对应的文件名列表
-)
+opts := visvise.NewGenPoseOptions().
+    SetName("my_pose").                                   // 可选，默认 "gen_pose"
+    SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").         // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
+    SetImageFilenames([]string{"pose_ref_1.png", "pose_ref_2.png"}) // 可选
+
+modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, opts)
 ```
 
 ---
@@ -496,17 +459,16 @@ onThinking := func(content string) {
     fmt.Println("[思考]", content)
 }
 
-segModelID, err := client.GenSegment2D(
-    "Model202604xxxxxx",               // 必填（与 input_view 二选一），图生 360 的 model_id
-    "",                                 // 可选，如 "VISVISE-Seg2D-V1.0.0"
-    "gen_segment_2d",                   // 可选，任务名称
-    nil,                                // 可选（与 model_id_360 二选一），输入视图
-    nil,                                // 可选，SegmentSplitTypeFrontView(1, 默认) / FourView(2)
-    nil,                                // 可选，SegmentGranularityCoarse(1) / Medium(2, 默认) / Fine(3)
-    "",                                 // 可选，自然语言描述拆分规则（最长 200 字符）
-    nil,                                // 可选，处理 thinking 事件的回调
-)
-// 后续可作为 segmentModelID 传给 GenMidModel / GenLowModel
+opts := visvise.NewGenSegment2DOptions().
+    SetName("my_segment").                                // 可选，默认 "gen_segment_2d"
+    SetAlgorithmModel("VISVISE-Seg2D-V1.0.0").           // 可选
+    SetSplitType(int(visvise.SegmentSplitFrontView)).    // 可选，正视图/四视图拆分
+    SetGranularity(int(visvise.SegmentGranularityMedium)).// 可选，颗粒度
+    SetPrompt("segment by body parts").                   // 可选，自然语言描述拆分规则
+    SetOnThinking(onThinking)                             // 可选，处理 thinking 事件的回调
+
+segModelID, err := client.GenSegment2D("Model2026...", opts)
+// 后续可作为 segmentModelID 传给 GenMidModel
 ```
 
 ---
@@ -558,7 +520,7 @@ models, total, err := api.GetModelList(
 )
 
 // 获取算法模型列表
-algModels, err := api.ListAlgorithmModel(&visvise.ListAlgorithmModelParams{NodeType: 4, SubType: 1})
+algModels, err := api.ListAlgorithmModel(int(visvise.NodeTypeAnimation), nil)
 
 // 获取下载链接
 url, err := api.DownloadModel("Model2026...")
@@ -570,7 +532,7 @@ err = api.DeleteModel("Model2026...")
 err = api.BatchDeleteModel([]string{"Model2026...", "Model2026..."})
 
 // 去除背景
-outURL, err := api.RemoveBg("https://cos.../image.png")
+outURL, err := api.RemoveBackground("https://cos.../image.png")
 
 // 文生动画提示词列表
 prompts, err := api.GetText2MotionPromptList("zh")
@@ -606,7 +568,7 @@ import (
 
 client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
 
-modelID, err := client.Gen360("image.png", "", "test", "image.png", nil, "", nil, "", nil, "", nil, "")
+modelID, err := client.Gen360("image.png", visvise.NewGen360Options())
 if err != nil {
     if _, ok := err.(*visvise.QuotaExceededError); ok {
         fmt.Println("今日配额已用完，明天再试")
@@ -637,17 +599,18 @@ func main() {
 
     // Step 1: 图生360
     fmt.Println("Step 1: 生成多视图...")
-    mvID, _ := client.Gen360("character.png", "", "gen_360", "character.png", nil, "", nil, "", nil, "", nil, "")
+    opts := visvise.NewGen360Options()
+    mvID, _ := client.Gen360("character.png", opts)
     mv, _ := client.WaitModel(mvID, &visvise.WaitOptions{Interval: 3, Timeout: 300})
     views := mv.ImageGen360Output.OutputView
 
     // Step 2: 图生高模
     fmt.Println("Step 2: 生成高模...")
-    highID, _ := client.GenHighModel(
-        views.MainView, "", visvise.OutputModelFormatFBX,
-        visvise.FaceTypeTriangle, "gen_high_model", "",
-        nil, views.BackView, "", views.LeftView, "", views.RightView, "",
-    )
+    opts = visvise.NewGenHighModelOptions().
+        SetBackView(views.BackView, "").
+        SetLeftView(views.LeftView, "").
+        SetRightView(views.RightView, "")
+    highID, _ := client.GenHighModel(views.MainView, opts)
     highModel, _ := client.WaitModel(highID, &visvise.WaitOptions{Timeout: 900})
     fmt.Println("高模下载地址:", highModel.OutputModel)
 }
@@ -669,26 +632,19 @@ func main() {
     client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
 
     // Step 1: 骨骼架设
-    rigID, _ := client.GenRigging(
-        "character.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_rigging", "character.fbx", "humanoid", "",
-    )
+    opts := visvise.NewGenRiggingOptions()
+    rigID, _ := client.GenRigging("character.fbx", opts)
     rig, _ := client.WaitModel(rigID, &visvise.WaitOptions{Timeout: 600})
     fmt.Println("骨骼模型:", rig.OutputModel)
 
     // Step 2: 蒙皮生成
-    skinID, _ := client.GenSkinning(
-        "rigged_character.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_skinning", "rigged_character.fbx",
-        []string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"},
-    )
+    opts = visvise.NewGenSkinningOptions([]string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"})
+    skinID, _ := client.GenSkinning("rigged_character.fbx", opts)
     client.WaitModel(skinID, &visvise.WaitOptions{Timeout: 600})
 
     // Step 3: 视频生动画
-    animID, _ := client.GenVideoMotion(
-        "skinned_model.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_video_motion", "skinned_model.fbx", "dance.mp4", nil, nil, nil,
-    )
+    opts = visvise.NewGenVideoMotionOptions()
+    animID, _ := client.GenVideoMotion("skinned_model.fbx", "dance.mp4", opts)
     anim, _ := client.WaitModel(animID, &visvise.WaitOptions{Timeout: 900})
     fmt.Println("动画下载地址:", anim.OutputModel)
 }
@@ -710,14 +666,12 @@ func main() {
     client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
 
     reduceFaces := []visvise.ReduceFace{
-        {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-        {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
+        {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
+        {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
     }
 
-    modelIDs, _ := client.GenLOD(
-        "high_model.fbx", "", visvise.OutputModelFormatFBX,
-        "gen_lod", "high_model.fbx", reduceFaces,
-    )
+    opts := visvise.NewGenLODOptions()
+    modelIDs, _ := client.GenLOD("high_model.fbx", reduceFaces, opts)
 
     // 等待全部完成
     for _, mid := range modelIDs {

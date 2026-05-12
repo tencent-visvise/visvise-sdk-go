@@ -2,6 +2,7 @@ package examples
 
 import (
 	"fmt"
+
 	"github.com/visvise/visvise-sdk-go/visvise"
 )
 
@@ -16,21 +17,14 @@ func ExampleGen360() {
 		30,
 	)
 
-	// Generate 3D model from image
-	modelID, err := client.Gen360(
-		"path/to/character.png",
-		"hunyuan3D-MultiView-v3.0", // algorithm model
-		"my_360_model",             // name
-		"",                         // mainViewFilename
-		nil,                        // enableAPose
-		"",                         // style
-		"",                         // backView (empty string for nil)
-		"",                         // backViewFilename
-		"",                         // leftView (empty string for nil)
-		"",                         // leftViewFilename
-		"",                         // rightView (empty string for nil)
-		"",                         // rightViewFilename
-	)
+	// Generate 3D model from image using options
+	// name is set via Options struct (default: "gen_360")
+	opts := visvise.NewGen360Options().
+		SetName("my_360_model").                // optional, default is "gen_360"
+		SetAlgorithmModel("hunyuan3D-MultiView-v3.0") // optional
+	// Default output format is fbx, face type is triangle
+
+	modelID, err := client.Gen360("path/to/character.png", opts)
 	if err != nil {
 		panic(err)
 	}
@@ -59,24 +53,14 @@ func ExampleGenHighModel() {
 		30,
 	)
 
-	// Enable A-Pose
-	enableAPose := true
+	opts := visvise.NewGenHighModelOptions().
+		SetName("my_high_model").                // optional, default is "gen_high_model"
+		SetAlgorithmModel("hunyuan3D-v2.0").     // optional
+		SetFaceNum(500000).                       // optional
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)). // optional, default is fbx
+		SetFaceType(int(visvise.FaceTypeTriangle))                 // optional, default is triangle
 
-	modelID, err := client.GenHighModel(
-		"path/to/character.png",
-		"hunyuan3D-v2.0",            // algorithm model
-		string(visvise.OutputModelFormatFBX),
-		1,                          // faceType: Triangle
-		"my_high_model",
-		"character.png",            // mainViewFilename
-		nil,                        // faceNum
-		"",                         // backView
-		"",                         // backViewFilename
-		"",                         // leftView
-		"",                         // leftViewFilename
-		"",                         // rightView
-		"",                         // rightViewFilename
-	)
+	modelID, err := client.GenHighModel("path/to/character.png", opts)
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +70,6 @@ func ExampleGenHighModel() {
 		panic(err)
 	}
 
-	_ = enableAPose // Use the variable
 	fmt.Printf("High model generated: %s\n", model.OutputModel)
 }
 
@@ -107,15 +90,13 @@ func ExampleGenLOD() {
 		{ReduceLevel: 3, ReducePercent: 20, FaceType: int(visvise.FaceTypeTriangle)},
 	}
 
-	modelIDs, err := client.GenLOD(
-		"path/to/high_model.fbx",
-		reduceFaces,
-		"VISVISE-LOD-V1.0.0", // algorithm model
-		string(visvise.OutputModelFormatFBX),
-		"my_lod_model",
-		"high_model.fbx",     // filename
-		3,                    // genTimes: generate 3 results for comparison
-	)
+	opts := visvise.NewGenLODOptions().
+		SetName("my_lod_model").                 // optional, default is "gen_lod"
+		SetAlgorithmModel("VISVISE-LOD-V1.0.0"). // optional
+		SetGenTimes(3).                           // optional, default is 3
+		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)) // optional, default is fbx
+
+	modelIDs, err := client.GenLOD("path/to/high_model.fbx", reduceFaces, opts)
 	if err != nil {
 		panic(err)
 	}
@@ -140,15 +121,12 @@ func ExampleGenRigging() {
 		30,
 	)
 
-	modelID, err := client.GenRigging(
-		"path/to/model.fbx",
-		"VISVISE-GoRigging-V1.0.0", // algorithm model
-		"humanoid",                  // meshCategory
-		"my_rigged_model",
-		"model.fbx", // filename
-		nil,         // templateSkeleton
-		"",          // templateSkeletonFilename
-	)
+	opts := visvise.NewGenRiggingOptions().
+		SetName("my_rigged_model").             // optional, default is "gen_rigging"
+		SetAlgorithmModel("VISVISE-GoRigging-V1.0.0"). // optional
+		SetMeshCategory("humanoid")             // optional, default is humanoid
+
+	modelID, err := client.GenRigging("path/to/model.fbx", opts)
 	if err != nil {
 		panic(err)
 	}
@@ -171,24 +149,19 @@ func ExampleGenTexture() {
 		30,
 	)
 
-	// Resolution pointer
-	resolution := 2048
-
-	modelID, err := client.GenTexture(
-		"path/to/model.fbx",
-		"VISVISE-Tex-V1.0.0", // algorithm model
-		"my_textured_model",
-		"model.fbx", // filename
-		&visvise.View{
-			MainView: "path/to/front.png",
-			BackView: "path/to/back.png",
-			LeftView: "path/to/left.png",
+	opts := visvise.NewGenTextureOptions().
+		SetName("my_textured_model").           // optional, default is "gen_texture"
+		SetAlgorithmModel("VISVISE-Tex-V1.0.0"). // optional
+		SetInputView(&visvise.View{
+			MainView:  "path/to/front.png",
+			BackView:  "path/to/back.png",
+			LeftView:  "path/to/left.png",
 			RightView: "path/to/right.png",
-		},
-		&resolution,
-		nil,                           // unwarpUV
-		"high quality, realistic",      // prompt
-	)
+		}). // optional
+		SetResolution(2048).   // optional
+		SetPrompt("high quality, realistic") // optional, at least one of input_view.main_view or prompt is required
+
+	modelID, err := client.GenTexture("path/to/model.fbx", opts)
 	if err != nil {
 		panic(err)
 	}
@@ -211,22 +184,17 @@ func ExampleGenSegment2D() {
 		30,
 	)
 
-	// Split type and granularity
-	splitType := 1
-	granularity := 2
-
-	modelID, err := client.GenSegment2D(
-		"model_id_from_gen_360", // model_id from Gen360
-		"VISVISE-Segment-V1.0.0", // algorithm model
-		"my_segment",
-		nil,       // inputView
-		&splitType,    // splitType: Front view
-		&granularity, // granularity: Medium
-		"segment by body parts",
-		func(thought string) {
+	opts := visvise.NewGenSegment2DOptions().
+		SetName("my_segment").                  // optional, default is "gen_segment_2d"
+		SetAlgorithmModel("VISVISE-Segment-V1.0.0"). // optional
+		SetSplitType(int(visvise.SegmentSplitFrontView)).   // optional
+		SetGranularity(int(visvise.SegmentGranularityMedium)). // optional
+		SetPrompt("segment by body parts"). // optional
+		SetOnThinking(func(thought string) {
 			fmt.Println("Thinking:", thought)
-		},
-	)
+		}) // optional
+
+	modelID, err := client.GenSegment2D("model_id_from_gen_360", opts)
 	if err != nil {
 		panic(err)
 	}
