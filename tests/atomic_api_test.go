@@ -11,7 +11,7 @@ var (
 	appID     = os.Getenv("VISVISE_APP_ID")
 	secretKey = os.Getenv("VISVISE_SECRET_KEY")
 	uid       = os.Getenv("VISVISE_UID")
-	assetsDir = "tests/assets"
+	assetsDir = "assets"
 )
 
 // TestAtomicAPI_GetUserQuota tests the get_user_quota API
