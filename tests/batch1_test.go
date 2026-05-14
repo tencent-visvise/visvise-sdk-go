@@ -27,7 +27,7 @@ func TestBatch1_Gen360APose(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGen360Options().
 		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
@@ -60,7 +60,7 @@ func TestBatch1_Gen360NoAPose(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGen360Options().
 		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
@@ -88,7 +88,7 @@ func TestBatch1_HighModelFaceNum(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenHighModelOptions().
 		SetAlgorithmModel("Tripo-v3.1-ultra").
@@ -118,7 +118,7 @@ func TestBatch1_HighModelFaceType2(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenHighModelOptions().
 		SetAlgorithmModel("Tripo-v3.1-ultra").
@@ -147,7 +147,7 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenLowModelOptions().
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
@@ -177,7 +177,7 @@ func TestBatch1_LowModelFaceType2(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenLowModelOptions().
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
@@ -211,7 +211,7 @@ func TestBatch1_LODGenTimes(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad}}
 	opts := visvise.NewGenLODOptions().

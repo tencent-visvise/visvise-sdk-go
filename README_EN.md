@@ -60,13 +60,15 @@ import (
 )
 
 func main() {
+    // Create client with optional parameters
     client := visvise.NewClient(
         "your_app_id",
         "your_secret_key",
         "your_uid",
-        visvise.EnvProd,
-        30,
+        nil, // Use default config, or pass visvise.NewClientOptions()
     )
+    // Enable debug logging
+    // client := visvise.NewClient("...", "...", "...", visvise.NewClientOptions().SetDebug(true))
 
     // 1) Image-to-360: upload local image, generate multi-views
     // name is set in Options (optional, auto-generated if omitted)
@@ -86,9 +88,9 @@ func main() {
 
     // 3) Image-to-high-poly (pass COS URLs directly)
     opts = visvise.NewGenHighModelOptions().
-        SetBackView(outputView.BackView, "").
-        SetLeftView(outputView.LeftView, "").
-        SetRightView(outputView.RightView, "")
+        SetBackView(outputView.BackView).
+        SetLeftView(outputView.LeftView).
+        SetRightView(outputView.RightView)
     highModelID, err := client.GenHighModel(outputView.MainView, opts)
     if err != nil {
         panic(err)
@@ -110,13 +112,20 @@ func main() {
 ```go
 import "github.com/visvise/visvise-sdk-go/visvise"
 
+// Required parameters
 client := visvise.NewClient(
     "your_app_id",     // required, assigned by platform
     "your_secret_key", // required, assigned by platform
     "your_uid",        // required, the user ID of the account that obtained the key
-    visvise.EnvProd,  // optional, default: production
-    30,               // optional, per-request HTTP timeout in seconds (default 30)
+    nil,               // optional parameters, use defaults (EnvProd, Timeout=30, Debug=false)
 )
+
+// Optional parameters example
+client := visvise.NewClient("...", "...", "...",
+    visvise.NewClientOptions().
+        SetEnv(visvise.EnvDev).  // Set environment, default is EnvProd
+        SetTimeout(60).            // Set timeout, default is 30 seconds
+        SetDebug(true))            // Enable debug logging, default is false
 ```
 
 | Parameter | Required | Description |
@@ -124,8 +133,7 @@ client := visvise.NewClient(
 | `appID` | ✅ | Client identifier assigned by the platform |
 | `secretKey` | ✅ | Signing key assigned by the platform |
 | `uid` | ✅ | User ID, obtained from the account that registered the key |
-| `env` | — | Environment: `EnvProd` (default) / `EnvTest` / `EnvDev` |
-| `timeout` | — | Per-request HTTP timeout in seconds (default 30) |
+| `opts` | — | Optional parameters `*ClientOptions`, nil means use defaults |
 
 ---
 
@@ -566,7 +574,7 @@ import (
     "github.com/visvise/visvise-sdk-go/visvise"
 )
 
-client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+client := visvise.NewClient("...", "...", "...", nil)
 
 modelID, err := client.Gen360("image.png", visvise.NewGen360Options())
 if err != nil {
@@ -595,7 +603,7 @@ import (
 )
 
 func main() {
-    client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+    client := visvise.NewClient("...", "...", "...", nil)
 
     // Step 1: Image-to-360
     fmt.Println("Step 1: generating multi-views...")
@@ -607,9 +615,9 @@ func main() {
     // Step 2: High-poly model
     fmt.Println("Step 2: generating high-poly model...")
     opts = visvise.NewGenHighModelOptions().
-        SetBackView(views.BackView, "").
-        SetLeftView(views.LeftView, "").
-        SetRightView(views.RightView, "")
+        SetBackView(views.BackView).
+        SetLeftView(views.LeftView).
+        SetRightView(views.RightView)
     highID, _ := client.GenHighModel(views.MainView, opts)
     highModel, _ := client.WaitModel(highID, &visvise.WaitOptions{Timeout: 900})
     fmt.Println("High-poly download URL:", highModel.OutputModel)
@@ -629,7 +637,7 @@ import (
 )
 
 func main() {
-    client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+    client := visvise.NewClient("...", "...", "...", nil)
 
     // Step 1: Rigging
     opts := visvise.NewGenRiggingOptions()
@@ -663,7 +671,7 @@ import (
 )
 
 func main() {
-    client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+    client := visvise.NewClient("...", "...", "...", nil)
 
     reduceFaces := []visvise.ReduceFace{
         {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},

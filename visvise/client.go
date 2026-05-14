@@ -154,24 +154,78 @@ type Client struct {
 	api  *VisviseAPI
 }
 
-// NewClient creates a new VISVISE client
-func NewClient(appID, secretKey, uid string, env Environment, timeout int) *Client {
-	httpClient := NewHTTPClient(appID, secretKey, uid, env, timeout)
+// NewClient creates a new VISVISE client.
+//
+// 必需参数:
+//   - appID: 应用 ID
+//   - secretKey: 密钥
+//   - uid: 用户 ID
+//
+// 可选参数 (*ClientOptions):
+//   - Env: 运行环境，默认 EnvProd (生产环境)
+//   - Timeout: HTTP 超时时间（秒），默认 30
+//   - Debug: 是否开启调试日志，默认 false
+//
+// 示例:
+//
+//	// 使用默认配置（生产环境，30秒超时）
+//	client := visvise.NewClient("app_id", "secret_key", "uid", nil)
+//
+//	// 自定义环境
+//	client := visvise.NewClient("app_id", "secret_key", "uid",
+//	  visvise.NewClientOptions().SetEnv(visvise.EnvDev))
+//
+//	// 开启调试日志
+//	client := visvise.NewClient("app_id", "secret_key", "uid",
+//	  visvise.NewClientOptions().SetDebug(true))
+//
+//	// 自定义超时
+//	client := visvise.NewClient("app_id", "secret_key", "uid",
+//	  visvise.NewClientOptions().SetTimeout(60).SetDebug(true))
+func NewClient(appID, secretKey, uid string, opts *ClientOptions) *Client {
+	if opts == nil {
+		opts = NewClientOptions()
+	}
+
+	httpClient := NewHTTPClient(appID, secretKey, uid, opts.Env, opts.Timeout)
+	httpClient.Debug = opts.Debug
+	if opts.Debug {
+		SetDebug(true)
+	}
 	api := NewVisviseAPI(httpClient)
+
 	return &Client{
 		http: httpClient,
 		api:  api,
 	}
 }
 
-// NewClientDefault creates a new VISVISE client with default settings (production environment)
+// NewClientDefault creates a new VISVISE client with default settings.
+// Defaults: EnvProd, Timeout=30, Debug=false.
+//
+// Deprecated: Use NewClient with optional parameters instead.
+//
+// 示例:
+//
+//	client := visvise.NewClientDefault("app_id", "secret_key", "uid")
 func NewClientDefault(appID, secretKey, uid string) *Client {
-	return NewClient(appID, secretKey, uid, EnvProd, 30)
+	return NewClient(appID, secretKey, uid, nil)
 }
 
 // GetAPI returns the underlying API instance
 func (c *Client) GetAPI() *VisviseAPI {
 	return c.api
+}
+
+// SetDebug enables or disables debug logging for all HTTP requests.
+// When enabled, logs request path, request body, response status, and response body.
+func (c *Client) SetDebug(enabled bool) *Client {
+	c.http.Debug = enabled
+	c.api.http.Debug = enabled
+	if enabled {
+		SetDebug(true) // Also enable global logger's debug level
+	}
+	return c
 }
 
 // resolveFile resolves a file input to a COS URL
@@ -221,7 +275,7 @@ func (c *Client) uploadFile(path string, filename string, isTemp bool) (string, 
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
 
-	return c.uploadWithCred(cred, data, filename, isTemp)
+	return c.uploadWithCred(cred, data, filename)
 }
 
 func (c *Client) uploadBytes(data []byte, filename string, isTemp bool) (string, error) {
@@ -230,10 +284,10 @@ func (c *Client) uploadBytes(data []byte, filename string, isTemp bool) (string,
 		return "", err
 	}
 
-	return c.uploadWithCred(cred, data, filename, isTemp)
+	return c.uploadWithCred(cred, data, filename)
 }
 
-func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename string, isTemp bool) (string, error) {
+func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename string) (string, error) {
 	if filename == "" {
 		filename = fmt.Sprintf("upload_%d.bin", time.Now().UnixNano()%1000000)
 	}
@@ -254,15 +308,7 @@ func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename st
 
 	client := cos.NewClient(baseURL, httpClient)
 
-	// Upload file
-	opt := &cos.ObjectPutOptions{}
-	if isTemp {
-		opt.ObjectPutHeaderOptions = &cos.ObjectPutHeaderOptions{
-			XCosStorageClass: "STANDARD_IA",
-		}
-	}
-
-	_, err := client.Object.Put(context.Background(), cosKey, bytes.NewReader(data), opt)
+	_, err := client.Object.Put(context.Background(), cosKey, bytes.NewReader(data), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload file: %w", err)
 	}

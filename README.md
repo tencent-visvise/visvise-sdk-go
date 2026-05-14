@@ -60,13 +60,15 @@ import (
 )
 
 func main() {
+    // 创建客户端（可选参数）
     client := visvise.NewClient(
         "your_app_id",
         "your_secret_key",
         "your_uid",
-        visvise.EnvProd,
-        30,
+        nil, // 使用默认配置，或传入 visvise.NewClientOptions()
     )
+    // 开启调试日志
+    // client := visvise.NewClient("...", "...", "...", visvise.NewClientOptions().SetDebug(true))
 
     // ① 图生360：上传本地图片，生成多视图
     // name 在 Options 中设置（可选，默认自动生成）
@@ -86,9 +88,9 @@ func main() {
 
     // ③ 图生高模（多视图输出的 COS URL 直接传入）
     opts = visvise.NewGenHighModelOptions().
-        SetBackView(outputView.BackView, "").
-        SetLeftView(outputView.LeftView, "").
-        SetRightView(outputView.RightView, "")
+        SetBackView(outputView.BackView).
+        SetLeftView(outputView.LeftView).
+        SetRightView(outputView.RightView)
     highModelID, err := client.GenHighModel(outputView.MainView, opts)
     if err != nil {
         panic(err)
@@ -110,13 +112,20 @@ func main() {
 ```go
 import "github.com/visvise/visvise-sdk-go/visvise"
 
+// 必需参数
 client := visvise.NewClient(
-    "your_app_id",       // 必填，由平台分配
-    "your_secret_key",   // 必填，由平台分配
-    "your_uid",          // 必填，从申请 key 的登录账号获取
-    visvise.EnvProd,     // 可选，默认生产环境
-    30,                  // 可选，单次请求超时（秒），默认 30
+    "your_app_id",     // 必填，由平台分配
+    "your_secret_key", // 必填，由平台分配
+    "your_uid",        // 必填，从申请 key 的登录账号获取
+    nil,               // 可选参数，使用默认配置（EnvProd, Timeout=30, Debug=false）
 )
+
+// 可选参数示例
+client := visvise.NewClient("...", "...", "...",
+    visvise.NewClientOptions().
+        SetEnv(visvise.EnvDev).     // 设置环境，默认 EnvProd
+        SetTimeout(60).              // 设置超时，默认 30 秒
+        SetDebug(true))              // 开启调试日志，默认 false
 ```
 
 | 参数 | 必填 | 说明 |
@@ -124,8 +133,8 @@ client := visvise.NewClient(
 | `appID` | ✅ | 由平台分配的客户端标识 |
 | `secretKey` | ✅ | 由平台分配的签名密钥 |
 | `uid` | ✅ | 用户 ID，从申请 key 的登录账号获取 |
-| `env` | — | 环境：`EnvProd`（默认）/ `EnvTest` / `EnvDev` |
-| `timeout` | — | 单次 HTTP 请求超时（秒），默认 30 |
+| `opts` | — | 可选参数 `*ClientOptions`，nil 表示使用默认值 |
+
 
 ---
 
@@ -566,7 +575,7 @@ import (
     "github.com/visvise/visvise-sdk-go/visvise"
 )
 
-client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+client := visvise.NewClient("...", "...", "...", nil)
 
 modelID, err := client.Gen360("image.png", visvise.NewGen360Options())
 if err != nil {
@@ -595,7 +604,7 @@ import (
 )
 
 func main() {
-    client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+    client := visvise.NewClient("...", "...", "...", nil)
 
     // Step 1: 图生360
     fmt.Println("Step 1: 生成多视图...")
@@ -629,7 +638,7 @@ import (
 )
 
 func main() {
-    client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+    client := visvise.NewClient("...", "...", "...", nil)
 
     // Step 1: 骨骼架设
     opts := visvise.NewGenRiggingOptions()
@@ -663,7 +672,7 @@ import (
 )
 
 func main() {
-    client := visvise.NewClient("...", "...", "...", visvise.EnvProd, 30)
+    client := visvise.NewClient("...", "...", "...", nil)
 
     reduceFaces := []visvise.ReduceFace{
         {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},

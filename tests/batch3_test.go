@@ -19,7 +19,7 @@ func TestBatch3_VideoMotionWithHand(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenVideoMotionOptions().
 		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
@@ -54,7 +54,7 @@ func TestBatch3_VideoMotionNoHandNoMulti(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenVideoMotionOptions().
 		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
@@ -88,7 +88,7 @@ func TestBatch3_TextMotionWave(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenTextMotionOptions().
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0")
@@ -120,7 +120,7 @@ func TestBatch3_TextMotionStep(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenTextMotionOptions().
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").

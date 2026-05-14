@@ -18,7 +18,7 @@ func TestOptionalParams_Retopology(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
@@ -58,7 +58,7 @@ func TestOptionalParams_MeshRefine(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMeshRefineOptions().
 		SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").
@@ -94,7 +94,7 @@ func TestOptionalParams_UV(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenUVOptions().
 		SetAlgorithmModel("hunyuan3D-UV-v2.0").
@@ -131,7 +131,7 @@ func TestOptionalParams_Texture(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	view := &visvise.View{MainView: refFrontPath}
 	opts := visvise.NewGenTextureOptions().
@@ -173,7 +173,7 @@ func TestOptionalParams_LOD(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
 	opts := visvise.NewGenLODOptions().
@@ -200,7 +200,7 @@ func TestOptionalParams_VideoMotion(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenVideoMotionOptions().
 		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
@@ -238,7 +238,7 @@ func TestOptionalParams_TextMotion(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenTextMotionOptions().
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
@@ -267,7 +267,7 @@ func TestOptionalParams_QueryYesterdayModels(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	yesterdayModels := []struct {
@@ -301,7 +301,7 @@ func TestOptionalParams_CompleteBatch2(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").

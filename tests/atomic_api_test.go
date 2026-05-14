@@ -20,7 +20,8 @@ func TestAtomicAPI_GetUserQuota(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid,
+		visvise.NewClientOptions().SetEnv(visvise.EnvDev).SetDebug(true))
 	api := client.GetAPI()
 
 	quota, err := api.GetUserQuota()
@@ -41,7 +42,7 @@ func TestAtomicAPI_ListAlgorithmModel(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	testCases := []struct {
@@ -77,7 +78,7 @@ func TestAtomicAPI_GetText2MotionPromptList(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	for _, lang := range []string{"zh", "en"} {
@@ -105,7 +106,7 @@ func TestAtomicAPI_RemoveBackground(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found in tests/assets")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	cosURL, err := client.UploadFile(mainViewPath, "", false)
@@ -131,7 +132,7 @@ func TestAtomicAPI_DownloadModel(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	knownModelID := "Model2026042300226056"
@@ -160,7 +161,7 @@ func TestAtomicAPI_DeleteModel(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	animModelURL, err := client.UploadFile(animModelPath, "", false)

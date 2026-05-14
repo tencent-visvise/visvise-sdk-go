@@ -750,3 +750,48 @@ func (o *GenSegment2DOptions) SetReadTimeout(readTimeout int) *GenSegment2DOptio
 	o.ReadTimeout = readTimeout
 	return o
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Client Options
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ClientOptions defines optional parameters for creating a Client.
+// Use NewClientOptions() to create with default values, then chain setters.
+type ClientOptions struct {
+	Env     Environment // optional, environment (default EnvProd)
+	Timeout int         // optional, HTTP timeout in seconds (default 30)
+	Debug   bool        // optional, enable debug logging (default false)
+}
+
+// NewClientOptions creates ClientOptions with default values.
+// Defaults: Env=EnvProd, Timeout=30, Debug=false.
+//
+// 示例:
+//
+//	opts := visvise.NewClientOptions().SetEnv(visvise.EnvDev).SetDebug(true)
+//	client := visvise.NewClient("app_id", "secret_key", "uid", opts)
+func NewClientOptions() *ClientOptions {
+	return &ClientOptions{
+		Env:     EnvProd,
+		Timeout: 30,
+		Debug:   false,
+	}
+}
+
+// SetEnv sets the environment
+func (o *ClientOptions) SetEnv(env Environment) *ClientOptions {
+	o.Env = env
+	return o
+}
+
+// SetTimeout sets the HTTP timeout in seconds
+func (o *ClientOptions) SetTimeout(seconds int) *ClientOptions {
+	o.Timeout = seconds
+	return o
+}
+
+// SetDebug enables debug logging
+func (o *ClientOptions) SetDebug(enabled bool) *ClientOptions {
+	o.Debug = enabled
+	return o
+}

@@ -13,7 +13,7 @@ func TestBatch2_MidModelFaceType1(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
@@ -42,7 +42,7 @@ func TestBatch2_MidModelFaceType2(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
@@ -76,7 +76,7 @@ func TestBatch2_RetopologyDetailLevel2Face2(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
@@ -111,7 +111,7 @@ func TestBatch2_RetopologyDetailLevel3Face1(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
@@ -146,7 +146,7 @@ func TestBatch2_MeshRefinePreserveTrue(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMeshRefineOptions().
 		SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").
@@ -179,7 +179,7 @@ func TestBatch2_MeshRefinePreserveFalse(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMeshRefineOptions().
 		SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").
@@ -212,7 +212,7 @@ func TestBatch2_UVSmoothTrue(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenUVOptions().
 		SetAlgorithmModel("hunyuan3D-UV-v2.0").
@@ -245,7 +245,7 @@ func TestBatch2_UVSmoothFalse(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenUVOptions().
 		SetAlgorithmModel("hunyuan3D-UV-v2.0").
@@ -279,7 +279,7 @@ func TestBatch2_TextureRes1024(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	view := &visvise.View{MainView: refFrontPath}
 	opts := visvise.NewGenTextureOptions().
@@ -316,7 +316,7 @@ func TestBatch2_TextureRes2048(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	view := &visvise.View{MainView: refFrontPath}
 	opts := visvise.NewGenTextureOptions().

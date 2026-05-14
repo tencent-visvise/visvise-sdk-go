@@ -14,7 +14,7 @@ func TestFinal_QueryYesterdayModels(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 	api := client.GetAPI()
 
 	yesterdayModels := []struct {
@@ -48,7 +48,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
@@ -132,7 +132,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenVideoMotionOptions().
 		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").

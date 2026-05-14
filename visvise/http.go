@@ -9,12 +9,34 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// logger is the package-level logger for HTTP requests, similar to Python's logging.getLogger("visvise.http")
+var logger = slog.Default()
+
+// SetDebug enables or disables debug logging for all HTTP requests.
+// When enabled, logs request path, request body, response status, and response body.
+func SetDebug(enabled bool) {
+	if enabled {
+		logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
+	} else {
+		// Use a no-op handler when disabled
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+}
+
+// httpLogger returns the current logger (for internal use)
+func httpLogger() *slog.Logger {
+	return logger
+}
 
 // Environment represents the API environment
 type Environment string
@@ -33,6 +55,7 @@ type HTTPClient struct {
 	BaseURL   string
 	Timeout   int
 	Client    *http.Client
+	Debug     bool // enable request/response logging
 }
 
 // NewHTTPClient creates a new HTTP client
@@ -43,6 +66,7 @@ func NewHTTPClient(appID, secretKey, uid string, baseURL Environment, timeout in
 		UID:       uid,
 		BaseURL:   strings.TrimRight(string(baseURL), "/"),
 		Timeout:   timeout,
+		Debug:     false,
 		Client: &http.Client{
 			Timeout: time.Duration(timeout) * time.Second,
 		},
@@ -89,6 +113,10 @@ func (c *HTTPClient) Post(path string, body interface{}) (interface{}, error) {
 	url := c.BaseURL + "/" + strings.TrimLeft(path, "/")
 	headers := c.buildHeaders(bodyStr)
 
+	if c.Debug {
+		logger.Debug("POST request", "url", url, "body", truncate(bodyStr, 2000))
+	}
+
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(bodyStr))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -104,6 +132,10 @@ func (c *HTTPClient) Post(path string, body interface{}) (interface{}, error) {
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, NewNetworkError(fmt.Sprintf("failed to read response: %v", err))
+	}
+
+	if c.Debug {
+		logger.Debug("POST response", "url", url, "status", resp.StatusCode, "body", truncate(string(respBody), 2000))
 	}
 
 	var result map[string]interface{}
@@ -171,6 +203,10 @@ func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readT
 	headers := httpClient.buildHeaders(bodyStr)
 	headers.Set("Accept", "text/event-stream")
 
+	if httpClient.Debug {
+		logger.Debug("POST(SSE) request", "url", url, "body", truncate(bodyStr, 2000))
+	}
+
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(bodyStr))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -194,7 +230,9 @@ func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readT
 		return nil, NewNetworkError(fmt.Sprintf("SSE request failed: %v", err))
 	}
 
-	log.Printf("POST(SSE) response: status=%d, content-type=%s", resp.StatusCode, resp.Header.Get("Content-Type"))
+	if httpClient.Debug {
+		logger.Debug("POST(SSE) response", "url", url, "status", resp.StatusCode, "content-type", resp.Header.Get("Content-Type"))
+	}
 
 	// Check HTTP status code like Python SDK does with raise_for_status()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
@@ -280,4 +318,12 @@ func (c *HTTPClient) PostSSE(path string, body interface{}, readTimeout int) (*S
 		readTimeout = 1200 // Default 20 minutes
 	}
 	return NewSSEIterator(c, path, body, readTimeout)
+}
+
+// truncate truncates a string to maxLen characters
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "...(truncated)"
 }

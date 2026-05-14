@@ -18,7 +18,7 @@ func TestAutoAlgorithmModel_Gen360(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found in tests/assets")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGen360Options()
 
@@ -41,7 +41,7 @@ func TestAutoAlgorithmModel_GenHighModel(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found in tests/assets")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenHighModelOptions().
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -70,7 +70,7 @@ func TestAutoAlgorithmModel_GenMidModel(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMidModelOptions().
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -95,7 +95,7 @@ func TestAutoAlgorithmModel_GenLowModel(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenLowModelOptions().
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -120,7 +120,7 @@ func TestAutoAlgorithmModel_GenMeshRefine(t *testing.T) {
 		t.Skip("Skipping test: high_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenMeshRefineOptions()
 
@@ -143,7 +143,7 @@ func TestAutoAlgorithmModel_GenRetopology(t *testing.T) {
 		t.Skip("Skipping test: high_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenRetopologyOptions().
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -169,7 +169,7 @@ func TestAutoAlgorithmModel_GenLOD(t *testing.T) {
 		t.Skip("Skipping test: high_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad}}
 	opts := visvise.NewGenLODOptions().
@@ -195,7 +195,7 @@ func TestAutoAlgorithmModel_GenUV(t *testing.T) {
 		t.Skip("Skipping test: high_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenUVOptions().
 		SetEnableAutoSmoothing(false)
@@ -220,7 +220,7 @@ func TestAutoAlgorithmModel_GenTexture(t *testing.T) {
 		t.Skip("Skipping test: high_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	view := &visvise.View{MainView: mainViewPath}
 	opts := visvise.NewGenTextureOptions().
@@ -245,7 +245,7 @@ func TestAutoAlgorithmModel_GenRigging(t *testing.T) {
 		t.Skip("Skipping test: high_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenRiggingOptions()
 
@@ -268,7 +268,7 @@ func TestAutoAlgorithmModel_GenSkinning(t *testing.T) {
 		t.Skip("Skipping test: skinning_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenSkinningOptions([]string{"Body_Mesh"}, []string{"Bip001", "Bip001 Pelvis"})
 
@@ -292,7 +292,7 @@ func TestAutoAlgorithmModel_GenVideoMotion(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenVideoMotionOptions().
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -318,7 +318,7 @@ func TestAutoAlgorithmModel_GenTextMotion(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenTextMotionOptions()
 
@@ -342,7 +342,7 @@ func TestAutoAlgorithmModel_GenPose(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
+	client := visvise.NewClient(appID, secretKey, uid, nil)
 
 	opts := visvise.NewGenPoseOptions()
 
