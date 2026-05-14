@@ -92,8 +92,8 @@ func TestBatch1_HighModelFaceNum(t *testing.T) {
 
 	opts := visvise.NewGenHighModelOptions().
 		SetAlgorithmModel("Tripo-v3.1-ultra").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle).
 		SetFaceNum(100000)
 
 	modelID, err := client.GenHighModel(mv["main"], opts)
@@ -122,8 +122,8 @@ func TestBatch1_HighModelFaceType2(t *testing.T) {
 
 	opts := visvise.NewGenHighModelOptions().
 		SetAlgorithmModel("Tripo-v3.1-ultra").
-		SetOutputModelFormat(string(visvise.OutputModelFormatGLB)).
-		SetFaceType(int(visvise.FaceTypeQuad))
+		SetOutputModelFormat(visvise.OutputModelFormatGLB).
+		SetFaceType(visvise.FaceTypeQuad)
 
 	modelID, err := client.GenHighModel(mv["main"], opts)
 	if err != nil {
@@ -151,8 +151,8 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 
 	opts := visvise.NewGenLowModelOptions().
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle).
 		SetBackView(mv["back"], "")
 
 	modelID, err := client.GenLowModel(mv["main"], opts)
@@ -181,8 +181,8 @@ func TestBatch1_LowModelFaceType2(t *testing.T) {
 
 	opts := visvise.NewGenLowModelOptions().
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeQuad))
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeQuad)
 
 	modelID, err := client.GenLowModel(mv["main"], opts)
 	if err != nil {
@@ -213,10 +213,10 @@ func TestBatch1_LODGenTimes(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
+	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad}}
 	opts := visvise.NewGenLODOptions().
 		SetAlgorithmModel("VISVISE-LOD-V1.0.0").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetGenTimes(1)
 
 	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts)

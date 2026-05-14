@@ -52,8 +52,8 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeQuad)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeQuad).
 		SetName("opt_mid_b_final")
 
 	modelID, err := client.GenMidModel(mv["main"], mv["back"], mv["left"], mv["right"], opts)
@@ -69,10 +69,10 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 
 	opts2 := visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle).
 		SetName("opt_rtp_b_final").
-		SetDetailLevel(int(visvise.DetailLevelHigh))
+		SetDetailLevel(visvise.DetailLevelHigh)
 
 	modelID, err = client.GenRetopology(modelPath, opts2)
 	if err != nil {
@@ -109,7 +109,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
 	opts5 := visvise.NewGenLODOptions().
 		SetAlgorithmModel("VISVISE-LOD-V1.0.0").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetName("opt_lod_a_final").
 		SetGenTimes(1)
 
@@ -170,7 +170,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 
 	opts4 := visvise.NewGenTextMotionOptions().
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
-		SetOutputModelFormat(string(visvise.OutputModelFormatGLB)).
+		SetOutputModelFormat(visvise.OutputModelFormatGLB).
 		SetName("opt_tm_b_final")
 
 	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", opts4)

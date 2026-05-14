@@ -2,19 +2,19 @@ package visvise
 
 // Gen360Options defines optional parameters for Gen360
 type Gen360Options struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name; auto-selected if empty
-	OutputModelFormat string // optional, output format (default fbx)
-	FaceType          int    // optional, face type (default triangle)
-	MainViewFilename  string // optional, main view filename
-	EnableAPose       *bool  // optional, enable A-Pose
-	Style             string // optional, style type (VISVISE proprietary models only)
-	BackView          FileInput // optional, back view to improve quality
-	BackViewFilename  string    // optional, back view filename
-	LeftView          FileInput // optional, left view
-	LeftViewFilename  string    // optional, left view filename
-	RightView         FileInput // optional, right view
-	RightViewFilename string    // optional, right view filename
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name; auto-selected if empty
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	FaceType          FaceType          // optional, face type (default triangle)
+	MainViewFilename  string            // optional, main view filename
+	EnableAPose       *bool             // optional, enable A-Pose
+	Style             string            // optional, style type (VISVISE proprietary models only)
+	BackView          FileInput         // optional, back view to improve quality
+	BackViewFilename  string            // optional, back view filename
+	LeftView          FileInput         // optional, left view
+	LeftViewFilename  string            // optional, left view filename
+	RightView         FileInput         // optional, right view
+	RightViewFilename string            // optional, right view filename
 }
 
 // Gen360OptionsWithFilename is a convenience struct combining main view with its filename
@@ -27,8 +27,8 @@ type Gen360OptionsWithFilename struct {
 func NewGen360Options() *Gen360Options {
 	return &Gen360Options{
 		Name:              "gen_360",
-		OutputModelFormat: string(OutputModelFormatFBX),
-		FaceType:          int(FaceTypeTriangle),
+		OutputModelFormat: OutputModelFormatFBX,
+		FaceType:          FaceTypeTriangle,
 	}
 }
 
@@ -84,39 +84,39 @@ func (o *Gen360Options) SetRightView(view FileInput, filename string) *Gen360Opt
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *Gen360Options) SetOutputModelFormat(format string) *Gen360Options {
+func (o *Gen360Options) SetOutputModelFormat(format OutputModelFormat) *Gen360Options {
 	o.OutputModelFormat = format
 	return o
 }
 
 // SetFaceType sets the face type
-func (o *Gen360Options) SetFaceType(faceType int) *Gen360Options {
+func (o *Gen360Options) SetFaceType(faceType FaceType) *Gen360Options {
 	o.FaceType = faceType
 	return o
 }
 
 // GenHighModelOptions defines optional parameters for GenHighModel
 type GenHighModelOptions struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name; auto-selected if empty
-	OutputModelFormat string // optional, output format (default fbx)
-	FaceType          int    // optional, face type (default triangle)
-	MainViewFilename  string // optional, main view filename
-	FaceNum           *int   // optional, target face count (1000-1500000)
-	BackView          FileInput // optional, back view to improve quality
-	BackViewFilename  string    // optional, back view filename
-	LeftView          FileInput // optional, left view
-	LeftViewFilename  string    // optional, left view filename
-	RightView         FileInput // optional, right view
-	RightViewFilename string    // optional, right view filename
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name; auto-selected if empty
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	FaceType          FaceType          // optional, face type (default triangle)
+	MainViewFilename  string            // optional, main view filename
+	FaceNum           *int              // optional, target face count (1000-1500000)
+	BackView          FileInput         // optional, back view to improve quality
+	BackViewFilename  string            // optional, back view filename
+	LeftView          FileInput         // optional, left view
+	LeftViewFilename  string            // optional, left view filename
+	RightView         FileInput         // optional, right view
+	RightViewFilename string            // optional, right view filename
 }
 
 // NewGenHighModelOptions creates GenHighModelOptions with common defaults
 func NewGenHighModelOptions() *GenHighModelOptions {
 	return &GenHighModelOptions{
 		Name:              "gen_high_model",
-		OutputModelFormat: string(OutputModelFormatFBX),
-		FaceType:          int(FaceTypeTriangle),
+		OutputModelFormat: OutputModelFormatFBX,
+		FaceType:          FaceTypeTriangle,
 	}
 }
 
@@ -133,13 +133,13 @@ func (o *GenHighModelOptions) SetAlgorithmModel(model string) *GenHighModelOptio
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenHighModelOptions) SetOutputModelFormat(format string) *GenHighModelOptions {
+func (o *GenHighModelOptions) SetOutputModelFormat(format OutputModelFormat) *GenHighModelOptions {
 	o.OutputModelFormat = format
 	return o
 }
 
 // SetFaceType sets the face type
-func (o *GenHighModelOptions) SetFaceType(faceType int) *GenHighModelOptions {
+func (o *GenHighModelOptions) SetFaceType(faceType FaceType) *GenHighModelOptions {
 	o.FaceType = faceType
 	return o
 }
@@ -179,23 +179,23 @@ func (o *GenHighModelOptions) SetRightView(view FileInput, filename string) *Gen
 
 // GenMidModelOptions defines optional parameters for GenMidModel
 type GenMidModelOptions struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name
-	OutputModelFormat string // optional, output format (default fbx)
-	FaceType          int    // optional, face type (default triangle)
-	MainViewFilename  string // optional, main view filename
-	BackViewFilename  string // optional, back view filename
-	LeftViewFilename  string // optional, left view filename
-	RightViewFilename string // optional, right view filename
-	SegmentModelID    string // optional, 2D segmentation asset ID
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	FaceType          FaceType          // optional, face type (default triangle)
+	MainViewFilename  string            // optional, main view filename
+	BackViewFilename  string            // optional, back view filename
+	LeftViewFilename  string            // optional, left view filename
+	RightViewFilename string            // optional, right view filename
+	SegmentModelID    string            // optional, 2D segmentation asset ID
 }
 
 // NewGenMidModelOptions creates GenMidModelOptions with common defaults
 func NewGenMidModelOptions() *GenMidModelOptions {
 	return &GenMidModelOptions{
 		Name:              "gen_mid_model",
-		OutputModelFormat: string(OutputModelFormatFBX),
-		FaceType:          int(FaceTypeTriangle),
+		OutputModelFormat: OutputModelFormatFBX,
+		FaceType:          FaceTypeTriangle,
 	}
 }
 
@@ -212,13 +212,13 @@ func (o *GenMidModelOptions) SetAlgorithmModel(model string) *GenMidModelOptions
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenMidModelOptions) SetOutputModelFormat(format string) *GenMidModelOptions {
+func (o *GenMidModelOptions) SetOutputModelFormat(format OutputModelFormat) *GenMidModelOptions {
 	o.OutputModelFormat = format
 	return o
 }
 
 // SetFaceType sets the face type
-func (o *GenMidModelOptions) SetFaceType(faceType int) *GenMidModelOptions {
+func (o *GenMidModelOptions) SetFaceType(faceType FaceType) *GenMidModelOptions {
 	o.FaceType = faceType
 	return o
 }
@@ -231,25 +231,25 @@ func (o *GenMidModelOptions) SetSegmentModelID(id string) *GenMidModelOptions {
 
 // GenLowModelOptions defines optional parameters for GenLowModel
 type GenLowModelOptions struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name
-	OutputModelFormat string // optional, output format (default fbx)
-	FaceType          int    // optional, face type (default triangle)
-	MainViewFilename  string // optional, main view filename
-	BackView          FileInput // optional, back view
-	BackViewFilename  string    // optional, back view filename
-	LeftView          FileInput // optional, left view
-	LeftViewFilename  string    // optional, left view filename
-	RightView         FileInput // optional, right view
-	RightViewFilename string   // optional, right view filename
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	FaceType          FaceType          // optional, face type (default triangle)
+	MainViewFilename  string            // optional, main view filename
+	BackView          FileInput         // optional, back view
+	BackViewFilename  string            // optional, back view filename
+	LeftView          FileInput         // optional, left view
+	LeftViewFilename  string            // optional, left view filename
+	RightView         FileInput         // optional, right view
+	RightViewFilename string            // optional, right view filename
 }
 
 // NewGenLowModelOptions creates GenLowModelOptions with common defaults
 func NewGenLowModelOptions() *GenLowModelOptions {
 	return &GenLowModelOptions{
 		Name:              "gen_low_model",
-		OutputModelFormat: string(OutputModelFormatFBX),
-		FaceType:          int(FaceTypeTriangle),
+		OutputModelFormat: OutputModelFormatFBX,
+		FaceType:          FaceTypeTriangle,
 	}
 }
 
@@ -266,13 +266,13 @@ func (o *GenLowModelOptions) SetAlgorithmModel(model string) *GenLowModelOptions
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenLowModelOptions) SetOutputModelFormat(format string) *GenLowModelOptions {
+func (o *GenLowModelOptions) SetOutputModelFormat(format OutputModelFormat) *GenLowModelOptions {
 	o.OutputModelFormat = format
 	return o
 }
 
 // SetFaceType sets the face type
-func (o *GenLowModelOptions) SetFaceType(faceType int) *GenLowModelOptions {
+func (o *GenLowModelOptions) SetFaceType(faceType FaceType) *GenLowModelOptions {
 	o.FaceType = faceType
 	return o
 }
@@ -300,20 +300,20 @@ func (o *GenLowModelOptions) SetRightView(view FileInput, filename string) *GenL
 
 // GenMeshRefineOptions defines optional parameters for GenMeshRefine
 type GenMeshRefineOptions struct {
-	Name               string // optional, task name (auto-generated if empty)
-	AlgorithmModel     string // optional, algorithm model name
-	InputModelFormat   string // optional, input model format (default fbx)
-	Filename           string // optional, filename
-	Mode               *int   // optional, MeshRefineModeOptimize(1) or MeshRefineModeDensify(2)
-	ColorModel         FileInput  // optional, color model for texture preservation
-	ColorModelFilename string    // optional, color model filename
+	Name               string            // optional, task name (auto-generated if empty)
+	AlgorithmModel     string            // optional, algorithm model name
+	InputModelFormat   OutputModelFormat // optional, input model format (default fbx)
+	Filename           string            // optional, filename
+	Mode               *MeshRefineMode   // optional, MeshRefineModeOptimize(1) or MeshRefineModeDensify(2)
+	ColorModel         FileInput         // optional, color model for texture preservation
+	ColorModelFilename string            // optional, color model filename
 }
 
 // NewGenMeshRefineOptions creates GenMeshRefineOptions with common defaults
 func NewGenMeshRefineOptions() *GenMeshRefineOptions {
 	return &GenMeshRefineOptions{
 		Name:             "gen_mesh_refine",
-		InputModelFormat: string(OutputModelFormatFBX),
+		InputModelFormat: OutputModelFormatFBX,
 	}
 }
 
@@ -330,7 +330,7 @@ func (o *GenMeshRefineOptions) SetAlgorithmModel(model string) *GenMeshRefineOpt
 }
 
 // SetInputModelFormat sets the input model format
-func (o *GenMeshRefineOptions) SetInputModelFormat(format string) *GenMeshRefineOptions {
+func (o *GenMeshRefineOptions) SetInputModelFormat(format OutputModelFormat) *GenMeshRefineOptions {
 	o.InputModelFormat = format
 	return o
 }
@@ -342,7 +342,7 @@ func (o *GenMeshRefineOptions) SetFilename(filename string) *GenMeshRefineOption
 }
 
 // SetMode sets the refine mode
-func (o *GenMeshRefineOptions) SetMode(mode int) *GenMeshRefineOptions {
+func (o *GenMeshRefineOptions) SetMode(mode MeshRefineMode) *GenMeshRefineOptions {
 	o.Mode = &mode
 	return o
 }
@@ -356,21 +356,21 @@ func (o *GenMeshRefineOptions) SetColorModel(model FileInput, filename string) *
 
 // GenRetopologyOptions defines optional parameters for GenRetopology
 type GenRetopologyOptions struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name
-	OutputModelFormat string // optional, output format (default fbx)
-	FaceType          int    // optional, face type (default quad)
-	Filename          string // optional, filename
-	DetailLevel       *int   // optional, for Hunyuan models: DetailLevel.LOW/MEDIUM/HIGH
-	FaceNum           *int   // optional, for VISVISE models: target face count
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	FaceType          FaceType          // optional, face type (default quad)
+	Filename          string            // optional, filename
+	DetailLevel       *DetailLevel      // optional, for Hunyuan models: DetailLevel.LOW/MEDIUM/HIGH
+	FaceNum           *int              // optional, for VISVISE models: target face count
 }
 
 // NewGenRetopologyOptions creates GenRetopologyOptions with common defaults
 func NewGenRetopologyOptions() *GenRetopologyOptions {
 	return &GenRetopologyOptions{
 		Name:              "gen_retopology",
-		OutputModelFormat: string(OutputModelFormatFBX),
-		FaceType:          int(FaceTypeQuad),
+		OutputModelFormat: OutputModelFormatFBX,
+		FaceType:          FaceTypeQuad,
 	}
 }
 
@@ -387,13 +387,13 @@ func (o *GenRetopologyOptions) SetAlgorithmModel(model string) *GenRetopologyOpt
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenRetopologyOptions) SetOutputModelFormat(format string) *GenRetopologyOptions {
+func (o *GenRetopologyOptions) SetOutputModelFormat(format OutputModelFormat) *GenRetopologyOptions {
 	o.OutputModelFormat = format
 	return o
 }
 
 // SetFaceType sets the face type
-func (o *GenRetopologyOptions) SetFaceType(faceType int) *GenRetopologyOptions {
+func (o *GenRetopologyOptions) SetFaceType(faceType FaceType) *GenRetopologyOptions {
 	o.FaceType = faceType
 	return o
 }
@@ -405,7 +405,7 @@ func (o *GenRetopologyOptions) SetFilename(filename string) *GenRetopologyOption
 }
 
 // SetDetailLevel sets the detail level for Hunyuan models
-func (o *GenRetopologyOptions) SetDetailLevel(level int) *GenRetopologyOptions {
+func (o *GenRetopologyOptions) SetDetailLevel(level DetailLevel) *GenRetopologyOptions {
 	o.DetailLevel = &level
 	return o
 }
@@ -418,18 +418,18 @@ func (o *GenRetopologyOptions) SetFaceNum(faceNum int) *GenRetopologyOptions {
 
 // GenLODOptions defines optional parameters for GenLOD
 type GenLODOptions struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name
-	OutputModelFormat string // optional, output format (default fbx)
-	Filename          string // optional, filename
-	GenTimes          int    // optional, number of generations (default 3)
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	Filename          string            // optional, filename
+	GenTimes          int               // optional, number of generations (default 3)
 }
 
 // NewGenLODOptions creates GenLODOptions with common defaults
 func NewGenLODOptions() *GenLODOptions {
 	return &GenLODOptions{
 		Name:              "gen_lod",
-		OutputModelFormat: string(OutputModelFormatFBX),
+		OutputModelFormat: OutputModelFormatFBX,
 		GenTimes:          3,
 	}
 }
@@ -447,7 +447,7 @@ func (o *GenLODOptions) SetAlgorithmModel(model string) *GenLODOptions {
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenLODOptions) SetOutputModelFormat(format string) *GenLODOptions {
+func (o *GenLODOptions) SetOutputModelFormat(format OutputModelFormat) *GenLODOptions {
 	o.OutputModelFormat = format
 	return o
 }
@@ -466,9 +466,9 @@ func (o *GenLODOptions) SetGenTimes(times int) *GenLODOptions {
 
 // GenUVOptions defines optional parameters for GenUV
 type GenUVOptions struct {
-	Name               string // optional, task name (auto-generated if empty)
-	AlgorithmModel     string // optional, algorithm model name
-	Filename           string // optional, filename
+	Name                string // optional, task name (auto-generated if empty)
+	AlgorithmModel      string // optional, algorithm model name
+	Filename            string // optional, filename
 	EnableAutoSmoothing *bool  // optional, enable auto-smoothing
 }
 
@@ -508,9 +508,9 @@ type GenTextureOptions struct {
 	Name           string // optional, task name (auto-generated if empty)
 	AlgorithmModel string // optional, algorithm model name
 	Filename       string // optional, filename
-	InputView      *View   // optional, reference view (required with prompt)
-	Resolution     *int    // optional, resolution (e.g. 1024, 2048)
-	UnwarpUV       *bool   // optional, also unwrap UV
+	InputView      *View  // optional, reference view (required with prompt)
+	Resolution     *int   // optional, resolution (e.g. 1024, 2048)
+	UnwarpUV       *bool  // optional, also unwrap UV
 	Prompt         string // optional, text prompt for texture
 }
 
@@ -565,12 +565,12 @@ func (o *GenTextureOptions) SetPrompt(prompt string) *GenTextureOptions {
 
 // GenRiggingOptions defines optional parameters for GenRigging
 type GenRiggingOptions struct {
-	Name                    string // optional, task name (auto-generated if empty)
-	AlgorithmModel         string // optional, algorithm model name
-	Filename               string // optional, filename
-	MeshCategory           string // optional, "humanoid" (default) or "tetrapod"
-	TemplateSkeleton       FileInput  // optional, template skeleton
-	TemplateSkeletonFilename string   // optional, template skeleton filename
+	Name                     string    // optional, task name (auto-generated if empty)
+	AlgorithmModel           string    // optional, algorithm model name
+	Filename                 string    // optional, filename
+	MeshCategory             string    // optional, "humanoid" (default) or "tetrapod"
+	TemplateSkeleton         FileInput // optional, template skeleton
+	TemplateSkeletonFilename string    // optional, template skeleton filename
 }
 
 // NewGenRiggingOptions creates GenRiggingOptions with common defaults
@@ -614,9 +614,9 @@ func (o *GenRiggingOptions) SetTemplateSkeleton(skeleton FileInput, filename str
 
 // GenSkinningOptions defines optional parameters for GenSkinning
 type GenSkinningOptions struct {
-	Name           string // optional, task name (auto-generated if empty)
-	AlgorithmModel string // optional, algorithm model name
-	Filename       string // optional, filename
+	Name           string   // optional, task name (auto-generated if empty)
+	AlgorithmModel string   // optional, algorithm model name
+	Filename       string   // optional, filename
 	MeshNames      []string // required, meshes to skin
 	JointNames     []string // required, joints to skin
 }
@@ -662,21 +662,21 @@ func (o *GenSkinningOptions) SetJointNames(names []string) *GenSkinningOptions {
 
 // GenVideoMotionOptions defines optional parameters for GenVideoMotion
 type GenVideoMotionOptions struct {
-	Name              string     // optional, task name (auto-generated if empty)
-	AlgorithmModel    string     // optional, algorithm model name
-	OutputModelFormat string     // optional, output format (default fbx)
-	ModelFilename     string     // optional, model filename
-	VideoFilename     string     // optional, video filename
-	WithHand          *bool      // optional, enable hand capture
-	MultipleTrack     *bool      // optional, enable multi-person capture
-	RotateAxisAngle   []float64  // optional, rotation axis-angle [x, y, z] (radians)
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	ModelFilename     string            // optional, model filename
+	VideoFilename     string            // optional, video filename
+	WithHand          *bool             // optional, enable hand capture
+	MultipleTrack     *bool             // optional, enable multi-person capture
+	RotateAxisAngle   []float64         // optional, rotation axis-angle [x, y, z] (radians)
 }
 
 // NewGenVideoMotionOptions creates GenVideoMotionOptions with common defaults
 func NewGenVideoMotionOptions() *GenVideoMotionOptions {
 	return &GenVideoMotionOptions{
 		Name:              "gen_video_motion",
-		OutputModelFormat: string(OutputModelFormatFBX),
+		OutputModelFormat: OutputModelFormatFBX,
 	}
 }
 
@@ -693,7 +693,7 @@ func (o *GenVideoMotionOptions) SetAlgorithmModel(model string) *GenVideoMotionO
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenVideoMotionOptions) SetOutputModelFormat(format string) *GenVideoMotionOptions {
+func (o *GenVideoMotionOptions) SetOutputModelFormat(format OutputModelFormat) *GenVideoMotionOptions {
 	o.OutputModelFormat = format
 	return o
 }
@@ -724,17 +724,17 @@ func (o *GenVideoMotionOptions) SetRotateAxisAngle(x, y, z float64) *GenVideoMot
 
 // GenTextMotionOptions defines optional parameters for GenTextMotion
 type GenTextMotionOptions struct {
-	Name              string // optional, task name (auto-generated if empty)
-	AlgorithmModel    string // optional, algorithm model name
-	OutputModelFormat string // optional, output format (default fbx)
-	Filename          string // optional, filename
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	Filename          string            // optional, filename
 }
 
 // NewGenTextMotionOptions creates GenTextMotionOptions with common defaults
 func NewGenTextMotionOptions() *GenTextMotionOptions {
 	return &GenTextMotionOptions{
 		Name:              "gen_text_motion",
-		OutputModelFormat: string(OutputModelFormatFBX),
+		OutputModelFormat: OutputModelFormatFBX,
 	}
 }
 
@@ -751,7 +751,7 @@ func (o *GenTextMotionOptions) SetAlgorithmModel(model string) *GenTextMotionOpt
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenTextMotionOptions) SetOutputModelFormat(format string) *GenTextMotionOptions {
+func (o *GenTextMotionOptions) SetOutputModelFormat(format OutputModelFormat) *GenTextMotionOptions {
 	o.OutputModelFormat = format
 	return o
 }
@@ -764,18 +764,18 @@ func (o *GenTextMotionOptions) SetFilename(filename string) *GenTextMotionOption
 
 // GenPoseOptions defines optional parameters for GenPose
 type GenPoseOptions struct {
-	Name              string     // optional, task name (auto-generated if empty)
-	AlgorithmModel    string     // optional, algorithm model name
-	OutputModelFormat string     // optional, output format (default fbx)
-	ModelFilename     string     // optional, model filename
-	ImageFilenames    []string   // optional, filenames for input images
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	ModelFilename     string            // optional, model filename
+	ImageFilenames    []string          // optional, filenames for input images
 }
 
 // NewGenPoseOptions creates GenPoseOptions with common defaults
 func NewGenPoseOptions() *GenPoseOptions {
 	return &GenPoseOptions{
 		Name:              "gen_pose",
-		OutputModelFormat: string(OutputModelFormatFBX),
+		OutputModelFormat: OutputModelFormatFBX,
 	}
 }
 
@@ -792,7 +792,7 @@ func (o *GenPoseOptions) SetAlgorithmModel(model string) *GenPoseOptions {
 }
 
 // SetOutputModelFormat sets the output model format
-func (o *GenPoseOptions) SetOutputModelFormat(format string) *GenPoseOptions {
+func (o *GenPoseOptions) SetOutputModelFormat(format OutputModelFormat) *GenPoseOptions {
 	o.OutputModelFormat = format
 	return o
 }
@@ -811,13 +811,13 @@ func (o *GenPoseOptions) SetImageFilenames(filenames []string) *GenPoseOptions {
 
 // GenSegment2DOptions defines optional parameters for GenSegment2D
 type GenSegment2DOptions struct {
-	Name           string           // optional, task name (auto-generated if empty)
-	AlgorithmModel string           // optional, algorithm model name
-	InputView      *View            // optional, input view (with model_id_360)
-	SplitType      *int             // optional, split type
-	Granularity    *int             // optional, granularity
-	Prompt         string           // optional, natural language prompt
-	OnThinking     ThinkingCallback // optional, callback for thinking events
+	Name           string              // optional, task name (auto-generated if empty)
+	AlgorithmModel string              // optional, algorithm model name
+	InputView      *View               // optional, input view (with model_id_360)
+	SplitType      *SegmentSplitType   // optional, split type
+	Granularity    *SegmentGranularity // optional, granularity
+	Prompt         string              // optional, natural language prompt
+	OnThinking     ThinkingCallback    // optional, callback for thinking events
 }
 
 // NewGenSegment2DOptions creates GenSegment2DOptions with common defaults
@@ -846,13 +846,13 @@ func (o *GenSegment2DOptions) SetInputView(view *View) *GenSegment2DOptions {
 }
 
 // SetSplitType sets the split type
-func (o *GenSegment2DOptions) SetSplitType(splitType int) *GenSegment2DOptions {
+func (o *GenSegment2DOptions) SetSplitType(splitType SegmentSplitType) *GenSegment2DOptions {
 	o.SplitType = &splitType
 	return o
 }
 
 // SetGranularity sets the granularity
-func (o *GenSegment2DOptions) SetGranularity(granularity int) *GenSegment2DOptions {
+func (o *GenSegment2DOptions) SetGranularity(granularity SegmentGranularity) *GenSegment2DOptions {
 	o.Granularity = &granularity
 	return o
 }

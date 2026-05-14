@@ -270,10 +270,10 @@ func (api *VisviseAPI) BatchGenPose(
 	params map[string]interface{},
 ) ([]string, error) {
 	body := map[string]interface{}{
-		"name":          name,
-		"input_model":   inputModel,
-		"input_images":  inputImages,
-		"params":        params,
+		"name":         name,
+		"input_model":  inputModel,
+		"input_images": inputImages,
+		"params":       params,
 	}
 
 	data, err := api.http.Post("openapi/weaver/resource/batch_gen_pose", body)
@@ -326,13 +326,13 @@ func (api *VisviseAPI) InitSegment(
 	algorithmModel string,
 	modelID string,
 	inputView *View,
-	splitType *int,
-	granularity *int,
+	splitType *SegmentSplitType,
+	granularity *SegmentGranularity,
 	prompt string,
 ) (*SSEIterator, error) {
 	body := map[string]interface{}{
-		"name":             name,
-		"algorithm_model":  algorithmModel,
+		"name":            name,
+		"algorithm_model": algorithmModel,
 	}
 
 	if modelID != "" {

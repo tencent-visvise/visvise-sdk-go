@@ -44,8 +44,8 @@ func TestAutoAlgorithmModel_GenHighModel(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	opts := visvise.NewGenHighModelOptions().
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle))
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle)
 
 	modelID, err := client.GenHighModel(mainViewPath, opts)
 	if err != nil {
@@ -73,8 +73,8 @@ func TestAutoAlgorithmModel_GenMidModel(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	opts := visvise.NewGenMidModelOptions().
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle))
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle)
 
 	modelID, err := client.GenMidModel(mainViewPath, backViewPath, leftViewPath, rightViewPath, opts)
 	if err != nil {
@@ -98,8 +98,8 @@ func TestAutoAlgorithmModel_GenLowModel(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	opts := visvise.NewGenLowModelOptions().
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle))
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle)
 
 	modelID, err := client.GenLowModel(mainViewPath, opts)
 	if err != nil {
@@ -146,9 +146,9 @@ func TestAutoAlgorithmModel_GenRetopology(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	opts := visvise.NewGenRetopologyOptions().
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeQuad)).
-		SetDetailLevel(int(visvise.DetailLevelMedium))
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeQuad).
+		SetDetailLevel(visvise.DetailLevelMedium)
 
 	modelID, err := client.GenRetopology(modelPath, opts)
 	if err != nil {
@@ -171,9 +171,9 @@ func TestAutoAlgorithmModel_GenLOD(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
+	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad}}
 	opts := visvise.NewGenLODOptions().
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetGenTimes(1)
 
 	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts)
@@ -295,7 +295,7 @@ func TestAutoAlgorithmModel_GenVideoMotion(t *testing.T) {
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
 	opts := visvise.NewGenVideoMotionOptions().
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetWithHand(false).
 		SetMultipleTrack(false)
 

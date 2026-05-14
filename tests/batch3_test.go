@@ -124,7 +124,7 @@ func TestBatch3_TextMotionStep(t *testing.T) {
 
 	opts := visvise.NewGenTextMotionOptions().
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
-		SetOutputModelFormat(string(visvise.OutputModelFormatGLB))
+		SetOutputModelFormat(visvise.OutputModelFormatGLB)
 
 	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在原地踏步", opts)
 	if err != nil {

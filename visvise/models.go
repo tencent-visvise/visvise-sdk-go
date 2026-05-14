@@ -7,9 +7,9 @@ import (
 
 // View represents the multi-view structure
 type View struct {
-	MainView string `json:"main_view"`
-	BackView string `json:"back_view,omitempty"`
-	LeftView string `json:"left_view,omitempty"`
+	MainView  string `json:"main_view"`
+	BackView  string `json:"back_view,omitempty"`
+	LeftView  string `json:"left_view,omitempty"`
 	RightView string `json:"right_view,omitempty"`
 }
 
@@ -30,9 +30,9 @@ func (v *View) ToMap() map[string]interface{} {
 
 // ReduceFace represents the LOD single level reduce face configuration
 type ReduceFace struct {
-	ReduceLevel   int `json:"reduce_level"`
-	ReducePercent int `json:"reduce_percent"`
-	FaceType      int `json:"face_type"` // 1: Triangle, 2: Quad
+	ReduceLevel   int      `json:"reduce_level"`
+	ReducePercent int      `json:"reduce_percent"`
+	FaceType      FaceType `json:"face_type"` // 1: Triangle, 2: Quad
 }
 
 // ToMap converts ReduceFace to map
@@ -75,9 +75,9 @@ type FailedReason struct {
 
 // LODFile represents a single LOD level output
 type LODFile struct {
-	ReduceLevel   int    `json:"reduce_level"`
-	DownloadURL   string `json:"download_url"`
-	PreviewImg    string `json:"preview_img,omitempty"`
+	ReduceLevel int    `json:"reduce_level"`
+	DownloadURL string `json:"download_url"`
+	PreviewImg  string `json:"preview_img,omitempty"`
 }
 
 // LODOutput represents the LOD output file collection
@@ -105,26 +105,26 @@ type FramingAIOutput struct {
 
 // ModelInfo represents the model asset information
 type ModelInfo struct {
-	ModelID           string           `json:"model_id"`
-	Name              string           `json:"name"`
-	Status            int              `json:"status"`
-	NodeType          int              `json:"node_type"`
-	CreateTS          int64            `json:"create_ts,omitempty"`
-	CreateUser        string           `json:"create_user,omitempty"`
-	PreviewImg        string           `json:"preview_img,omitempty"`
-	OutputModel       string           `json:"output_model,omitempty"`
-	InputModel        string           `json:"input_model,omitempty"`
-	InputVideo        string           `json:"input_video,omitempty"`
-	TimeCost          int              `json:"time_cost,omitempty"`
-	RemainingTime     int              `json:"remaining_time,omitempty"`
-	WaitTime          int              `json:"wait_time,omitempty"`
-	FailedReason      *FailedReason    `json:"failed_reason,omitempty"`
-	LODOutput         *LODOutput       `json:"lod_output,omitempty"`
+	ModelID           string             `json:"model_id"`
+	Name              string             `json:"name"`
+	Status            int                `json:"status"`
+	NodeType          int                `json:"node_type"`
+	CreateTS          int64              `json:"create_ts,omitempty"`
+	CreateUser        string             `json:"create_user,omitempty"`
+	PreviewImg        string             `json:"preview_img,omitempty"`
+	OutputModel       string             `json:"output_model,omitempty"`
+	InputModel        string             `json:"input_model,omitempty"`
+	InputVideo        string             `json:"input_video,omitempty"`
+	TimeCost          int                `json:"time_cost,omitempty"`
+	RemainingTime     int                `json:"remaining_time,omitempty"`
+	WaitTime          int                `json:"wait_time,omitempty"`
+	FailedReason      *FailedReason      `json:"failed_reason,omitempty"`
+	LODOutput         *LODOutput         `json:"lod_output,omitempty"`
 	ImageGen360Output *ImageGen360Output `json:"image_gen_360_output,omitempty"`
-	FramingAIOutput   *FramingAIOutput `json:"framing_ai_output,omitempty"`
-	Params            interface{}      `json:"params,omitempty"`
-	InputView         interface{}      `json:"input_view,omitempty"`
-	AlgorithmModel    string           `json:"algorithm_model,omitempty"`
+	FramingAIOutput   *FramingAIOutput   `json:"framing_ai_output,omitempty"`
+	Params            interface{}        `json:"params,omitempty"`
+	InputView         interface{}        `json:"input_view,omitempty"`
+	AlgorithmModel    string             `json:"algorithm_model,omitempty"`
 }
 
 // IsSuccess returns true if the model generation succeeded
@@ -257,9 +257,9 @@ func parseImageGen360Output(m map[string]interface{}) *ImageGen360Output {
 	}
 	if ov, ok := m["output_view"].(map[string]interface{}); ok {
 		view := &View{
-			MainView: getString(ov, "main_view", ""),
-			BackView: getString(ov, "back_view", ""),
-			LeftView: getString(ov, "left_view", ""),
+			MainView:  getString(ov, "main_view", ""),
+			BackView:  getString(ov, "back_view", ""),
+			LeftView:  getString(ov, "left_view", ""),
 			RightView: getString(ov, "right_view", ""),
 		}
 		if view.MainView != "" || view.BackView != "" {

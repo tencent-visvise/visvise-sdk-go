@@ -54,11 +54,11 @@ func ExampleGenHighModel() {
 	)
 
 	opts := visvise.NewGenHighModelOptions().
-		SetName("my_high_model").                // optional, default is "gen_high_model"
-		SetAlgorithmModel("hunyuan3D-v2.0").     // optional
-		SetFaceNum(500000).                       // optional
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)). // optional, default is fbx
-		SetFaceType(int(visvise.FaceTypeTriangle))                 // optional, default is triangle
+		SetName("my_high_model").                             // optional, default is "gen_high_model"
+		SetAlgorithmModel("hunyuan3D-v2.0").                  // optional
+		SetFaceNum(500000).                                    // optional
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).    // optional, default is fbx
+		SetFaceType(visvise.FaceTypeTriangle)                 // optional, default is triangle
 
 	modelID, err := client.GenHighModel("path/to/character.png", opts)
 	if err != nil {
@@ -85,16 +85,16 @@ func ExampleGenLOD() {
 
 	// Configure LOD levels
 	reduceFaces := []visvise.ReduceFace{
-		{ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeTriangle)},
-		{ReduceLevel: 2, ReducePercent: 30, FaceType: int(visvise.FaceTypeTriangle)},
-		{ReduceLevel: 3, ReducePercent: 20, FaceType: int(visvise.FaceTypeTriangle)},
+		{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeTriangle},
+		{ReduceLevel: 2, ReducePercent: 30, FaceType: visvise.FaceTypeTriangle},
+		{ReduceLevel: 3, ReducePercent: 20, FaceType: visvise.FaceTypeTriangle},
 	}
 
 	opts := visvise.NewGenLODOptions().
-		SetName("my_lod_model").                 // optional, default is "gen_lod"
+		SetName("my_lod_model").                  // optional, default is "gen_lod"
 		SetAlgorithmModel("VISVISE-LOD-V1.0.0"). // optional
 		SetGenTimes(3).                           // optional, default is 3
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)) // optional, default is fbx
+		SetOutputModelFormat(visvise.OutputModelFormatFBX) // optional, default is fbx
 
 	modelIDs, err := client.GenLOD("path/to/high_model.fbx", reduceFaces, opts)
 	if err != nil {
@@ -185,11 +185,11 @@ func ExampleGenSegment2D() {
 	)
 
 	opts := visvise.NewGenSegment2DOptions().
-		SetName("my_segment").                  // optional, default is "gen_segment_2d"
-		SetAlgorithmModel("VISVISE-Segment-V1.0.0"). // optional
-		SetSplitType(int(visvise.SegmentSplitFrontView)).   // optional
-		SetGranularity(int(visvise.SegmentGranularityMedium)). // optional
-		SetPrompt("segment by body parts"). // optional
+		SetName("my_segment").                           // optional, default is "gen_segment_2d"
+		SetAlgorithmModel("VISVISE-Segment-V1.0.0").    // optional
+		SetSplitType(visvise.SegmentSplitFrontView).    // optional
+		SetGranularity(visvise.SegmentGranularityMedium). // optional
+		SetPrompt("segment by body parts").             // optional
 		SetOnThinking(func(thought string) {
 			fmt.Println("Thinking:", thought)
 		}) // optional

@@ -22,10 +22,10 @@ func TestOptionalParams_Retopology(t *testing.T) {
 
 	opts := visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeQuad)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeQuad).
 		SetName("opt_rtp_a2").
-		SetDetailLevel(int(visvise.DetailLevelMedium))
+		SetDetailLevel(visvise.DetailLevelMedium)
 
 	modelID, err := client.GenRetopology(modelPath, opts)
 	if err != nil {
@@ -35,10 +35,10 @@ func TestOptionalParams_Retopology(t *testing.T) {
 
 	opts = visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
-		SetOutputModelFormat(string(visvise.OutputModelFormatFBX)).
-		SetFaceType(int(visvise.FaceTypeTriangle)).
+		SetOutputModelFormat(visvise.OutputModelFormatFBX).
+		SetFaceType(visvise.FaceTypeTriangle).
 		SetName("opt_rtp_b2").
-		SetDetailLevel(int(visvise.DetailLevelHigh))
+		SetDetailLevel(visvise.DetailLevelHigh)
 
 	modelID, err = client.GenRetopology(modelPath, opts)
 	if err != nil {
@@ -63,7 +63,7 @@ func TestOptionalParams_MeshRefine(t *testing.T) {
 	opts := visvise.NewGenMeshRefineOptions().
 		SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").
 		SetName("opt_mr_a2").
-		SetMode(int(visvise.MeshRefineModeOptimize))
+		SetMode(visvise.MeshRefineModeOptimize)
 
 	modelID, err := client.GenMeshRefine(modelPath, opts)
 	if err != nil {
@@ -74,7 +74,7 @@ func TestOptionalParams_MeshRefine(t *testing.T) {
 	opts = visvise.NewGenMeshRefineOptions().
 		SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").
 		SetName("opt_mr_b2").
-		SetMode(int(visvise.MeshRefineModeDensify))
+		SetMode(visvise.MeshRefineModeDensify)
 
 	modelID, err = client.GenMeshRefine(modelPath, opts)
 	if err != nil {
@@ -306,7 +306,7 @@ func TestOptionalParams_CompleteBatch2(t *testing.T) {
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
 		SetName("opt_mid_b2").
-		SetFaceType(int(visvise.FaceTypeQuad))
+		SetFaceType(visvise.FaceTypeQuad)
 
 	modelID, err := client.GenMidModel(mv["main"], mv["back"], mv["left"], mv["right"], opts)
 	if err != nil {
@@ -322,7 +322,7 @@ func TestOptionalParams_CompleteBatch2(t *testing.T) {
 	opts2 := visvise.NewGenRetopologyOptions().
 		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
 		SetName("opt_rtp_b2").
-		SetDetailLevel(int(visvise.DetailLevelHigh))
+		SetDetailLevel(visvise.DetailLevelHigh)
 
 	modelID, err = client.GenRetopology(modelPath, opts2)
 	if err != nil {
