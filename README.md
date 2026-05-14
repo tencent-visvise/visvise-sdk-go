@@ -34,7 +34,7 @@ VISVISE Weaver OpenAPI 的 Go SDK，提供：
   - [GenSegment2D — 2D 拆分](#gensegment2d--2d-拆分)
   - [WaitModel — 等待完成](#waitmodel--等待完成)
 - [原子 API 方法参考](#原子-api-方法参考)
-- [异常说明](#异常说明)
+- [错误说明](#错误说明)
 - [完整流程示例](#完整流程示例)
 
 ---
@@ -490,7 +490,7 @@ fmt.Println(modelInfo.OutputModel) // 输出模型下载 URL
 fmt.Println(modelInfo.TimeCost)   // 耗时（秒）
 ```
 
-**异常：**
+**错误：**
 
 - `PollingTimeoutError`：超时仍未完成时抛出
 - `ModelGenerationError`：模型生成失败（status=4）时抛出
@@ -540,13 +540,13 @@ prompts, err := api.GetText2MotionPromptList("zh")
 
 ---
 
-## 异常说明
+## 错误说明
 
-所有 SDK 异常均继承自 `WeaverError`，可以捕获基类也可以精确捕获子类。
+所有 SDK 错误均继承自 `WeaverError`，可以捕获基类也可以精确捕获子类。
 
-| 异常类 | 对应错误码 | 说明 |
+| 错误类 | 对应错误码 | 说明 |
 |---|---|---|
-| `WeaverError` | 任意 | 基础异常 |
+| `WeaverError` | 任意 | 基础错误 |
 | `NetworkError` | — | 网络连接失败、超时等 |
 | `SignatureError` | 400 | 签名错误 |
 | `InvalidParamsError` | 120008 | 请求参数错误 |

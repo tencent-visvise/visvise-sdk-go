@@ -1,6 +1,6 @@
 # VISVISE Weaver Go SDK
 
-中文 | **[English](README_EN.md)**
+**[中文](README.md)** | English
 
 Go SDK for the VISVISE Weaver OpenAPI. It provides:
 
@@ -34,7 +34,7 @@ Go SDK for the VISVISE Weaver OpenAPI. It provides:
   - [GenSegment2D — 2D Segmentation](#gensegment2d--2d-segmentation)
   - [WaitModel — Wait for Completion](#waitmodel--wait-for-completion)
 - [Atomic API Methods](#atomic-api-methods)
-- [Exceptions](#exceptions)
+- [Errors](#Errors)
 - [Full Workflow Examples](#full-workflow-examples)
 
 ---
@@ -490,7 +490,7 @@ fmt.Println(modelInfo.OutputModel) // output model URL
 fmt.Println(modelInfo.TimeCost)    // elapsed seconds
 ```
 
-**Exceptions:**
+**Errors:**
 
 - `PollingTimeoutError` — raised when the timeout is reached
 - `ModelGenerationError` — raised when the task fails (status=4)
@@ -540,13 +540,13 @@ prompts, err := api.GetText2MotionPromptList("en")
 
 ---
 
-## Exceptions
+## Errors
 
-All SDK exceptions inherit from `WeaverError`; you can catch the base class or any subclass.
+All SDK errors inherit from `WeaverError`; you can catch the base class or any subclass.
 
-| Exception | Code | Description |
+| Error | Code | Description |
 |---|---|---|
-| `WeaverError` | any | Base exception |
+| `WeaverError` | any | Base error |
 | `NetworkError` | — | Connection / timeout errors |
 | `SignatureError` | 400 | Signature failure |
 | `InvalidParamsError` | 120008 | Invalid request parameters |
