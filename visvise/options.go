@@ -818,6 +818,7 @@ type GenSegment2DOptions struct {
 	Granularity    *SegmentGranularity // optional, granularity
 	Prompt         string              // optional, natural language prompt
 	OnThinking     ThinkingCallback    // optional, callback for thinking events
+	ReadTimeout    int
 }
 
 // NewGenSegment2DOptions creates GenSegment2DOptions with common defaults
@@ -866,5 +867,11 @@ func (o *GenSegment2DOptions) SetPrompt(prompt string) *GenSegment2DOptions {
 // SetOnThinking sets the thinking callback
 func (o *GenSegment2DOptions) SetOnThinking(callback ThinkingCallback) *GenSegment2DOptions {
 	o.OnThinking = callback
+	return o
+}
+
+// SetReadTimeout sets the readTimeout
+func (o *GenSegment2DOptions) SetReadTimeout(readTimeout int) *GenSegment2DOptions {
+	o.ReadTimeout = readTimeout
 	return o
 }

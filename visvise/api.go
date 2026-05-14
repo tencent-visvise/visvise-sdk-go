@@ -329,6 +329,7 @@ func (api *VisviseAPI) InitSegment(
 	splitType *SegmentSplitType,
 	granularity *SegmentGranularity,
 	prompt string,
+	readTimeout int,
 ) (*SSEIterator, error) {
 	body := map[string]interface{}{
 		"name":            name,
@@ -351,5 +352,5 @@ func (api *VisviseAPI) InitSegment(
 		body["prompt"] = prompt
 	}
 
-	return api.http.PostSSE("openapi/weaver/component/init_segment", body, 1200)
+	return api.http.PostSSE("openapi/weaver/component/init_segment", body, readTimeout)
 }

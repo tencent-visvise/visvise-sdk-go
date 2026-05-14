@@ -1371,7 +1371,7 @@ func (c *Client) GenSegment2D(modelID360 string, opts *GenSegment2DOptions) (str
 		return "", err
 	}
 
-	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, opts.Granularity, opts.Prompt)
+	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, opts.Granularity, opts.Prompt, opts.ReadTimeout)
 	if err != nil {
 		return "", err
 	}

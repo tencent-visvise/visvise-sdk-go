@@ -1,6 +1,7 @@
 package visvise
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -8,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,19 +20,19 @@ import (
 type Environment string
 
 const (
-	EnvProd Environment = "https://ws.visvise.com.cn"      // Production environment
-	EnvTest Environment = "https://qa-ws.visvise.com.cn"   // Test environment
-	EnvDev  Environment = "https://dev-ws.visvise.com.cn"  // Development environment
+	EnvProd Environment = "https://ws.visvise.com.cn"     // Production environment
+	EnvTest Environment = "https://qa-ws.visvise.com.cn"  // Test environment
+	EnvDev  Environment = "https://dev-ws.visvise.com.cn" // Development environment
 )
 
 // HTTPClient is the low-level HTTP client that handles signing and error handling
 type HTTPClient struct {
-	AppID    string
+	AppID     string
 	SecretKey string
-	UID      string
-	BaseURL  string
-	Timeout  int
-	Client   *http.Client
+	UID       string
+	BaseURL   string
+	Timeout   int
+	Client    *http.Client
 }
 
 // NewHTTPClient creates a new HTTP client
@@ -122,9 +124,9 @@ func (c *HTTPClient) Post(path string, body interface{}) (interface{}, error) {
 
 // SSEClient represents an SSE stream client
 type SSEClient struct {
-	HTTPClient *HTTPClient
-	Path       string
-	Body       interface{}
+	HTTPClient  *HTTPClient
+	Path        string
+	Body        interface{}
 	ReadTimeout int
 }
 
@@ -145,9 +147,11 @@ func (e *ReadTimeoutError) Error() string {
 
 // SSEIterator iterates over SSE events
 type SSEIterator struct {
-	client *http.Client
-	req    *http.Request
-	reader io.ReadCloser
+	client   *http.Client
+	req      *http.Request
+	resp     *http.Response
+	reader   *bufio.Reader
+	leftover string
 }
 
 // NewSSEIterator creates a new SSE iterator
@@ -173,9 +177,16 @@ func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readT
 	}
 	req.Header = headers
 
-	// Set timeout for SSE
+	// Use a separate transport with connection timeout, but NO total Timeout.
+	// http.Client.Timeout covers the entire request lifecycle including body read,
+	// which is incompatible with SSE streaming. Instead we set TLSHandshakeTimeout
+	// and use context for connection phase only.
+	transport := &http.Transport{
+		TLSHandshakeTimeout:   time.Duration(httpClient.Timeout) * time.Second,
+		ResponseHeaderTimeout: time.Duration(httpClient.Timeout) * time.Second,
+	}
 	client := &http.Client{
-		Timeout: time.Duration(readTimeout) * time.Second,
+		Transport: transport,
 	}
 
 	resp, err := client.Do(req)
@@ -183,10 +194,25 @@ func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readT
 		return nil, NewNetworkError(fmt.Sprintf("SSE request failed: %v", err))
 	}
 
+	log.Printf("POST(SSE) response: status=%d, content-type=%s", resp.StatusCode, resp.Header.Get("Content-Type"))
+
+	// Check HTTP status code like Python SDK does with raise_for_status()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, 500))
+		resp.Body.Close()
+		bodyExcerpt := string(bodyBytes)
+		if len(bodyExcerpt) > 500 {
+			bodyExcerpt = bodyExcerpt[:500] + "...(truncated)"
+		}
+		return nil, NewNetworkError(fmt.Sprintf("SSE HTTP error [%d]: %s body=%s", resp.StatusCode, http.StatusText(resp.StatusCode), bodyExcerpt))
+	}
+
 	return &SSEIterator{
-		client: client,
-		req:    req,
-		reader: resp.Body,
+		client:   client,
+		req:      req,
+		resp:     resp,
+		reader:   bufio.NewReader(resp.Body),
+		leftover: "",
 	}, nil
 }
 
@@ -196,12 +222,11 @@ func (iter *SSEIterator) Next() (*SSEEvent, error) {
 	var dataLines []string
 
 	for {
-		line := make([]byte, 1024)
-		n, err := iter.reader.Read(line)
+		line, err := iter.reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				// Process remaining data
-				if len(dataLines) > 0 {
+				if len(dataLines) > 0 || event != "" {
 					dataStr := strings.Join(dataLines, "\n")
 					return &SSEEvent{Event: event, Data: parseSSELineData(dataStr)}, nil
 				}
@@ -210,7 +235,8 @@ func (iter *SSEIterator) Next() (*SSEEvent, error) {
 			return nil, NewNetworkError(fmt.Sprintf("SSE read error: %v", err))
 		}
 
-		lineStr := strings.TrimRight(string(line[:n]), "\n")
+		lineStr := strings.TrimRight(line, "\r\n")
+
 		if lineStr == "" {
 			// Empty line indicates end of frame
 			if event != "" || len(dataLines) > 0 {
@@ -225,7 +251,7 @@ func (iter *SSEIterator) Next() (*SSEEvent, error) {
 		}
 
 		if strings.HasPrefix(lineStr, "event:") {
-			event = strings.TrimSpace(lineStr[5:])
+			event = strings.TrimSpace(lineStr[6:])
 		} else if strings.HasPrefix(lineStr, "data:") {
 			dataLines = append(dataLines, strings.TrimSpace(lineStr[5:]))
 		}
@@ -234,7 +260,10 @@ func (iter *SSEIterator) Next() (*SSEEvent, error) {
 
 // Close closes the SSE stream
 func (iter *SSEIterator) Close() error {
-	return iter.reader.Close()
+	if iter.resp != nil {
+		return iter.resp.Body.Close()
+	}
+	return nil
 }
 
 func parseSSELineData(dataStr string) interface{} {
