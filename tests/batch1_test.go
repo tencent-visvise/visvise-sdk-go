@@ -153,7 +153,7 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetFaceType(visvise.FaceTypeTriangle).
-		SetBackView(mv["back"], "")
+		SetBackView(mv["back"])
 
 	modelID, err := client.GenLowModel(mv["main"], opts)
 	if err != nil {

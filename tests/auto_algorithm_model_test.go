@@ -344,8 +344,7 @@ func TestAutoAlgorithmModel_GenPose(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, uid, visvise.EnvProd, 30)
 
-	opts := visvise.NewGenPoseOptions().
-		SetImageFilenames([]string{"main_view.png"})
+	opts := visvise.NewGenPoseOptions()
 
 	modelIDs, err := client.GenPose(modelPath, []visvise.FileInput{mainViewPath}, opts)
 	if err != nil {

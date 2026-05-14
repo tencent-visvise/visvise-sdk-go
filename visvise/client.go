@@ -175,16 +175,12 @@ func (c *Client) GetAPI() *VisviseAPI {
 }
 
 // resolveFile resolves a file input to a COS URL
-func (c *Client) resolveFile(source FileInput, filename string, isTemp bool) (string, error) {
+func (c *Client) resolveFile(source FileInput, isTemp bool) (string, error) {
 	// If source is a string
 	if s, ok := source.(string); ok {
 		// Check if it's a local file path
 		if isLocalFile(s) {
-			// If filename not provided, use the source file's basename
-			if filename == "" {
-				filename = filepath.Base(s)
-			}
-			return c.uploadFile(s, filename, isTemp)
+			return c.uploadFile(s, filepath.Base(s), isTemp)
 		}
 		// Not a local file, check if it's a COS URL
 		if isCosURL(s) {
@@ -196,10 +192,7 @@ func (c *Client) resolveFile(source FileInput, filename string, isTemp bool) (st
 
 	// If source is bytes
 	if b, ok := source.([]byte); ok {
-		// Auto-detect extension for bytes input
-		if filename == "" {
-			filename = genRandomFilename(sniffExtension(b, ".bin"))
-		}
+		filename := genRandomFilename(sniffExtension(b, ".bin"))
 		return c.uploadBytes(b, filename, isTemp)
 	}
 
@@ -209,10 +202,7 @@ func (c *Client) resolveFile(source FileInput, filename string, isTemp bool) (st
 		if err != nil {
 			return "", fmt.Errorf("failed to read data: %w", err)
 		}
-		// Auto-detect extension for reader input
-		if filename == "" {
-			filename = genRandomFilename(sniffExtension(data, ".bin"))
-		}
+		filename := genRandomFilename(sniffExtension(data, ".bin"))
 		return c.uploadBytes(data, filename, isTemp)
 	}
 
@@ -282,7 +272,7 @@ func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename st
 }
 
 // resolveModelFile resolves a model file to a COS URL, handling zip packaging automatically
-func (c *Client) resolveModelFile(source FileInput, filename string, isTemp bool) (string, error) {
+func (c *Client) resolveModelFile(source FileInput, isTemp bool) (string, error) {
 	// If source is a string
 	if s, ok := source.(string); ok {
 		// Check if it's a local file path
@@ -302,11 +292,7 @@ func (c *Client) resolveModelFile(source FileInput, filename string, isTemp bool
 				return c.uploadZip(data, srcFilename, zipFilename, isTemp)
 			}
 			// .zip or other format, upload directly
-			// If filename not provided, use the source file's basename
-			if filename == "" {
-				filename = filepath.Base(s)
-			}
-			return c.uploadFile(s, filename, isTemp)
+			return c.uploadFile(s, filepath.Base(s), isTemp)
 		}
 		// Not a local file, check if it's a COS URL
 		if isCosURL(s) {
@@ -332,16 +318,12 @@ func (c *Client) resolveModelFile(source FileInput, filename string, isTemp bool
 
 	// Check if data is already a zip
 	if isZip(data) {
-		if filename == "" {
-			filename = genRandomFilename(".zip")
-		}
+		filename := genRandomFilename(".zip")
 		return c.uploadBytes(data, filename, isTemp)
 	}
 
 	// Not a zip: detect extension (fbx/obj/glb etc), default to .fbx and package
-	if filename == "" {
-		filename = genRandomFilename(sniffExtension(data, ".fbx"))
-	}
+	filename := genRandomFilename(sniffExtension(data, ".fbx"))
 	stem := strings.TrimSuffix(filename, filepath.Ext(filename))
 	zipFilename := stem + ".zip"
 	return c.uploadZip(data, filename, zipFilename, isTemp)
@@ -618,7 +600,7 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	}
 
 	// Upload views
-	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, false)
 	if err != nil {
 		return "", err
 	}
@@ -626,7 +608,7 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	view := &View{MainView: mainURL}
 
 	if opts.BackView != nil {
-		backURL, err := c.resolveFile(opts.BackView, opts.BackViewFilename, false)
+		backURL, err := c.resolveFile(opts.BackView, false)
 		if err != nil {
 			return "", err
 		}
@@ -634,7 +616,7 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	}
 
 	if opts.LeftView != nil {
-		leftURL, err := c.resolveFile(opts.LeftView, opts.LeftViewFilename, false)
+		leftURL, err := c.resolveFile(opts.LeftView, false)
 		if err != nil {
 			return "", err
 		}
@@ -642,7 +624,7 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	}
 
 	if opts.RightView != nil {
-		rightURL, err := c.resolveFile(opts.RightView, opts.RightViewFilename, false)
+		rightURL, err := c.resolveFile(opts.RightView, false)
 		if err != nil {
 			return "", err
 		}
@@ -680,14 +662,14 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 
 	view := &View{}
 
-	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, false)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	if opts.BackView != nil {
-		backURL, err := c.resolveFile(opts.BackView, opts.BackViewFilename, false)
+		backURL, err := c.resolveFile(opts.BackView, false)
 		if err != nil {
 			return "", err
 		}
@@ -695,7 +677,7 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 	}
 
 	if opts.LeftView != nil {
-		leftURL, err := c.resolveFile(opts.LeftView, opts.LeftViewFilename, false)
+		leftURL, err := c.resolveFile(opts.LeftView, false)
 		if err != nil {
 			return "", err
 		}
@@ -703,7 +685,7 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 	}
 
 	if opts.RightView != nil {
-		rightURL, err := c.resolveFile(opts.RightView, opts.RightViewFilename, false)
+		rightURL, err := c.resolveFile(opts.RightView, false)
 		if err != nil {
 			return "", err
 		}
@@ -747,28 +729,28 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	view := &View{}
 
 	// Resolve main view
-	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, false)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	// Resolve back view (required)
-	backURL, err := c.resolveFile(backView, opts.BackViewFilename, false)
+	backURL, err := c.resolveFile(backView, false)
 	if err != nil {
 		return "", err
 	}
 	view.BackView = backURL
 
 	// Resolve left view (required)
-	leftURL, err := c.resolveFile(leftView, opts.LeftViewFilename, false)
+	leftURL, err := c.resolveFile(leftView, false)
 	if err != nil {
 		return "", err
 	}
 	view.LeftView = leftURL
 
 	// Resolve right view (required)
-	rightURL, err := c.resolveFile(rightView, opts.RightViewFilename, false)
+	rightURL, err := c.resolveFile(rightView, false)
 	if err != nil {
 		return "", err
 	}
@@ -810,14 +792,14 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 
 	view := &View{}
 
-	mainURL, err := c.resolveFile(mainView, opts.MainViewFilename, false)
+	mainURL, err := c.resolveFile(mainView, false)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	if opts.BackView != nil {
-		backURL, err := c.resolveFile(opts.BackView, opts.BackViewFilename, false)
+		backURL, err := c.resolveFile(opts.BackView, false)
 		if err != nil {
 			return "", err
 		}
@@ -825,7 +807,7 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 	}
 
 	if opts.LeftView != nil {
-		leftURL, err := c.resolveFile(opts.LeftView, opts.LeftViewFilename, false)
+		leftURL, err := c.resolveFile(opts.LeftView, false)
 		if err != nil {
 			return "", err
 		}
@@ -833,7 +815,7 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 	}
 
 	if opts.RightView != nil {
-		rightURL, err := c.resolveFile(opts.RightView, opts.RightViewFilename, false)
+		rightURL, err := c.resolveFile(opts.RightView, false)
 		if err != nil {
 			return "", err
 		}
@@ -871,7 +853,7 @@ func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) 
 		opts = NewGenMeshRefineOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return "", err
 	}
@@ -889,7 +871,7 @@ func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) 
 		params["mode"] = *opts.Mode
 	}
 	if opts.ColorModel != nil {
-		colorURL, err := c.resolveModelFile(opts.ColorModel, opts.ColorModelFilename, false)
+		colorURL, err := c.resolveModelFile(opts.ColorModel, false)
 		if err != nil {
 			return "", err
 		}
@@ -916,7 +898,7 @@ func (c *Client) GenRetopology(modelPath FileInput, opts *GenRetopologyOptions) 
 		opts = NewGenRetopologyOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return "", err
 	}
@@ -958,7 +940,7 @@ func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, opts *Gen
 		opts = NewGenLODOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return nil, err
 	}
@@ -990,7 +972,7 @@ func (c *Client) GenUV(modelPath FileInput, opts *GenUVOptions) (string, error) 
 		opts = NewGenUVOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return "", err
 	}
@@ -1035,7 +1017,7 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 		return "", errors.New("gen_texture requires either input_view.main_view or prompt")
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
+	cosURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return "", err
 	}
@@ -1062,28 +1044,28 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 	if opts.InputView != nil {
 		resolvedView = &View{}
 		if opts.InputView.MainView != "" {
-			url, err := c.resolveFile(opts.InputView.MainView, "", false)
+			url, err := c.resolveFile(opts.InputView.MainView, false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.MainView = url
 		}
 		if opts.InputView.BackView != "" {
-			url, err := c.resolveFile(opts.InputView.BackView, "", false)
+			url, err := c.resolveFile(opts.InputView.BackView, false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.BackView = url
 		}
 		if opts.InputView.LeftView != "" {
-			url, err := c.resolveFile(opts.InputView.LeftView, "", false)
+			url, err := c.resolveFile(opts.InputView.LeftView, false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.LeftView = url
 		}
 		if opts.InputView.RightView != "" {
-			url, err := c.resolveFile(opts.InputView.RightView, "", false)
+			url, err := c.resolveFile(opts.InputView.RightView, false)
 			if err != nil {
 				return "", err
 			}
@@ -1123,7 +1105,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 		},
 	}
 
-	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, opts.Filename)
+	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, "")
 	if err != nil {
 		return "", err
 	}
@@ -1137,7 +1119,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 		"algorithm_model": resolvedModel,
 	}
 	if opts.TemplateSkeleton != nil {
-		skeletonURL, err := c.resolveModelFile(opts.TemplateSkeleton, opts.TemplateSkeletonFilename, false)
+		skeletonURL, err := c.resolveModelFile(opts.TemplateSkeleton, false)
 		if err != nil {
 			return "", err
 		}
@@ -1183,7 +1165,7 @@ func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (str
 		},
 	}
 
-	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, opts.Filename)
+	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, "")
 	if err != nil {
 		return "", err
 	}
@@ -1213,12 +1195,12 @@ func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, opts *GenVideoMo
 		opts = NewGenVideoMotionOptions()
 	}
 
-	modelURL, err := c.resolveModelFile(modelPath, opts.ModelFilename, false)
+	modelURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return "", err
 	}
 
-	videoURL, err := c.resolveFile(videoPath, opts.VideoFilename, false)
+	videoURL, err := c.resolveFile(videoPath, false)
 	if err != nil {
 		return "", err
 	}
@@ -1263,7 +1245,7 @@ func (c *Client) GenTextMotion(modelPath FileInput, prompt string, opts *GenText
 		opts = NewGenTextMotionOptions()
 	}
 
-	modelURL, err := c.resolveModelFile(modelPath, opts.Filename, false)
+	modelURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1290,18 +1272,14 @@ func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, opts *Gen
 		opts = NewGenPoseOptions()
 	}
 
-	modelURL, err := c.resolveModelFile(modelPath, opts.ModelFilename, false)
+	modelURL, err := c.resolveModelFile(modelPath, false)
 	if err != nil {
 		return nil, err
 	}
 
 	uploadedImages := make([]string, len(inputImages))
 	for i, img := range inputImages {
-		var fname string
-		if opts.ImageFilenames != nil && i < len(opts.ImageFilenames) {
-			fname = opts.ImageFilenames[i]
-		}
-		url, err := c.resolveFile(img, fname, false)
+		url, err := c.resolveFile(img, false)
 		if err != nil {
 			return nil, err
 		}
@@ -1337,28 +1315,28 @@ func (c *Client) GenSegment2D(modelID360 string, opts *GenSegment2DOptions) (str
 	if opts.InputView != nil {
 		resolvedView = &View{}
 		if opts.InputView.MainView != "" {
-			url, err := c.resolveFile(opts.InputView.MainView, "", false)
+			url, err := c.resolveFile(opts.InputView.MainView, false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.MainView = url
 		}
 		if opts.InputView.BackView != "" {
-			url, err := c.resolveFile(opts.InputView.BackView, "", false)
+			url, err := c.resolveFile(opts.InputView.BackView, false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.BackView = url
 		}
 		if opts.InputView.LeftView != "" {
-			url, err := c.resolveFile(opts.InputView.LeftView, "", false)
+			url, err := c.resolveFile(opts.InputView.LeftView, false)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.LeftView = url
 		}
 		if opts.InputView.RightView != "" {
-			url, err := c.resolveFile(opts.InputView.RightView, "", false)
+			url, err := c.resolveFile(opts.InputView.RightView, false)
 			if err != nil {
 				return "", err
 			}
