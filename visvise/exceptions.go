@@ -3,6 +3,7 @@ package visvise
 import "fmt"
 
 // WeaverError is the base error type for all SDK errors
+// SDK 基础异常
 type WeaverError struct {
 	Code    int    // Error code
 	ReqID   string // Request ID
@@ -17,60 +18,77 @@ func (e *WeaverError) Error() string {
 }
 
 // NetworkError indicates network failure (connection timeout, DNS resolution failed, etc.)
+// 网络请求失败（连接超时、DNS 解析失败等）
 type NetworkError struct {
 	WeaverError
 }
 
 func (e *NetworkError) Error() string {
-	return fmt.Sprintf("Network error: %s", e.Message)
+	return fmt.Sprintf("[%d] %s", e.Code, e.Message)
 }
 
-// SignatureError indicates signature mismatch (HTTP 400)
+// SignatureError indicates signature mismatch (411)
+// 签名错误（业务错误码 411）
 type SignatureError struct {
 	WeaverError
 }
 
+// SignatureExpiredError indicates signature expired, timestamp deviation too large (412)
+// 签名过期，timestamp 与服务端时间偏差过大（业务错误码 412）
+type SignatureExpiredError struct {
+	WeaverError
+}
+
 // InvalidParamsError indicates invalid request parameters (120008)
+// 请求参数错误 (120008)
 type InvalidParamsError struct {
 	WeaverError
 }
 
 // UserNotFoundError indicates user not found (120017)
+// 用户未找到 (120017)
 type UserNotFoundError struct {
 	WeaverError
 }
 
-// PermissionDeniedError indicates permission denied (120018)
+// PermissionDeniedError indicates user permission denied (120018)
+// 用户无权限 (120018)
 type PermissionDeniedError struct {
 	WeaverError
 }
 
 // QuotaExceededError indicates daily generation quota exceeded (120020)
+// 每日生成次数超出上限 (120020)
 type QuotaExceededError struct {
 	WeaverError
 }
 
 // ProjectPermissionError indicates project permission not authorized (120027)
+// 项目权限未授权 (120027)
 type ProjectPermissionError struct {
 	WeaverError
 }
 
 // ServerNetworkError indicates server network error (120028)
+// 服务器网络错误 (120028)
 type ServerNetworkError struct {
 	WeaverError
 }
 
 // ServerTimeoutError indicates server processing timeout (120032)
+// 服务器处理超时 (120032)
 type ServerTimeoutError struct {
 	WeaverError
 }
 
 // RateLimitError indicates too many requests (120040)
+// 请求过于频繁 (120040)
 type RateLimitError struct {
 	WeaverError
 }
 
 // ModelGenerationError indicates model generation failed (async task status=4)
+// 模型生成失败（异步任务 status=4）
 type ModelGenerationError struct {
 	WeaverError
 	ModelID string
@@ -84,6 +102,7 @@ func (e *ModelGenerationError) Error() string {
 }
 
 // PollingTimeoutError indicates waiting for model completion timeout
+// 等待模型完成超时
 type PollingTimeoutError struct {
 	WeaverError
 	ModelID string
@@ -96,7 +115,8 @@ func (e *PollingTimeoutError) Error() string {
 
 // errorCodeMapping maps error codes to error types
 var errorCodeMapping = map[int]func(WeaverError) error{
-	400:    func(e WeaverError) error { return &SignatureError{WeaverError: e} },
+	411:    func(e WeaverError) error { return &SignatureError{WeaverError: e} },
+	412:    func(e WeaverError) error { return &SignatureExpiredError{WeaverError: e} },
 	120008: func(e WeaverError) error { return &InvalidParamsError{WeaverError: e} },
 	120017: func(e WeaverError) error { return &UserNotFoundError{WeaverError: e} },
 	120018: func(e WeaverError) error { return &PermissionDeniedError{WeaverError: e} },
