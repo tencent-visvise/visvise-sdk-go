@@ -170,6 +170,10 @@ visvise.SegmentSplitFourView  // 2 - four-view split
 visvise.SegmentGranularityCoarse  // 1 - coarse
 visvise.SegmentGranularityMedium  // 2 - medium (default)
 visvise.SegmentGranularityFine    // 3 - fine
+
+// Mesh category (for rigging)
+visvise.MeshCategoryHumanoid // "humanoid" - humanoid (default)
+visvise.MeshCategoryTetrapod // "tetrapod" - tetrapod (four-legged)
 ```
 
 ---
@@ -198,9 +202,9 @@ opts := visvise.NewGen360Options().
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
     SetEnableAPose(true).                                 // optional, enable A-Pose
     SetStyle("anime").                                    // optional, style type
-    SetBackView("path/to/back.png", "back.png").          // optional, back view
-    SetLeftView("path/to/left.png", "left.png").          // optional, left view
-    SetRightView("path/to/right.png", "right.png")        // optional, right view
+    SetBackView("path/to/back.png").                      // optional, back view
+    SetLeftView("path/to/left.png").                      // optional, left view
+    SetRightView("path/to/right.png")                     // optional, right view
 
 modelID, err := client.Gen360("path/to/character.png", opts)
 ```
@@ -218,9 +222,9 @@ opts := visvise.NewGenHighModelOptions().
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format (default fbx)
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
     SetFaceNum(500000).                                  // optional, target face count (1000-1500000)
-    SetBackView(outputView.BackView, "").                 // optional, back view
-    SetLeftView(outputView.LeftView, "").                 // optional, left view
-    SetRightView(outputView.RightView, "")                // optional, right view
+    SetBackView(outputView.BackView).                    // optional, back view
+    SetLeftView(outputView.LeftView).                    // optional, left view
+    SetRightView(outputView.RightView)                   // optional, right view
 
 modelID, err := client.GenHighModel("path/to/main.png", opts)
 ```
@@ -261,9 +265,9 @@ opts := visvise.NewGenLowModelOptions().
     SetAlgorithmModel("Tripo-v1.0-fast").                // optional
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type
-    SetBackView("path/to/back.png", "back.png").         // optional, back view
-    SetLeftView("path/to/left.png", "left.png").         // optional, left view
-    SetRightView("path/to/right.png", "right.png")       // optional, right view
+    SetBackView("path/to/back.png").                     // optional, back view
+    SetLeftView("path/to/left.png").                     // optional, left view
+    SetRightView("path/to/right.png")                    // optional, right view
 
 modelID, err := client.GenLowModel("path/to/main.png", opts)
 ```
@@ -280,7 +284,7 @@ opts := visvise.NewGenMeshRefineOptions().
     SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").      // optional
     SetInputModelFormat(visvise.OutputModelFormatFBX).  // optional, input format (default fbx)
     SetMode(visvise.MeshRefineModeOptimize).            // optional, refine mode
-    SetColorModel("path/to/color.fbx", "color.fbx")      // optional, color model
+    SetColorModel("path/to/color.fbx")                   // optional, color model
 
 modelID, err := client.GenMeshRefine("path/to/model.fbx", opts)
 ```
@@ -318,8 +322,8 @@ Generate level-of-detail meshes (node_type=2), with multi-shot support. Default 
 
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
 }
 
 opts := visvise.NewGenLODOptions().
@@ -378,8 +382,8 @@ Auto-rigging (node_type=5). The SDK packages the raw model + JSON parameters int
 opts := visvise.NewGenRiggingOptions().
     SetName("my_rigging").                              // optional, default "gen_rigging"
     SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").      // optional
-    SetMeshCategory("humanoid").                        // optional, "humanoid" (default) or "tetrapod"
-    SetTemplateSkeleton("path/to/skeleton.fbx", "skeleton.fbx") // optional, template skeleton
+    SetMeshCategory(visvise.MeshCategoryHumanoid).      // optional, humanoid (default) or visvise.MeshCategoryTetrapod
+    SetTemplateSkeleton("path/to/skeleton.fbx")          // optional, template skeleton
 
 modelID, err := client.GenRigging("path/to/model.fbx", opts)
 ```
@@ -450,8 +454,7 @@ inputImages := []visvise.FileInput{
 opts := visvise.NewGenPoseOptions().
     SetName("my_pose").                                 // optional, default "gen_pose"
     SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").       // optional
-    SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
-    SetImageFilenames([]string{"pose_ref_1.png", "pose_ref_2.png"}) // optional
+    SetOutputModelFormat(visvise.OutputModelFormatFBX)  // optional, output format
 
 modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, opts)
 ```
@@ -460,7 +463,7 @@ modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, opts)
 
 ### GenSegment2D — 2D Segmentation
 
-Component segmentation over multi-views from Gen360 (node_type=14, SSE protocol). The resulting `model_id` can be passed as `segmentModelID` for `GenMidModel` / `GenLowModel`.
+Component segmentation over multi-views from Gen360 (node_type=14, SSE protocol). The resulting `model_id` can be passed as `segmentModelID` for `GenMidModel`.
 
 ```go
 onThinking := func(content string) {
@@ -470,10 +473,12 @@ onThinking := func(content string) {
 opts := visvise.NewGenSegment2DOptions().
     SetName("my_segment").                              // optional, default "gen_segment_2d"
     SetAlgorithmModel("VISVISE-Seg2D-V1.0.0").          // optional
-    SetSplitType(int(visvise.SegmentSplitFrontView)).   // optional, split type
-    SetGranularity(int(visvise.SegmentGranularityMedium)). // optional, granularity
+    SetInputView(&visvise.View{MainView: "path/to/ref.png"}) // optional, input view
+    SetSplitType(visvise.SegmentSplitFrontView).         // optional, split type
+    SetGranularity(visvise.SegmentGranularityMedium).    // optional, granularity
     SetPrompt("segment by body parts").                 // optional, natural language prompt
-    SetOnThinking(onThinking)                            // optional, thinking callback
+    SetOnThinking(onThinking).                           // optional, thinking callback
+    SetReadTimeout(120)                                  // optional, SSE read timeout (seconds)
 
 segModelID, err := client.GenSegment2D("Model2026...", opts)
 // Use the result as segmentModelID for GenMidModel
@@ -674,8 +679,8 @@ func main() {
     client := visvise.NewClient("...", "...", "...", nil)
 
     reduceFaces := []visvise.ReduceFace{
-        {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
-        {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
+        {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
+        {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
     }
 
     opts := visvise.NewGenLODOptions()

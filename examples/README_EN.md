@@ -74,7 +74,7 @@ Generate models with multiple levels of detail, supports quad and triangle faces
 At least one of `InputView.MainView` or `Prompt` must be provided.
 
 ### gen_rigging (Rigging)
-- `MeshCategory`: `humanoid` or `tetrapod`
+- `MeshCategory`: `visvise.MeshCategoryHumanoid` (default) or `visvise.MeshCategoryTetrapod`
 
 ### gen_skinning (Skinning)
 Requires providing `MeshNames` and `JointNames` lists.
@@ -90,4 +90,4 @@ Extract poses from reference images.
 
 ### gen_segment_2d (2D Segmentation)
 Requires running `gen_360` first to get `MV_360_MODEL_ID`.
-The segmentation result can be used as the `SegmentModelID` parameter for `gen_mid_model` or `gen_low_model`.
+The segmentation result can be used as the `SegmentModelID` parameter for `gen_mid_model`.

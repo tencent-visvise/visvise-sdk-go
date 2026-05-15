@@ -171,6 +171,10 @@ visvise.SegmentSplitFourView  // 2 - 生成四视图拆分
 visvise.SegmentGranularityCoarse  // 1 - 粗
 visvise.SegmentGranularityMedium  // 2 - 中（默认）
 visvise.SegmentGranularityFine    // 3 - 细
+
+// 骨骼类别（骨骼架设）
+visvise.MeshCategoryHumanoid // "humanoid" - 人形（默认）
+visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 ```
 
 ---
@@ -199,9 +203,9 @@ opts := visvise.NewGen360Options().
     SetFaceType(visvise.FaceTypeTriangle).                // 可选，面数类型（默认三角面）
     SetEnableAPose(true).                                 // 可选，是否开启 A-Pose
     SetStyle("anime").                                    // 可选，风格类型
-    SetBackView("path/to/back.png", "back.png").          // 可选，背视图
-    SetLeftView("path/to/left.png", "left.png").          // 可选，左视图
-    SetRightView("path/to/right.png", "right.png")        // 可选，右视图
+    SetBackView("path/to/back.png").                      // 可选，背视图
+    SetLeftView("path/to/left.png").                      // 可选，左视图
+    SetRightView("path/to/right.png")                     // 可选，右视图
 
 modelID, err := client.Gen360("path/to/character.png", opts)
 ```
@@ -219,9 +223,9 @@ opts := visvise.NewGenHighModelOptions().
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式（默认 fbx）
     SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型（默认三角面）
     SetFaceNum(500000).                                  // 可选，目标面数（1000~1500000）
-    SetBackView(outputView.BackView, "").                 // 可选，背视图
-    SetLeftView(outputView.LeftView, "").                 // 可选，左视图
-    SetRightView(outputView.RightView, "")                 // 可选，右视图
+    SetBackView(outputView.BackView).                    // 可选，背视图
+    SetLeftView(outputView.LeftView).                    // 可选，左视图
+    SetRightView(outputView.RightView)                   // 可选，右视图
 
 modelID, err := client.GenHighModel("path/to/main.png", opts)
 ```
@@ -262,9 +266,9 @@ opts := visvise.NewGenLowModelOptions().
     SetAlgorithmModel("Tripo-v1.0-快速生成").             // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
     SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型
-    SetBackView("path/to/back.png", "back.png").          // 可选，背视图
-    SetLeftView("path/to/left.png", "left.png").          // 可选，左视图
-    SetRightView("path/to/right.png", "right.png")        // 可选，右视图
+    SetBackView("path/to/back.png").                     // 可选，背视图
+    SetLeftView("path/to/left.png").                     // 可选，左视图
+    SetRightView("path/to/right.png")                    // 可选，右视图
 
 modelID, err := client.GenLowModel("path/to/main.png", opts)
 ```
@@ -281,7 +285,7 @@ opts := visvise.NewGenMeshRefineOptions().
     SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").      // 可选
     SetInputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输入模型格式（默认 fbx）
     SetMode(visvise.MeshRefineModeOptimize).             // 可选，布线优化模式
-    SetColorModel("path/to/color.fbx", "color.fbx")      // 可选，色彩模型
+    SetColorModel("path/to/color.fbx")                   // 可选，色彩模型
 
 modelID, err := client.GenMeshRefine("path/to/model.fbx", opts)
 ```
@@ -319,8 +323,8 @@ modelID, err := client.GenRetopology("path/to/model.fbx", opts)
 
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
 }
 
 opts := visvise.NewGenLODOptions().
@@ -379,8 +383,8 @@ modelID, err := client.GenTexture("path/to/model.fbx", opts)
 opts := visvise.NewGenRiggingOptions().
     SetName("my_rigging").                                // 可选，默认 "gen_rigging"
     SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").       // 可选
-    SetMeshCategory("humanoid").                          // 可选，"humanoid"（人形，默认）或 "tetrapod"（四足）
-    SetTemplateSkeleton("path/to/skeleton.fbx", "skeleton.fbx") // 可选，模板骨骼
+    SetMeshCategory(visvise.MeshCategoryHumanoid).       // 可选，人形（默认）或 visvise.MeshCategoryTetrapod（四足）
+    SetTemplateSkeleton("path/to/skeleton.fbx")           // 可选，模板骨骼
 
 modelID, err := client.GenRigging("path/to/model.fbx", opts)
 ```
@@ -451,8 +455,7 @@ inputImages := []visvise.FileInput{
 opts := visvise.NewGenPoseOptions().
     SetName("my_pose").                                   // 可选，默认 "gen_pose"
     SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").         // 可选
-    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
-    SetImageFilenames([]string{"pose_ref_1.png", "pose_ref_2.png"}) // 可选
+    SetOutputModelFormat(visvise.OutputModelFormatFBX)    // 可选，输出格式
 
 modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, opts)
 ```
@@ -461,7 +464,7 @@ modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, opts)
 
 ### GenSegment2D — 2D 拆分
 
-对图生 360 输出的多视图进行组件分割（node_type=14，SSE 协议）。生成的分割资产 `model_id` 可作为图生中模/低模的 `segmentModelID` 输入。
+对图生 360 输出的多视图进行组件分割（node_type=14，SSE 协议）。生成的分割资产 `model_id` 可作为图生中模的 `segmentModelID` 输入。
 
 ```go
 onThinking := func(content string) {
@@ -471,10 +474,12 @@ onThinking := func(content string) {
 opts := visvise.NewGenSegment2DOptions().
     SetName("my_segment").                                // 可选，默认 "gen_segment_2d"
     SetAlgorithmModel("VISVISE-Seg2D-V1.0.0").           // 可选
-    SetSplitType(int(visvise.SegmentSplitFrontView)).    // 可选，正视图/四视图拆分
-    SetGranularity(int(visvise.SegmentGranularityMedium)).// 可选，颗粒度
+    SetInputView(&visvise.View{MainView: "path/to/ref.png"}) // 可选，输入视图
+    SetSplitType(visvise.SegmentSplitFrontView).          // 可选，正视图/四视图拆分
+    SetGranularity(visvise.SegmentGranularityMedium).     // 可选，颗粒度
     SetPrompt("segment by body parts").                   // 可选，自然语言描述拆分规则
-    SetOnThinking(onThinking)                             // 可选，处理 thinking 事件的回调
+    SetOnThinking(onThinking).                            // 可选，处理 thinking 事件的回调
+    SetReadTimeout(120)                                   // 可选，SSE 读取超时（秒）
 
 segModelID, err := client.GenSegment2D("Model2026...", opts)
 // 后续可作为 segmentModelID 传给 GenMidModel
@@ -616,9 +621,9 @@ func main() {
     // Step 2: 图生高模
     fmt.Println("Step 2: 生成高模...")
     opts = visvise.NewGenHighModelOptions().
-        SetBackView(views.BackView, "").
-        SetLeftView(views.LeftView, "").
-        SetRightView(views.RightView, "")
+        SetBackView(views.BackView).
+        SetLeftView(views.LeftView).
+        SetRightView(views.RightView)
     highID, _ := client.GenHighModel(views.MainView, opts)
     highModel, _ := client.WaitModel(highID, &visvise.WaitOptions{Timeout: 900})
     fmt.Println("高模下载地址:", highModel.OutputModel)
@@ -675,8 +680,8 @@ func main() {
     client := visvise.NewClient("...", "...", "...", nil)
 
     reduceFaces := []visvise.ReduceFace{
-        {ReduceLevel: 1, ReducePercent: 50, FaceType: int(visvise.FaceTypeQuad)},
-        {ReduceLevel: 2, ReducePercent: 25, FaceType: int(visvise.FaceTypeQuad)},
+        {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
+        {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
     }
 
     opts := visvise.NewGenLODOptions()

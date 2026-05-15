@@ -4,31 +4,31 @@ package visvise
 type NodeType int
 
 const (
-	NodeTypeReTopology   NodeType = 1  // Re-topology
-	NodeTypeLOD          NodeType = 2  // LOD
-	NodeTypeImgTo3DHigh  NodeType = 3  // Image to 3D (High)
-	NodeTypeAnimation    NodeType = 4  // Framing AI Animation
-	NodeTypeRigging      NodeType = 5  // Skeleton setup
-	NodeTypeSkinning     NodeType = 6  // Skinning
-	NodeTypeImgTo360     NodeType = 7  // Image to 360
-	NodeTypeTexture      NodeType = 8  // Texture
-	NodeTypeUV           NodeType = 9  // UV unwrap
-	NodeTypeMeshRefine   NodeType = 10 // Mesh refine
-	NodeTypeImgTo3DMid   NodeType = 11 // Image to 3D (Mid)
-	NodeTypeImgToPose    NodeType = 12 // Image to Pose
-	NodeTypeImgTo3DLow   NodeType = 13 // Image to 3D (Low)
-	NodeTypeSegment2D    NodeType = 14 // 2D Segmentation
+	NodeTypeReTopology  NodeType = 1  // Re-topology
+	NodeTypeLOD         NodeType = 2  // LOD
+	NodeTypeImgTo3DHigh NodeType = 3  // Image to 3D (High)
+	NodeTypeAnimation   NodeType = 4  // Framing AI Animation
+	NodeTypeRigging     NodeType = 5  // Skeleton setup
+	NodeTypeSkinning    NodeType = 6  // Skinning
+	NodeTypeImgTo360    NodeType = 7  // Image to 360
+	NodeTypeTexture     NodeType = 8  // Texture
+	NodeTypeUV          NodeType = 9  // UV unwrap
+	NodeTypeMeshRefine  NodeType = 10 // Mesh refine
+	NodeTypeImgTo3DMid  NodeType = 11 // Image to 3D (Mid)
+	NodeTypeImgToPose   NodeType = 12 // Image to Pose
+	NodeTypeImgTo3DLow  NodeType = 13 // Image to 3D (Low)
+	NodeTypeSegment2D   NodeType = 14 // 2D Segmentation
 )
 
 // ModelStatus represents the model asset status code
 type ModelStatus int
 
 const (
-	ModelStatusInvalid  ModelStatus = 0 // Invalid
-	ModelStatusPending  ModelStatus = 1 // Waiting for generation
-	ModelStatusRunning  ModelStatus = 2 // Generating
-	ModelStatusSuccess  ModelStatus = 3 // Generation succeeded
-	ModelStatusFailed   ModelStatus = 4 // Generation failed
+	ModelStatusInvalid ModelStatus = 0 // Invalid
+	ModelStatusPending ModelStatus = 1 // Waiting for generation
+	ModelStatusRunning ModelStatus = 2 // Generating
+	ModelStatusSuccess ModelStatus = 3 // Generation succeeded
+	ModelStatusFailed  ModelStatus = 4 // Generation failed
 )
 
 // FaceType represents the face type enum
@@ -77,9 +77,17 @@ const (
 type SegmentGranularity int
 
 const (
-	SegmentGranularityCoarse  SegmentGranularity = 1 // Coarse (x50%)
-	SegmentGranularityMedium  SegmentGranularity = 2 // Medium (x70%, default)
-	SegmentGranularityFine    SegmentGranularity = 3 // Fine (x100%)
+	SegmentGranularityCoarse SegmentGranularity = 1 // Coarse (x50%)
+	SegmentGranularityMedium SegmentGranularity = 2 // Medium (x70%, default)
+	SegmentGranularityFine   SegmentGranularity = 3 // Fine (x100%)
+)
+
+// MeshCategory represents the mesh category for rigging
+type MeshCategory string
+
+const (
+	MeshCategoryHumanoid MeshCategory = "humanoid" // Humanoid (default)
+	MeshCategoryTetrapod MeshCategory = "tetrapod" // Tetrapod (four-legged)
 )
 
 // AnimationSubType represents the animation sub-type

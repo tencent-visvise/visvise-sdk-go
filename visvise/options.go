@@ -485,17 +485,17 @@ func (o *GenTextureOptions) SetPrompt(prompt string) *GenTextureOptions {
 
 // GenRiggingOptions defines optional parameters for GenRigging
 type GenRiggingOptions struct {
-	Name             string    // optional, task name (auto-generated if empty)
-	AlgorithmModel   string    // optional, algorithm model name
-	MeshCategory     string    // optional, "humanoid" (default) or "tetrapod"
-	TemplateSkeleton FileInput // optional, template skeleton
+	Name             string       // optional, task name (auto-generated if empty)
+	AlgorithmModel   string       // optional, algorithm model name
+	MeshCategory     MeshCategory // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
+	TemplateSkeleton FileInput    // optional, template skeleton
 }
 
 // NewGenRiggingOptions creates GenRiggingOptions with common defaults
 func NewGenRiggingOptions() *GenRiggingOptions {
 	return &GenRiggingOptions{
 		Name:         "gen_rigging",
-		MeshCategory: "humanoid",
+		MeshCategory: MeshCategoryHumanoid,
 	}
 }
 
@@ -512,7 +512,7 @@ func (o *GenRiggingOptions) SetAlgorithmModel(model string) *GenRiggingOptions {
 }
 
 // SetMeshCategory sets the mesh category
-func (o *GenRiggingOptions) SetMeshCategory(category string) *GenRiggingOptions {
+func (o *GenRiggingOptions) SetMeshCategory(category MeshCategory) *GenRiggingOptions {
 	o.MeshCategory = category
 	return o
 }

@@ -47,7 +47,7 @@ func main() {
 	modelID, err := client.GenRigging(modelPath,
 		visvise.NewGenRiggingOptions().
 			SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").
-			SetMeshCategory("humanoid"). // humanoid（人形）或 tetrapod（四足）
+			SetMeshCategory(visvise.MeshCategoryHumanoid). // 人形（默认）或 visvise.MeshCategoryTetrapod（四足）
 			SetName("example_gen_rigging"))
 	if err != nil {
 		log.Fatalf("[gen_rigging] 创建任务失败: %v", err)

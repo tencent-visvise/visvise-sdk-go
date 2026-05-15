@@ -74,7 +74,7 @@ go run main.go
 `InputView.MainView` 和 `Prompt` 至少需要传一个。
 
 ### gen_rigging (骨骼架设)
-- `MeshCategory`: `humanoid`(人形) 或 `tetrapod`(四足)
+- `MeshCategory`: `visvise.MeshCategoryHumanoid`(人形，默认) 或 `visvise.MeshCategoryTetrapod`(四足)
 
 ### gen_skinning (蒙皮生成)
 需要提供 `MeshNames` 和 `JointNames` 列表。
@@ -90,4 +90,4 @@ go run main.go
 
 ### gen_segment_2d (2D拆分)
 需要先运行 `gen_360` 获取 `MV_360_MODEL_ID`。
-分割结果可作为 `gen_mid_model` 或 `gen_low_model` 的 `SegmentModelID` 参数。
+分割结果可作为 `gen_mid_model` 的 `SegmentModelID` 参数。
