@@ -201,7 +201,7 @@ opts := visvise.NewGen360Options().
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // optional, output format (default fbx)
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
     SetEnableAPose(true).                                 // optional, enable A-Pose
-    SetStyle("anime").                                    // optional, style type
+    SetStyle("灰模").                                    // optional, style type
     SetBackView("path/to/back.png").                      // optional, back view
     SetLeftView("path/to/left.png").                      // optional, left view
     SetRightView("path/to/right.png")                     // optional, right view

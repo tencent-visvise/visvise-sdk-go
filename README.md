@@ -202,7 +202,7 @@ opts := visvise.NewGen360Options().
     SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式（默认 fbx）
     SetFaceType(visvise.FaceTypeTriangle).                // 可选，面数类型（默认三角面）
     SetEnableAPose(true).                                 // 可选，是否开启 A-Pose
-    SetStyle("anime").                                    // 可选，风格类型
+    SetStyle("灰模").                                    // 可选，风格类型（仅 VISVISE 自研模型支持）：灰模/超写实/Q版卡通/像素风格
     SetBackView("path/to/back.png").                      // 可选，背视图
     SetLeftView("path/to/left.png").                      // 可选，左视图
     SetRightView("path/to/right.png")                     // 可选，右视图
