@@ -51,7 +51,6 @@ const (
 type HTTPClient struct {
 	AppID     string
 	SecretKey string
-	UID       string
 	BaseURL   string
 	Timeout   int
 	Client    *http.Client
@@ -59,11 +58,10 @@ type HTTPClient struct {
 }
 
 // NewHTTPClient creates a new HTTP client
-func NewHTTPClient(appID, secretKey, uid string, baseURL Environment, timeout int) *HTTPClient {
+func NewHTTPClient(appID, secretKey string, baseURL Environment, timeout int) *HTTPClient {
 	return &HTTPClient{
 		AppID:     appID,
 		SecretKey: secretKey,
-		UID:       uid,
 		BaseURL:   strings.TrimRight(string(baseURL), "/"),
 		Timeout:   timeout,
 		Debug:     false,
@@ -82,14 +80,14 @@ func (c *HTTPClient) sign(bodyStr string, ts string) string {
 }
 
 // buildHeaders builds the request headers with signature
-func (c *HTTPClient) buildHeaders(bodyStr string) http.Header {
+func (c *HTTPClient) buildHeaders(bodyStr string, rtx string) http.Header {
 	ts := strconv.FormatInt(time.Now().Unix(), 10)
 	sign := c.sign(bodyStr, ts)
 
 	headers := http.Header{
 		"Content-Type": []string{"application/json"},
 		"app_id":       []string{c.AppID},
-		"uid":          []string{c.UID},
+		"rtx":          []string{rtx},
 		"ts":           []string{ts},
 		"sign":         []string{sign},
 	}
@@ -97,7 +95,7 @@ func (c *HTTPClient) buildHeaders(bodyStr string) http.Header {
 }
 
 // Post sends a POST request
-func (c *HTTPClient) Post(path string, body interface{}) (interface{}, error) {
+func (c *HTTPClient) Post(path string, body interface{}, rtx string) (interface{}, error) {
 	var bodyStr string
 	if body == nil {
 		bodyStr = "{}"
@@ -111,7 +109,7 @@ func (c *HTTPClient) Post(path string, body interface{}) (interface{}, error) {
 	}
 
 	url := c.BaseURL + "/" + strings.TrimLeft(path, "/")
-	headers := c.buildHeaders(bodyStr)
+	headers := c.buildHeaders(bodyStr, rtx)
 
 	if c.Debug {
 		logger.Debug("POST request", "url", url, "body", truncate(bodyStr, 2000))
@@ -187,7 +185,7 @@ type SSEIterator struct {
 }
 
 // NewSSEIterator creates a new SSE iterator
-func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readTimeout int) (*SSEIterator, error) {
+func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readTimeout int, rtx string) (*SSEIterator, error) {
 	var bodyStr string
 	if body == nil {
 		bodyStr = "{}"
@@ -200,7 +198,7 @@ func NewSSEIterator(httpClient *HTTPClient, path string, body interface{}, readT
 	}
 
 	url := httpClient.BaseURL + "/" + strings.TrimLeft(path, "/")
-	headers := httpClient.buildHeaders(bodyStr)
+	headers := httpClient.buildHeaders(bodyStr, rtx)
 	headers.Set("Accept", "text/event-stream")
 
 	if httpClient.Debug {
@@ -313,11 +311,11 @@ func parseSSELineData(dataStr string) interface{} {
 }
 
 // PostSSE sends a POST request and returns an SSE iterator
-func (c *HTTPClient) PostSSE(path string, body interface{}, readTimeout int) (*SSEIterator, error) {
+func (c *HTTPClient) PostSSE(path string, body interface{}, readTimeout int, rtx string) (*SSEIterator, error) {
 	if readTimeout <= 0 {
 		readTimeout = 1200 // Default 20 minutes
 	}
-	return NewSSEIterator(c, path, body, readTimeout)
+	return NewSSEIterator(c, path, body, readTimeout, rtx)
 }
 
 // truncate truncates a string to maxLen characters

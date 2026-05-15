@@ -159,7 +159,6 @@ type Client struct {
 // 必需参数:
 //   - appID: 应用 ID
 //   - secretKey: 密钥
-//   - uid: 用户 ID
 //
 // 可选参数 (*ClientOptions):
 //   - Env: 运行环境，默认 EnvProd (生产环境)
@@ -169,25 +168,25 @@ type Client struct {
 // 示例:
 //
 //	// 使用默认配置（生产环境，30秒超时）
-//	client := visvise.NewClient("app_id", "secret_key", "uid", nil)
+//	client := visvise.NewClient("app_id", "secret_key", nil)
 //
 //	// 自定义环境
-//	client := visvise.NewClient("app_id", "secret_key", "uid",
+//	client := visvise.NewClient("app_id", "secret_key",
 //	  visvise.NewClientOptions().SetEnv(visvise.EnvDev))
 //
 //	// 开启调试日志
-//	client := visvise.NewClient("app_id", "secret_key", "uid",
+//	client := visvise.NewClient("app_id", "secret_key",
 //	  visvise.NewClientOptions().SetDebug(true))
 //
 //	// 自定义超时
-//	client := visvise.NewClient("app_id", "secret_key", "uid",
+//	client := visvise.NewClient("app_id", "secret_key",
 //	  visvise.NewClientOptions().SetTimeout(60).SetDebug(true))
-func NewClient(appID, secretKey, uid string, opts *ClientOptions) *Client {
+func NewClient(appID, secretKey string, opts *ClientOptions) *Client {
 	if opts == nil {
 		opts = NewClientOptions()
 	}
 
-	httpClient := NewHTTPClient(appID, secretKey, uid, opts.Env, opts.Timeout)
+	httpClient := NewHTTPClient(appID, secretKey, opts.Env, opts.Timeout)
 	httpClient.Debug = opts.Debug
 	if opts.Debug {
 		SetDebug(true)
@@ -207,9 +206,9 @@ func NewClient(appID, secretKey, uid string, opts *ClientOptions) *Client {
 //
 // 示例:
 //
-//	client := visvise.NewClientDefault("app_id", "secret_key", "uid")
-func NewClientDefault(appID, secretKey, uid string) *Client {
-	return NewClient(appID, secretKey, uid, nil)
+//	client := visvise.NewClientDefault("app_id", "secret_key")
+func NewClientDefault(appID, secretKey string) *Client {
+	return NewClient(appID, secretKey, nil)
 }
 
 // GetAPI returns the underlying API instance
@@ -229,12 +228,12 @@ func (c *Client) SetDebug(enabled bool) *Client {
 }
 
 // resolveFile resolves a file input to a COS URL
-func (c *Client) resolveFile(source FileInput, isTemp bool) (string, error) {
+func (c *Client) resolveFile(source FileInput, isTemp bool, rtx string) (string, error) {
 	// If source is a string
 	if s, ok := source.(string); ok {
 		// Check if it's a local file path
 		if isLocalFile(s) {
-			return c.uploadFile(s, filepath.Base(s), isTemp)
+			return c.uploadFile(s, filepath.Base(s), isTemp, rtx)
 		}
 		// Not a local file, check if it's a COS URL
 		if isCosURL(s) {
@@ -247,7 +246,7 @@ func (c *Client) resolveFile(source FileInput, isTemp bool) (string, error) {
 	// If source is bytes
 	if b, ok := source.([]byte); ok {
 		filename := genRandomFilename(sniffExtension(b, ".bin"))
-		return c.uploadBytes(b, filename, isTemp)
+		return c.uploadBytes(b, filename, isTemp, rtx)
 	}
 
 	// If source is io.Reader
@@ -257,14 +256,14 @@ func (c *Client) resolveFile(source FileInput, isTemp bool) (string, error) {
 			return "", fmt.Errorf("failed to read data: %w", err)
 		}
 		filename := genRandomFilename(sniffExtension(data, ".bin"))
-		return c.uploadBytes(data, filename, isTemp)
+		return c.uploadBytes(data, filename, isTemp, rtx)
 	}
 
 	return "", fmt.Errorf("unsupported file input type")
 }
 
-func (c *Client) uploadFile(path string, filename string, isTemp bool) (string, error) {
-	cred, err := c.api.GetCosCred(isTemp)
+func (c *Client) uploadFile(path string, filename string, isTemp bool, rtx string) (string, error) {
+	cred, err := c.api.GetCosCred(isTemp, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -278,8 +277,8 @@ func (c *Client) uploadFile(path string, filename string, isTemp bool) (string, 
 	return c.uploadWithCred(cred, data, filename)
 }
 
-func (c *Client) uploadBytes(data []byte, filename string, isTemp bool) (string, error) {
-	cred, err := c.api.GetCosCred(isTemp)
+func (c *Client) uploadBytes(data []byte, filename string, isTemp bool, rtx string) (string, error) {
+	cred, err := c.api.GetCosCred(isTemp, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -318,7 +317,7 @@ func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename st
 }
 
 // resolveModelFile resolves a model file to a COS URL, handling zip packaging automatically
-func (c *Client) resolveModelFile(source FileInput, isTemp bool) (string, error) {
+func (c *Client) resolveModelFile(source FileInput, isTemp bool, rtx string) (string, error) {
 	// If source is a string
 	if s, ok := source.(string); ok {
 		// Check if it's a local file path
@@ -335,10 +334,10 @@ func (c *Client) resolveModelFile(source FileInput, isTemp bool) (string, error)
 				srcFilename := filepath.Base(s)
 				stem := strings.TrimSuffix(srcFilename, filepath.Ext(srcFilename))
 				zipFilename := stem + ".zip"
-				return c.uploadZip(data, srcFilename, zipFilename, isTemp)
+				return c.uploadZip(data, srcFilename, zipFilename, isTemp, rtx)
 			}
 			// .zip or other format, upload directly
-			return c.uploadFile(s, filepath.Base(s), isTemp)
+			return c.uploadFile(s, filepath.Base(s), isTemp, rtx)
 		}
 		// Not a local file, check if it's a COS URL
 		if isCosURL(s) {
@@ -365,21 +364,21 @@ func (c *Client) resolveModelFile(source FileInput, isTemp bool) (string, error)
 	// Check if data is already a zip
 	if isZip(data) {
 		filename := genRandomFilename(".zip")
-		return c.uploadBytes(data, filename, isTemp)
+		return c.uploadBytes(data, filename, isTemp, rtx)
 	}
 
 	// Not a zip: detect extension (fbx/obj/glb etc), default to .fbx and package
 	filename := genRandomFilename(sniffExtension(data, ".fbx"))
 	stem := strings.TrimSuffix(filename, filepath.Ext(filename))
 	zipFilename := stem + ".zip"
-	return c.uploadZip(data, filename, zipFilename, isTemp)
+	return c.uploadZip(data, filename, zipFilename, isTemp, rtx)
 }
 
 func isZip(data []byte) bool {
 	return len(data) >= 4 && data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04
 }
 
-func (c *Client) uploadZip(data []byte, innerFilename, zipFilename string, isTemp bool) (string, error) {
+func (c *Client) uploadZip(data []byte, innerFilename, zipFilename string, isTemp bool, rtx string) (string, error) {
 	// Create zip in memory
 	buf := new(bytes.Buffer)
 	zw := zip.NewWriter(buf)
@@ -402,7 +401,7 @@ func (c *Client) uploadZip(data []byte, innerFilename, zipFilename string, isTem
 		return "", fmt.Errorf("failed to close zip: %w", err)
 	}
 
-	return c.uploadBytes(buf.Bytes(), zipFilename, isTemp)
+	return c.uploadBytes(buf.Bytes(), zipFilename, isTemp, rtx)
 }
 
 // buildModelZip builds a model zip with JSON parameters
@@ -549,12 +548,12 @@ func (c *Client) buildModelZip(source FileInput, jsonData map[string]interface{}
 }
 
 // resolveAlgorithmModel resolves the algorithm model name
-func (c *Client) resolveAlgorithmModel(algorithmModel string, nodeType NodeType, subType *int) (string, error) {
+func (c *Client) resolveAlgorithmModel(algorithmModel string, nodeType NodeType, subType *int, rtx string) (string, error) {
 	if algorithmModel != "" {
 		return algorithmModel, nil
 	}
 
-	models, err := c.api.ListAlgorithmModel(int(nodeType), subType)
+	models, err := c.api.ListAlgorithmModel(int(nodeType), subType, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -568,7 +567,7 @@ func (c *Client) resolveAlgorithmModel(algorithmModel string, nodeType NodeType,
 }
 
 // WaitModel polls and waits for model generation to complete
-func (c *Client) WaitModel(modelID string, opts *WaitOptions) (*ModelInfo, error) {
+func (c *Client) WaitModel(modelID string, rtx string, opts *WaitOptions) (*ModelInfo, error) {
 	if opts == nil {
 		opts = DefaultWaitOptions()
 	}
@@ -582,7 +581,7 @@ func (c *Client) WaitModel(modelID string, opts *WaitOptions) (*ModelInfo, error
 			return nil, NewPollingTimeoutError(modelID, opts.Timeout)
 		}
 
-		models, _, err := c.api.GetModelList([]string{modelID}, nil, nil, "", 10, 1)
+		models, _, err := c.api.GetModelList([]string{modelID}, nil, nil, "", 10, 1, rtx)
 		if err != nil {
 			// Network errors: log and continue retry
 			if _, ok := err.(*NetworkError); ok {
@@ -640,13 +639,13 @@ func (c *Client) WaitModel(modelID string, opts *WaitOptions) (*ModelInfo, error
 
 // Gen360 generates multi-view images from an image
 // Simplified version using Gen360Options
-func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error) {
+func (c *Client) Gen360(mainView FileInput, rtx string, opts *Gen360Options) (string, error) {
 	if opts == nil {
 		opts = NewGen360Options()
 	}
 
 	// Upload views
-	mainURL, err := c.resolveFile(mainView, false)
+	mainURL, err := c.resolveFile(mainView, false, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -654,7 +653,7 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	view := &View{MainView: mainURL}
 
 	if opts.BackView != nil {
-		backURL, err := c.resolveFile(opts.BackView, false)
+		backURL, err := c.resolveFile(opts.BackView, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -662,7 +661,7 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	}
 
 	if opts.LeftView != nil {
-		leftURL, err := c.resolveFile(opts.LeftView, false)
+		leftURL, err := c.resolveFile(opts.LeftView, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -670,14 +669,14 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 	}
 
 	if opts.RightView != nil {
-		rightURL, err := c.resolveFile(opts.RightView, false)
+		rightURL, err := c.resolveFile(opts.RightView, false, rtx)
 		if err != nil {
 			return "", err
 		}
 		view.RightView = rightURL
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo360, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo360, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -696,26 +695,26 @@ func (c *Client) Gen360(mainView FileInput, opts *Gen360Options) (string, error)
 
 	return c.api.GenMultiViews(opts.Name, view, map[string]interface{}{
 		"image_gen_360_params": img360,
-	})
+	}, rtx)
 }
 
 // GenHighModel generates a high-detail 3D model from images
 // Simplified version using GenHighModelOptions
-func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (string, error) {
+func (c *Client) GenHighModel(mainView FileInput, rtx string, opts *GenHighModelOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenHighModelOptions()
 	}
 
 	view := &View{}
 
-	mainURL, err := c.resolveFile(mainView, false)
+	mainURL, err := c.resolveFile(mainView, false, rtx)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	if opts.BackView != nil {
-		backURL, err := c.resolveFile(opts.BackView, false)
+		backURL, err := c.resolveFile(opts.BackView, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -723,7 +722,7 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 	}
 
 	if opts.LeftView != nil {
-		leftURL, err := c.resolveFile(opts.LeftView, false)
+		leftURL, err := c.resolveFile(opts.LeftView, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -731,14 +730,14 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 	}
 
 	if opts.RightView != nil {
-		rightURL, err := c.resolveFile(opts.RightView, false)
+		rightURL, err := c.resolveFile(opts.RightView, false, rtx)
 		if err != nil {
 			return "", err
 		}
 		view.RightView = rightURL
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DHigh, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DHigh, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -754,7 +753,7 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DHigh),
 		map[string]interface{}{"image_gen_model_params": imgParams},
-		view, "", "", "")
+		view, "", "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -767,7 +766,7 @@ func (c *Client) GenHighModel(mainView FileInput, opts *GenHighModelOptions) (st
 
 // GenMidModel generates a mid-detail 3D model from images
 // Simplified version using GenMidModelOptions
-func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, opts *GenMidModelOptions) (string, error) {
+func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, rtx string, opts *GenMidModelOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenMidModelOptions()
 	}
@@ -775,34 +774,34 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	view := &View{}
 
 	// Resolve main view
-	mainURL, err := c.resolveFile(mainView, false)
+	mainURL, err := c.resolveFile(mainView, false, rtx)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	// Resolve back view (required)
-	backURL, err := c.resolveFile(backView, false)
+	backURL, err := c.resolveFile(backView, false, rtx)
 	if err != nil {
 		return "", err
 	}
 	view.BackView = backURL
 
 	// Resolve left view (required)
-	leftURL, err := c.resolveFile(leftView, false)
+	leftURL, err := c.resolveFile(leftView, false, rtx)
 	if err != nil {
 		return "", err
 	}
 	view.LeftView = leftURL
 
 	// Resolve right view (required)
-	rightURL, err := c.resolveFile(rightView, false)
+	rightURL, err := c.resolveFile(rightView, false, rtx)
 	if err != nil {
 		return "", err
 	}
 	view.RightView = rightURL
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DMid, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DMid, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -818,7 +817,7 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DMid),
 		map[string]interface{}{"image_gen_model_params": imgParams},
-		view, "", "", "")
+		view, "", "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -831,21 +830,21 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 
 // GenLowModel generates a low-detail 3D model from images
 // Simplified version using GenLowModelOptions
-func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (string, error) {
+func (c *Client) GenLowModel(mainView FileInput, rtx string, opts *GenLowModelOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenLowModelOptions()
 	}
 
 	view := &View{}
 
-	mainURL, err := c.resolveFile(mainView, false)
+	mainURL, err := c.resolveFile(mainView, false, rtx)
 	if err != nil {
 		return "", err
 	}
 	view.MainView = mainURL
 
 	if opts.BackView != nil {
-		backURL, err := c.resolveFile(opts.BackView, false)
+		backURL, err := c.resolveFile(opts.BackView, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -853,7 +852,7 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 	}
 
 	if opts.LeftView != nil {
-		leftURL, err := c.resolveFile(opts.LeftView, false)
+		leftURL, err := c.resolveFile(opts.LeftView, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -861,14 +860,14 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 	}
 
 	if opts.RightView != nil {
-		rightURL, err := c.resolveFile(opts.RightView, false)
+		rightURL, err := c.resolveFile(opts.RightView, false, rtx)
 		if err != nil {
 			return "", err
 		}
 		view.RightView = rightURL
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DLow, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DLow, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -881,7 +880,7 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DLow),
 		map[string]interface{}{"image_gen_model_params": imgParams},
-		view, "", "", "")
+		view, "", "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -894,17 +893,17 @@ func (c *Client) GenLowModel(mainView FileInput, opts *GenLowModelOptions) (stri
 
 // GenMeshRefine performs mesh refinement/optimization
 // Simplified version using GenMeshRefineOptions
-func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) (string, error) {
+func (c *Client) GenMeshRefine(modelPath FileInput, rtx string, opts *GenMeshRefineOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenMeshRefineOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, false)
+	cosURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeMeshRefine, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeMeshRefine, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -917,7 +916,7 @@ func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) 
 		params["mode"] = *opts.Mode
 	}
 	if opts.ColorModel != nil {
-		colorURL, err := c.resolveModelFile(opts.ColorModel, false)
+		colorURL, err := c.resolveModelFile(opts.ColorModel, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -926,7 +925,7 @@ func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) 
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeMeshRefine),
 		map[string]interface{}{"mesh_refine_params": params},
-		nil, cosURL, "", "")
+		nil, cosURL, "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -939,17 +938,17 @@ func (c *Client) GenMeshRefine(modelPath FileInput, opts *GenMeshRefineOptions) 
 
 // GenRetopology performs re-topology on a model
 // Simplified version using GenRetopologyOptions
-func (c *Client) GenRetopology(modelPath FileInput, opts *GenRetopologyOptions) (string, error) {
+func (c *Client) GenRetopology(modelPath FileInput, rtx string, opts *GenRetopologyOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenRetopologyOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, false)
+	cosURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeReTopology, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeReTopology, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -968,7 +967,7 @@ func (c *Client) GenRetopology(modelPath FileInput, opts *GenRetopologyOptions) 
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeReTopology),
 		map[string]interface{}{"re_topology_params": params},
-		nil, cosURL, "", "")
+		nil, cosURL, "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -981,17 +980,17 @@ func (c *Client) GenRetopology(modelPath FileInput, opts *GenRetopologyOptions) 
 
 // GenLOD generates LOD (Level of Detail) models
 // Simplified version using GenLODOptions
-func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, opts *GenLODOptions) ([]string, error) {
+func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, rtx string, opts *GenLODOptions) ([]string, error) {
 	if opts == nil {
 		opts = NewGenLODOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, false)
+	cosURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return nil, err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeLOD, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeLOD, nil, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -1008,22 +1007,22 @@ func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, opts *Gen
 			"reduce_faces":        reduceFacesData,
 			"gen_times":           opts.GenTimes,
 		}},
-		nil, cosURL, "", "")
+		nil, cosURL, "", "", rtx)
 }
 
 // GenUV performs UV unwrapping on a model
 // Simplified version using GenUVOptions
-func (c *Client) GenUV(modelPath FileInput, opts *GenUVOptions) (string, error) {
+func (c *Client) GenUV(modelPath FileInput, rtx string, opts *GenUVOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenUVOptions()
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, false)
+	cosURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeUV, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeUV, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1037,7 +1036,7 @@ func (c *Client) GenUV(modelPath FileInput, opts *GenUVOptions) (string, error) 
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeUV),
 		map[string]interface{}{"uv_params": uvParams},
-		nil, cosURL, "", "")
+		nil, cosURL, "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1050,7 +1049,7 @@ func (c *Client) GenUV(modelPath FileInput, opts *GenUVOptions) (string, error) 
 
 // GenTexture generates textures for a model
 // Simplified version using GenTextureOptions
-func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (string, error) {
+func (c *Client) GenTexture(modelPath FileInput, rtx string, opts *GenTextureOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenTextureOptions()
 	}
@@ -1063,12 +1062,12 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 		return "", errors.New("gen_texture requires either input_view.main_view or prompt")
 	}
 
-	cosURL, err := c.resolveModelFile(modelPath, false)
+	cosURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return "", err
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeTexture, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeTexture, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1090,28 +1089,28 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 	if opts.InputView != nil {
 		resolvedView = &View{}
 		if opts.InputView.MainView != "" {
-			url, err := c.resolveFile(opts.InputView.MainView, false)
+			url, err := c.resolveFile(opts.InputView.MainView, false, rtx)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.MainView = url
 		}
 		if opts.InputView.BackView != "" {
-			url, err := c.resolveFile(opts.InputView.BackView, false)
+			url, err := c.resolveFile(opts.InputView.BackView, false, rtx)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.BackView = url
 		}
 		if opts.InputView.LeftView != "" {
-			url, err := c.resolveFile(opts.InputView.LeftView, false)
+			url, err := c.resolveFile(opts.InputView.LeftView, false, rtx)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.LeftView = url
 		}
 		if opts.InputView.RightView != "" {
-			url, err := c.resolveFile(opts.InputView.RightView, false)
+			url, err := c.resolveFile(opts.InputView.RightView, false, rtx)
 			if err != nil {
 				return "", err
 			}
@@ -1121,7 +1120,7 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeTexture),
 		map[string]interface{}{"tex_params": texParams},
-		resolvedView, cosURL, "", "")
+		resolvedView, cosURL, "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1134,12 +1133,12 @@ func (c *Client) GenTexture(modelPath FileInput, opts *GenTextureOptions) (strin
 
 // GenRigging performs skeleton rigging on a model
 // Simplified version using GenRiggingOptions
-func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (string, error) {
+func (c *Client) GenRigging(modelPath FileInput, rtx string, opts *GenRiggingOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenRiggingOptions()
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeRigging, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeRigging, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1156,7 +1155,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 		return "", err
 	}
 
-	cosURL, err := c.uploadBytes(zipBytes, "", false)
+	cosURL, err := c.uploadBytes(zipBytes, "", false, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1165,7 +1164,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 		"algorithm_model": resolvedModel,
 	}
 	if opts.TemplateSkeleton != nil {
-		skeletonURL, err := c.resolveModelFile(opts.TemplateSkeleton, false)
+		skeletonURL, err := c.resolveModelFile(opts.TemplateSkeleton, false, rtx)
 		if err != nil {
 			return "", err
 		}
@@ -1174,7 +1173,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeRigging),
 		map[string]interface{}{"go_rigging_params": goRiggingParams},
-		nil, cosURL, "", "")
+		nil, cosURL, "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1187,7 +1186,7 @@ func (c *Client) GenRigging(modelPath FileInput, opts *GenRiggingOptions) (strin
 
 // GenSkinning performs skinning on a rigged model
 // Simplified version using GenSkinningOptions
-func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (string, error) {
+func (c *Client) GenSkinning(modelPath FileInput, rtx string, opts *GenSkinningOptions) (string, error) {
 	if opts == nil {
 		return "", errors.New("gen_skinning requires opts with mesh_names and joint_names")
 	}
@@ -1196,7 +1195,7 @@ func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (str
 		return "", errors.New("gen_skinning requires mesh_names and joint_names")
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSkinning, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSkinning, nil, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1216,14 +1215,14 @@ func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (str
 		return "", err
 	}
 
-	cosURL, err := c.uploadBytes(zipBytes, "", false)
+	cosURL, err := c.uploadBytes(zipBytes, "", false, rtx)
 	if err != nil {
 		return "", err
 	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeSkinning),
 		map[string]interface{}{},
-		nil, cosURL, "", "")
+		nil, cosURL, "", "", rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1236,23 +1235,23 @@ func (c *Client) GenSkinning(modelPath FileInput, opts *GenSkinningOptions) (str
 
 // GenVideoMotion generates animation from video
 // Simplified version using GenVideoMotionOptions
-func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, opts *GenVideoMotionOptions) (string, error) {
+func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, rtx string, opts *GenVideoMotionOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenVideoMotionOptions()
 	}
 
-	modelURL, err := c.resolveModelFile(modelPath, false)
+	modelURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return "", err
 	}
 
-	videoURL, err := c.resolveFile(videoPath, false)
+	videoURL, err := c.resolveFile(videoPath, false, rtx)
 	if err != nil {
 		return "", err
 	}
 
 	subType := int(AnimationSubTypeVideo)
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeAnimation, &subType)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeAnimation, &subType, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1273,7 +1272,7 @@ func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, opts *GenVideoMo
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeAnimation),
 		map[string]interface{}{"framing_ai_params": framing},
-		nil, modelURL, "", videoURL)
+		nil, modelURL, "", videoURL, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1286,18 +1285,18 @@ func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, opts *GenVideoMo
 
 // GenTextMotion generates animation from text prompts
 // Simplified version using GenTextMotionOptions
-func (c *Client) GenTextMotion(modelPath FileInput, prompt string, opts *GenTextMotionOptions) ([]string, error) {
+func (c *Client) GenTextMotion(modelPath FileInput, prompt string, rtx string, opts *GenTextMotionOptions) ([]string, error) {
 	if opts == nil {
 		opts = NewGenTextMotionOptions()
 	}
 
-	modelURL, err := c.resolveModelFile(modelPath, false)
+	modelURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return nil, err
 	}
 
 	subType := int(AnimationSubTypeText)
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeAnimation, &subType)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeAnimation, &subType, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -1308,31 +1307,31 @@ func (c *Client) GenTextMotion(modelPath FileInput, prompt string, opts *GenText
 			"output_model_format": opts.OutputModelFormat,
 			"prompt":              prompt,
 		}},
-		nil, modelURL, "", "")
+		nil, modelURL, "", "", rtx)
 }
 
 // GenPose generates poses from reference images
 // Simplified version using GenPoseOptions
-func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, opts *GenPoseOptions) ([]string, error) {
+func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, rtx string, opts *GenPoseOptions) ([]string, error) {
 	if opts == nil {
 		opts = NewGenPoseOptions()
 	}
 
-	modelURL, err := c.resolveModelFile(modelPath, false)
+	modelURL, err := c.resolveModelFile(modelPath, false, rtx)
 	if err != nil {
 		return nil, err
 	}
 
 	uploadedImages := make([]string, len(inputImages))
 	for i, img := range inputImages {
-		url, err := c.resolveFile(img, false)
+		url, err := c.resolveFile(img, false, rtx)
 		if err != nil {
 			return nil, err
 		}
 		uploadedImages[i] = url
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgToPose, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgToPose, nil, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -1340,7 +1339,7 @@ func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, opts *Gen
 	return c.api.BatchGenPose(opts.Name, modelURL, uploadedImages, map[string]interface{}{
 		"algorithm_model":     resolvedModel,
 		"output_model_format": opts.OutputModelFormat,
-	})
+	}, rtx)
 }
 
 // ThinkingCallback is a callback function for SSE thinking events
@@ -1348,7 +1347,7 @@ type ThinkingCallback func(string)
 
 // GenSegment2D performs 2D segmentation (SSE streaming interface)
 // Simplified version using GenSegment2DOptions
-func (c *Client) GenSegment2D(modelID360 string, opts *GenSegment2DOptions) (string, error) {
+func (c *Client) GenSegment2D(modelID360 string, rtx string, opts *GenSegment2DOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenSegment2DOptions()
 	}
@@ -1361,28 +1360,28 @@ func (c *Client) GenSegment2D(modelID360 string, opts *GenSegment2DOptions) (str
 	if opts.InputView != nil {
 		resolvedView = &View{}
 		if opts.InputView.MainView != "" {
-			url, err := c.resolveFile(opts.InputView.MainView, false)
+			url, err := c.resolveFile(opts.InputView.MainView, false, rtx)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.MainView = url
 		}
 		if opts.InputView.BackView != "" {
-			url, err := c.resolveFile(opts.InputView.BackView, false)
+			url, err := c.resolveFile(opts.InputView.BackView, false, rtx)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.BackView = url
 		}
 		if opts.InputView.LeftView != "" {
-			url, err := c.resolveFile(opts.InputView.LeftView, false)
+			url, err := c.resolveFile(opts.InputView.LeftView, false, rtx)
 			if err != nil {
 				return "", err
 			}
 			resolvedView.LeftView = url
 		}
 		if opts.InputView.RightView != "" {
-			url, err := c.resolveFile(opts.InputView.RightView, false)
+			url, err := c.resolveFile(opts.InputView.RightView, false, rtx)
 			if err != nil {
 				return "", err
 			}
@@ -1390,12 +1389,12 @@ func (c *Client) GenSegment2D(modelID360 string, opts *GenSegment2DOptions) (str
 		}
 	}
 
-	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSegment2D, nil)
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSegment2D, nil, rtx)
 	if err != nil {
 		return "", err
 	}
 
-	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, opts.Granularity, opts.Prompt, opts.ReadTimeout)
+	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, opts.Granularity, opts.Prompt, opts.ReadTimeout, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1462,6 +1461,6 @@ done:
 }
 
 // UploadFile uploads a local file to COS and returns the COS URL
-func (c *Client) UploadFile(path string, filename string, isTemp bool) (string, error) {
-	return c.uploadFile(path, filename, isTemp)
+func (c *Client) UploadFile(path string, filename string, isTemp bool, rtx string) (string, error) {
+	return c.uploadFile(path, filename, isTemp, rtx)
 }

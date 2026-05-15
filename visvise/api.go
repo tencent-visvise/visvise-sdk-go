@@ -11,13 +11,13 @@ func NewVisviseAPI(httpClient *HTTPClient) *VisviseAPI {
 }
 
 // GetCosCred retrieves COS temporary credentials for direct file upload
-func (api *VisviseAPI) GetCosCred(isTemp bool) (*GetCosCredResult, error) {
+func (api *VisviseAPI) GetCosCred(isTemp bool, rtx string) (*GetCosCredResult, error) {
 	body := map[string]interface{}{}
 	if isTemp {
 		body["is_temp"] = true
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/get_cos_cred", body)
+	data, err := api.http.Post("openapi/weaver/resource/get_cos_cred", body, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +60,8 @@ func parseCosCredResult(data interface{}) *GetCosCredResult {
 }
 
 // GetUserQuota retrieves the remaining generation count for the current API key
-func (api *VisviseAPI) GetUserQuota() (*UserQuota, error) {
-	data, err := api.http.Post("openapi/weaver/resource/get_user_quota", map[string]interface{}{})
+func (api *VisviseAPI) GetUserQuota(rtx string) (*UserQuota, error) {
+	data, err := api.http.Post("openapi/weaver/resource/get_user_quota", map[string]interface{}{}, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -84,6 +84,7 @@ func (api *VisviseAPI) Gen3DModel(
 	inputModel string,
 	inputModelFormat string,
 	inputVideo string,
+	rtx string,
 ) ([]string, error) {
 	body := map[string]interface{}{
 		"name":      name,
@@ -104,7 +105,7 @@ func (api *VisviseAPI) Gen3DModel(
 		body["input_video"] = inputVideo
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/gen_3d_model", body)
+	data, err := api.http.Post("openapi/weaver/resource/gen_3d_model", body, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -124,14 +125,14 @@ func (api *VisviseAPI) Gen3DModel(
 }
 
 // GenMultiViews generates multi-view images from a single image (async)
-func (api *VisviseAPI) GenMultiViews(name string, inputView *View, params map[string]interface{}) (string, error) {
+func (api *VisviseAPI) GenMultiViews(name string, inputView *View, params map[string]interface{}, rtx string) (string, error) {
 	body := map[string]interface{}{
 		"name":       name,
 		"input_view": inputView.ToMap(),
 		"params":     params,
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/gen_multi_views", body)
+	data, err := api.http.Post("openapi/weaver/resource/gen_multi_views", body, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -152,6 +153,7 @@ func (api *VisviseAPI) GetModelList(
 	keyword string,
 	limit int,
 	page int,
+	rtx string,
 ) ([]ModelInfo, int, error) {
 	body := map[string]interface{}{
 		"limit": limit,
@@ -171,7 +173,7 @@ func (api *VisviseAPI) GetModelList(
 		body["keyword"] = keyword
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/get_model_list", body)
+	data, err := api.http.Post("openapi/weaver/resource/get_model_list", body, rtx)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -181,7 +183,7 @@ func (api *VisviseAPI) GetModelList(
 }
 
 // ListAlgorithmModel retrieves the list of algorithm models for a given node type
-func (api *VisviseAPI) ListAlgorithmModel(nodeType int, subType *int) ([]string, error) {
+func (api *VisviseAPI) ListAlgorithmModel(nodeType int, subType *int, rtx string) ([]string, error) {
 	body := map[string]interface{}{
 		"node_type": nodeType,
 	}
@@ -189,7 +191,7 @@ func (api *VisviseAPI) ListAlgorithmModel(nodeType int, subType *int) ([]string,
 		body["type"] = *subType
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/list_algorithm_model", body)
+	data, err := api.http.Post("openapi/weaver/resource/list_algorithm_model", body, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -209,12 +211,12 @@ func (api *VisviseAPI) ListAlgorithmModel(nodeType int, subType *int) ([]string,
 }
 
 // DownloadModel generates a signed download URL for a model asset
-func (api *VisviseAPI) DownloadModel(modelID string) (string, error) {
+func (api *VisviseAPI) DownloadModel(modelID string, rtx string) (string, error) {
 	body := map[string]interface{}{
 		"model_id": modelID,
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/download_model", body)
+	data, err := api.http.Post("openapi/weaver/resource/download_model", body, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -226,30 +228,30 @@ func (api *VisviseAPI) DownloadModel(modelID string) (string, error) {
 }
 
 // DeleteModel deletes a single model asset
-func (api *VisviseAPI) DeleteModel(modelID string) error {
+func (api *VisviseAPI) DeleteModel(modelID string, rtx string) error {
 	body := map[string]interface{}{
 		"model_id": modelID,
 	}
-	_, err := api.http.Post("openapi/weaver/resource/delete_model", body)
+	_, err := api.http.Post("openapi/weaver/resource/delete_model", body, rtx)
 	return err
 }
 
 // BatchDeleteModel batch deletes model assets
-func (api *VisviseAPI) BatchDeleteModel(modelIDs []string) error {
+func (api *VisviseAPI) BatchDeleteModel(modelIDs []string, rtx string) error {
 	body := map[string]interface{}{
 		"model_ids": modelIDs,
 	}
-	_, err := api.http.Post("openapi/weaver/resource/batch_delete_model", body)
+	_, err := api.http.Post("openapi/weaver/resource/batch_delete_model", body, rtx)
 	return err
 }
 
 // RemoveBackground removes the background from an image
-func (api *VisviseAPI) RemoveBackground(imageURL string) (string, error) {
+func (api *VisviseAPI) RemoveBackground(imageURL string, rtx string) (string, error) {
 	body := map[string]interface{}{
 		"image_url": imageURL,
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/remove_background", body)
+	data, err := api.http.Post("openapi/weaver/resource/remove_background", body, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -268,6 +270,7 @@ func (api *VisviseAPI) BatchGenPose(
 	inputModel string,
 	inputImages []string,
 	params map[string]interface{},
+	rtx string,
 ) ([]string, error) {
 	body := map[string]interface{}{
 		"name":         name,
@@ -276,7 +279,7 @@ func (api *VisviseAPI) BatchGenPose(
 		"params":       params,
 	}
 
-	data, err := api.http.Post("openapi/weaver/resource/batch_gen_pose", body)
+	data, err := api.http.Post("openapi/weaver/resource/batch_gen_pose", body, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -296,12 +299,12 @@ func (api *VisviseAPI) BatchGenPose(
 }
 
 // GetText2MotionPromptList retrieves the text-to-motion prompt demo list
-func (api *VisviseAPI) GetText2MotionPromptList(language string) ([]string, error) {
+func (api *VisviseAPI) GetText2MotionPromptList(language string, rtx string) ([]string, error) {
 	body := map[string]interface{}{
 		"language": language,
 	}
 
-	data, err := api.http.Post("openapi/weaver/demo/get_text2motion_prompt_list", body)
+	data, err := api.http.Post("openapi/weaver/demo/get_text2motion_prompt_list", body, rtx)
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +333,7 @@ func (api *VisviseAPI) InitSegment(
 	granularity *SegmentGranularity,
 	prompt string,
 	readTimeout int,
+	rtx string,
 ) (*SSEIterator, error) {
 	body := map[string]interface{}{
 		"name":            name,
@@ -352,5 +356,5 @@ func (api *VisviseAPI) InitSegment(
 		body["prompt"] = prompt
 	}
 
-	return api.http.PostSSE("openapi/weaver/component/init_segment", body, readTimeout)
+	return api.http.PostSSE("openapi/weaver/component/init_segment", body, readTimeout, rtx)
 }

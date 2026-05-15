@@ -10,11 +10,11 @@ import (
 
 // TestFinal_QueryYesterdayModels tests querying yesterday's batch2 model_id results
 func TestFinal_QueryYesterdayModels(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 	api := client.GetAPI()
 
 	yesterdayModels := []struct {
@@ -29,7 +29,7 @@ func TestFinal_QueryYesterdayModels(t *testing.T) {
 	}
 
 	for _, m := range yesterdayModels {
-		models, _, err := api.GetModelList([]string{m.id}, nil, nil, "", 10, 1)
+		models, _, err := api.GetModelList([]string{m.id}, nil, nil, "", 10, 1, rtx)
 		if err != nil {
 			t.Logf("Query model %s failed: %v", m.id, err)
 			continue
@@ -44,11 +44,11 @@ func TestFinal_QueryYesterdayModels(t *testing.T) {
 
 // TestFinal_CompleteBatch2 tests completing batch2 remaining test cases
 func TestFinal_CompleteBatch2(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGenMidModelOptions().
 		SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
@@ -56,7 +56,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		SetFaceType(visvise.FaceTypeQuad).
 		SetName("opt_mid_b_final")
 
-	modelID, err := client.GenMidModel(mv["main"], mv["back"], mv["left"], mv["right"], opts)
+	modelID, err := client.GenMidModel(mv["main"], mv["back"], mv["left"], mv["right"], rtx, opts)
 	if err != nil {
 		t.Fatalf("GenMidModel face_type=2 fbx failed: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		SetName("opt_rtp_b_final").
 		SetDetailLevel(visvise.DetailLevelHigh)
 
-	modelID, err = client.GenRetopology(modelPath, opts2)
+	modelID, err = client.GenRetopology(modelPath, rtx, opts2)
 	if err != nil {
 		t.Fatalf("GenRetopology detail_level=3 face_type=1 failed: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		SetName("opt_uv_b_final").
 		SetEnableAutoSmoothing(false)
 
-	modelID, err = client.GenUV(modelPath, opts3)
+	modelID, err = client.GenUV(modelPath, rtx, opts3)
 	if err != nil {
 		t.Fatalf("GenUV smooth=False failed: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		SetResolution(2048).
 		SetUnwarpUV(true)
 
-	modelID, err = client.GenTexture(modelPath, opts4)
+	modelID, err = client.GenTexture(modelPath, rtx, opts4)
 	if err != nil {
 		t.Fatalf("GenTexture res=2048 unwarp_uv=True failed: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 		SetName("opt_lod_a_final").
 		SetGenTimes(1)
 
-	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts5)
+	modelIDs, err := client.GenLOD(modelPath, reduceFaces, rtx, opts5)
 	if err != nil {
 		t.Fatalf("GenLOD gen_times=1 failed: %v", err)
 	}
@@ -122,8 +122,8 @@ func TestFinal_CompleteBatch2(t *testing.T) {
 
 // TestFinal_AnimationTests tests batch3 animation tests
 func TestFinal_AnimationTests(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
 	animModelPath := assetsDir + "/animation_model.fbx"
@@ -132,7 +132,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGenVideoMotionOptions().
 		SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
@@ -140,7 +140,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		SetWithHand(true).
 		SetMultipleTrack(false)
 
-	modelID, err := client.GenVideoMotion(animModelPath, videoPath, opts)
+	modelID, err := client.GenVideoMotion(animModelPath, videoPath, rtx, opts)
 	if err != nil {
 		t.Fatalf("GenVideoMotion with_hand=True failed: %v", err)
 	}
@@ -152,7 +152,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		SetWithHand(false).
 		SetMultipleTrack(false)
 
-	modelID, err = client.GenVideoMotion(animModelPath, videoPath, opts2)
+	modelID, err = client.GenVideoMotion(animModelPath, videoPath, rtx, opts2)
 	if err != nil {
 		t.Fatalf("GenVideoMotion hand=False multi=False failed: %v", err)
 	}
@@ -162,7 +162,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 		SetName("opt_tm_a_final")
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", opts3)
+	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", rtx, opts3)
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=挥手 failed: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		SetOutputModelFormat(visvise.OutputModelFormatGLB).
 		SetName("opt_tm_b_final")
 
-	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", opts4)
+	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", rtx, opts4)
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=踏步 glb failed: %v", err)
 	}

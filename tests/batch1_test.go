@@ -18,8 +18,8 @@ var mv = map[string]string{
 
 // TestBatch1_Gen360APose tests gen_360 with enable_a_pose=True
 func TestBatch1_Gen360APose(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
 	mainViewPath := assetsDir + "/main_view.png"
@@ -27,13 +27,13 @@ func TestBatch1_Gen360APose(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGen360Options().
 		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
 		SetEnableAPose(true)
 
-	modelID, err := client.Gen360(mainViewPath, opts)
+	modelID, err := client.Gen360(mainViewPath, rtx, opts)
 	if err != nil {
 		t.Fatalf("Gen360 a_pose=True failed: %v", err)
 	}
@@ -41,7 +41,7 @@ func TestBatch1_Gen360APose(t *testing.T) {
 	t.Logf("PASS: gen_360 a_pose=True - model_id=%s", modelID)
 
 	waitOpts := &visvise.WaitOptions{Interval: 3, Timeout: 600}
-	model, err := client.WaitModel(modelID, waitOpts)
+	model, err := client.WaitModel(modelID, rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -51,8 +51,8 @@ func TestBatch1_Gen360APose(t *testing.T) {
 
 // TestBatch1_Gen360NoAPose tests gen_360 with enable_a_pose=False
 func TestBatch1_Gen360NoAPose(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
 	mainViewPath := assetsDir + "/main_view.png"
@@ -60,13 +60,13 @@ func TestBatch1_Gen360NoAPose(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGen360Options().
 		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
 		SetEnableAPose(false)
 
-	modelID, err := client.Gen360(mainViewPath, opts)
+	modelID, err := client.Gen360(mainViewPath, rtx, opts)
 	if err != nil {
 		t.Fatalf("Gen360 a_pose=False failed: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestBatch1_Gen360NoAPose(t *testing.T) {
 	t.Logf("PASS: gen_360 a_pose=False - model_id=%s", modelID)
 
 	waitOpts := &visvise.WaitOptions{Interval: 3, Timeout: 600}
-	model, err := client.WaitModel(modelID, waitOpts)
+	model, err := client.WaitModel(modelID, rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -84,11 +84,11 @@ func TestBatch1_Gen360NoAPose(t *testing.T) {
 
 // TestBatch1_HighModelFaceNum tests gen_high_model with face_num=100000
 func TestBatch1_HighModelFaceNum(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGenHighModelOptions().
 		SetAlgorithmModel("Tripo-v3.1-ultra").
@@ -96,7 +96,7 @@ func TestBatch1_HighModelFaceNum(t *testing.T) {
 		SetFaceType(visvise.FaceTypeTriangle).
 		SetFaceNum(100000)
 
-	modelID, err := client.GenHighModel(mv["main"], opts)
+	modelID, err := client.GenHighModel(mv["main"], rtx, opts)
 	if err != nil {
 		t.Fatalf("GenHighModel face_num=100000 failed: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestBatch1_HighModelFaceNum(t *testing.T) {
 	t.Logf("PASS: high face_num=100000 - model_id=%s", modelID)
 
 	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, waitOpts)
+	model, err := client.WaitModel(modelID, rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -114,18 +114,18 @@ func TestBatch1_HighModelFaceNum(t *testing.T) {
 
 // TestBatch1_HighModelFaceType2 tests gen_high_model with face_type=2 and glb format
 func TestBatch1_HighModelFaceType2(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGenHighModelOptions().
 		SetAlgorithmModel("Tripo-v3.1-ultra").
 		SetOutputModelFormat(visvise.OutputModelFormatGLB).
 		SetFaceType(visvise.FaceTypeQuad)
 
-	modelID, err := client.GenHighModel(mv["main"], opts)
+	modelID, err := client.GenHighModel(mv["main"], rtx, opts)
 	if err != nil {
 		t.Fatalf("GenHighModel face_type=2 glb failed: %v", err)
 	}
@@ -133,7 +133,7 @@ func TestBatch1_HighModelFaceType2(t *testing.T) {
 	t.Logf("PASS: high face_type=2 glb - model_id=%s", modelID)
 
 	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, waitOpts)
+	model, err := client.WaitModel(modelID, rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -143,11 +143,11 @@ func TestBatch1_HighModelFaceType2(t *testing.T) {
 
 // TestBatch1_LowModelFaceType1Back tests gen_low_model with face_type=1 and back_view
 func TestBatch1_LowModelFaceType1Back(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGenLowModelOptions().
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
@@ -155,7 +155,7 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 		SetFaceType(visvise.FaceTypeTriangle).
 		SetBackView(mv["back"])
 
-	modelID, err := client.GenLowModel(mv["main"], opts)
+	modelID, err := client.GenLowModel(mv["main"], rtx, opts)
 	if err != nil {
 		t.Fatalf("GenLowModel face_type=1 back failed: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 	t.Logf("PASS: low face_type=1 back - model_id=%s", modelID)
 
 	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, waitOpts)
+	model, err := client.WaitModel(modelID, rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -173,18 +173,18 @@ func TestBatch1_LowModelFaceType1Back(t *testing.T) {
 
 // TestBatch1_LowModelFaceType2 tests gen_low_model with face_type=2 and fbx format
 func TestBatch1_LowModelFaceType2(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	opts := visvise.NewGenLowModelOptions().
 		SetAlgorithmModel("Tripo-v1.0-快速生成").
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetFaceType(visvise.FaceTypeQuad)
 
-	modelID, err := client.GenLowModel(mv["main"], opts)
+	modelID, err := client.GenLowModel(mv["main"], rtx, opts)
 	if err != nil {
 		t.Fatalf("GenLowModel face_type=2 fbx failed: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestBatch1_LowModelFaceType2(t *testing.T) {
 	t.Logf("PASS: low face_type=2 fbx - model_id=%s", modelID)
 
 	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelID, waitOpts)
+	model, err := client.WaitModel(modelID, rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {
@@ -202,8 +202,8 @@ func TestBatch1_LowModelFaceType2(t *testing.T) {
 
 // TestBatch1_LODGenTimes tests gen_lod with gen_times=1
 func TestBatch1_LODGenTimes(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
 	modelPath := assetsDir + "/tex_model.obj"
@@ -211,7 +211,7 @@ func TestBatch1_LODGenTimes(t *testing.T) {
 		t.Skip("Skipping test: tex_model.obj not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 
 	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad}}
 	opts := visvise.NewGenLODOptions().
@@ -219,7 +219,7 @@ func TestBatch1_LODGenTimes(t *testing.T) {
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetGenTimes(1)
 
-	modelIDs, err := client.GenLOD(modelPath, reduceFaces, opts)
+	modelIDs, err := client.GenLOD(modelPath, reduceFaces, rtx, opts)
 	if err != nil {
 		t.Fatalf("GenLOD gen_times=1 failed: %v", err)
 	}
@@ -227,7 +227,7 @@ func TestBatch1_LODGenTimes(t *testing.T) {
 	t.Logf("PASS: lod gen_times=1 - model_ids=%v", modelIDs)
 
 	waitOpts := &visvise.WaitOptions{Interval: 5, Timeout: 900}
-	model, err := client.WaitModel(modelIDs[0], waitOpts)
+	model, err := client.WaitModel(modelIDs[0], rtx, waitOpts)
 	if err != nil {
 		t.Logf("Wait failed (may timeout): %v", err)
 	} else {

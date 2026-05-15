@@ -769,7 +769,7 @@ type ClientOptions struct {
 // 示例:
 //
 //	opts := visvise.NewClientOptions().SetEnv(visvise.EnvDev).SetDebug(true)
-//	client := visvise.NewClient("app_id", "secret_key", "uid", opts)
+//	client := visvise.NewClient("app_id", "secret_key", opts)
 func NewClientOptions() *ClientOptions {
 	return &ClientOptions{
 		Env:     EnvProd,

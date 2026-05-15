@@ -13,16 +13,16 @@ import (
 // 通过提示词描述动作自动生成 3D 动画，一次返回 4 个版本供抽卡选择。
 //
 // Usage:
-//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_UID=xxx VISVISE_ENV=prod go run main.go
+//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
 func main() {
 	appID := os.Getenv("VISVISE_APP_ID")
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
-	uid := os.Getenv("VISVISE_UID")
+	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
 
-	if appID == "" || secretKey == "" || uid == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_UID")
+	if appID == "" || secretKey == "" || rtx == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
 	}
 
 	env := visvise.EnvProd
@@ -33,7 +33,7 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(env))
 
 	assetsDir := "./tests/assets"
@@ -42,7 +42,7 @@ func main() {
 	fmt.Println("[gen_text_motion] 开始文本生动画...")
 
 	// 一次生成 4 个版本供抽卡
-	modelIDs, err := client.GenTextMotion(modelPath, "一个人在跳街舞",
+	modelIDs, err := client.GenTextMotion(modelPath, "一个人在跳街舞", rtx,
 		visvise.NewGenTextMotionOptions().
 			SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).

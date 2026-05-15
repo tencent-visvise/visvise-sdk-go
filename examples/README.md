@@ -33,7 +33,7 @@ examples/
 ```bash
 export VISVISE_APP_ID="your_app_id"
 export VISVISE_SECRET_KEY="your_secret_key"
-export VISVISE_UID="your_uid"
+export VISVISE_RTX="your_rtx"
 export VISVISE_ENV="prod"  # 可选: prod, test, dev
 ```
 

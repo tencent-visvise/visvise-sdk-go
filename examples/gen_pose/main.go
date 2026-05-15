@@ -13,16 +13,16 @@ import (
 // 从参考图片中提取姿态，驱动 3D 模型生成对应 Pose。
 //
 // Usage:
-//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_UID=xxx VISVISE_ENV=prod go run main.go
+//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
 func main() {
 	appID := os.Getenv("VISVISE_APP_ID")
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
-	uid := os.Getenv("VISVISE_UID")
+	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
 
-	if appID == "" || secretKey == "" || uid == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_UID")
+	if appID == "" || secretKey == "" || rtx == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
 	}
 
 	env := visvise.EnvProd
@@ -33,7 +33,7 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(env))
 
 	assetsDir := "./tests/assets"
@@ -45,7 +45,7 @@ func main() {
 	// []visvise.FileInput 类型转换
 	inputImages := []visvise.FileInput{poseRef}
 
-	modelIDs, err := client.GenPose(modelPath, inputImages,
+	modelIDs, err := client.GenPose(modelPath, inputImages, rtx,
 		visvise.NewGenPoseOptions().
 			SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -56,7 +56,7 @@ func main() {
 	fmt.Printf("[gen_pose] 任务已创建，model_ids=%v\n", modelIDs)
 
 	for _, mid := range modelIDs {
-		model, err := client.WaitModel(mid, &visvise.WaitOptions{
+		model, err := client.WaitModel(mid, rtx, &visvise.WaitOptions{
 			Interval: 3.0,
 			Timeout:  600,
 		})

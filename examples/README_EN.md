@@ -33,7 +33,7 @@ Before running the examples, you need to set the following environment variables
 ```bash
 export VISVISE_APP_ID="your_app_id"
 export VISVISE_SECRET_KEY="your_secret_key"
-export VISVISE_UID="your_uid"
+export VISVISE_RTX="your_rtx"
 export VISVISE_ENV="prod"  # Optional: prod, test, dev
 ```
 

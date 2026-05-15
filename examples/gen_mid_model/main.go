@@ -14,16 +14,16 @@ import (
 // 优先从环境变量 MV_360_MODEL_ID 读取 gen_360 的输出，自动提取四视图。
 //
 // Usage:
-//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_UID=xxx VISVISE_ENV=prod go run main.go
+//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
 func main() {
 	appID := os.Getenv("VISVISE_APP_ID")
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
-	uid := os.Getenv("VISVISE_UID")
+	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
 
-	if appID == "" || secretKey == "" || uid == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_UID")
+	if appID == "" || secretKey == "" || rtx == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
 	}
 
 	env := visvise.EnvProd
@@ -34,7 +34,7 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(env))
 
 	assetsDir := "./tests/assets"
@@ -44,7 +44,7 @@ func main() {
 
 	if mvModelID != "" {
 		fmt.Printf("[gen_mid_model] 从 gen_360 输出提取四视图 (model_id=%s)\n", mvModelID)
-		models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, nil, "", 10, 1)
+		models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, nil, "", 10, 1, rtx)
 		if err != nil || len(models) == 0 {
 			log.Fatalf("[gen_mid_model] 获取模型失败: %v", err)
 		}
@@ -62,7 +62,7 @@ func main() {
 
 	fmt.Println("[gen_mid_model] 开始生成中模...")
 
-	modelID, err := client.GenMidModel(mainView, backView, leftView, rightView,
+	modelID, err := client.GenMidModel(mainView, backView, leftView, rightView, rtx,
 		visvise.NewGenMidModelOptions().
 			SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -73,7 +73,7 @@ func main() {
 	}
 	fmt.Printf("[gen_mid_model] 任务已创建，model_id=%s\n", modelID)
 
-	model, err := client.WaitModel(modelID, &visvise.WaitOptions{
+	model, err := client.WaitModel(modelID, rtx, &visvise.WaitOptions{
 		Interval: 5.0,
 		Timeout:  900,
 	})

@@ -13,16 +13,16 @@ import (
 // 仅需主视图，其余视图可选。
 //
 // Usage:
-//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_UID=xxx VISVISE_ENV=prod go run main.go
+//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
 func main() {
 	appID := os.Getenv("VISVISE_APP_ID")
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
-	uid := os.Getenv("VISVISE_UID")
+	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
 
-	if appID == "" || secretKey == "" || uid == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_UID")
+	if appID == "" || secretKey == "" || rtx == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
 	}
 
 	env := visvise.EnvProd
@@ -33,7 +33,7 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(env))
 
 	assetsDir := "./tests/assets"
@@ -41,7 +41,7 @@ func main() {
 
 	fmt.Println("[gen_low_model] 开始生成低模...")
 
-	modelID, err := client.GenLowModel(mainView,
+	modelID, err := client.GenLowModel(mainView, rtx,
 		visvise.NewGenLowModelOptions().
 			SetAlgorithmModel("Tripo-v1.0-快速生成").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
@@ -52,7 +52,7 @@ func main() {
 	}
 	fmt.Printf("[gen_low_model] 任务已创建，model_id=%s\n", modelID)
 
-	model, err := client.WaitModel(modelID, &visvise.WaitOptions{
+	model, err := client.WaitModel(modelID, rtx, &visvise.WaitOptions{
 		Interval: 3.0,
 		Timeout:  600,
 	})

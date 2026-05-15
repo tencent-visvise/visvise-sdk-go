@@ -10,21 +10,21 @@ import (
 var (
 	appID     = os.Getenv("VISVISE_APP_ID")
 	secretKey = os.Getenv("VISVISE_SECRET_KEY")
-	uid       = os.Getenv("VISVISE_UID")
+	rtx       = os.Getenv("VISVISE_RTX")
 	assetsDir = "assets"
 )
 
 // TestAtomicAPI_GetUserQuota tests the get_user_quota API
 func TestAtomicAPI_GetUserQuota(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(visvise.EnvDev).SetDebug(true))
 	api := client.GetAPI()
 
-	quota, err := api.GetUserQuota()
+	quota, err := api.GetUserQuota(rtx)
 	if err != nil {
 		t.Fatalf("GetUserQuota failed: %v", err)
 	}
@@ -38,11 +38,11 @@ func TestAtomicAPI_GetUserQuota(t *testing.T) {
 
 // TestAtomicAPI_ListAlgorithmModel tests the list_algorithm_model API
 func TestAtomicAPI_ListAlgorithmModel(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 	api := client.GetAPI()
 
 	testCases := []struct {
@@ -59,7 +59,7 @@ func TestAtomicAPI_ListAlgorithmModel(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		models, err := api.ListAlgorithmModel(tc.nodeType, tc.subType)
+		models, err := api.ListAlgorithmModel(tc.nodeType, tc.subType, rtx)
 		if err != nil {
 			t.Errorf("ListAlgorithmModel %s failed: %v", tc.label, err)
 			continue
@@ -74,15 +74,15 @@ func TestAtomicAPI_ListAlgorithmModel(t *testing.T) {
 
 // TestAtomicAPI_GetText2MotionPromptList tests the get_text2motion_prompt_list API
 func TestAtomicAPI_GetText2MotionPromptList(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 	api := client.GetAPI()
 
 	for _, lang := range []string{"zh", "en"} {
-		prompts, err := api.GetText2MotionPromptList(lang)
+		prompts, err := api.GetText2MotionPromptList(lang, rtx)
 		if err != nil {
 			t.Errorf("GetText2MotionPromptList lang=%s failed: %v", lang, err)
 			continue
@@ -97,8 +97,8 @@ func TestAtomicAPI_GetText2MotionPromptList(t *testing.T) {
 
 // TestAtomicAPI_RemoveBackground tests the remove_bg API
 func TestAtomicAPI_RemoveBackground(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
 	mainViewPath := assetsDir + "/main_view.png"
@@ -106,15 +106,15 @@ func TestAtomicAPI_RemoveBackground(t *testing.T) {
 		t.Skip("Skipping test: main_view.png not found in tests/assets")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 	api := client.GetAPI()
 
-	cosURL, err := client.UploadFile(mainViewPath, "", false)
+	cosURL, err := client.UploadFile(mainViewPath, "", false, rtx)
 	if err != nil {
 		t.Fatalf("Upload file failed: %v", err)
 	}
 
-	resultURL, err := api.RemoveBackground(cosURL)
+	resultURL, err := api.RemoveBackground(cosURL, rtx)
 	if err != nil {
 		t.Fatalf("RemoveBackground failed: %v", err)
 	}
@@ -128,15 +128,15 @@ func TestAtomicAPI_RemoveBackground(t *testing.T) {
 
 // TestAtomicAPI_DownloadModel tests the download_model API
 func TestAtomicAPI_DownloadModel(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 	api := client.GetAPI()
 
 	knownModelID := "Model2026042300226056"
-	url, err := api.DownloadModel(knownModelID)
+	url, err := api.DownloadModel(knownModelID, rtx)
 	if err != nil {
 		t.Fatalf("DownloadModel failed: %v", err)
 	}
@@ -150,8 +150,8 @@ func TestAtomicAPI_DownloadModel(t *testing.T) {
 
 // TestAtomicAPI_DeleteModel tests the delete_model API
 func TestAtomicAPI_DeleteModel(t *testing.T) {
-	if appID == "" || secretKey == "" || uid == "" {
-		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_UID not set")
+	if appID == "" || secretKey == "" || rtx == "" {
+		t.Skip("Skipping test: VISVISE_APP_ID, VISVISE_SECRET_KEY, or VISVISE_RTX not set")
 	}
 
 	animModelPath := assetsDir + "/animation_model.fbx"
@@ -161,18 +161,18 @@ func TestAtomicAPI_DeleteModel(t *testing.T) {
 		t.Skip("Skipping test: animation_model.fbx not found")
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid, nil)
+	client := visvise.NewClient(appID, secretKey, nil)
 	api := client.GetAPI()
 
-	animModelURL, err := client.UploadFile(animModelPath, "", false)
+	animModelURL, err := client.UploadFile(animModelPath, "", false, rtx)
 	if err != nil {
 		t.Fatalf("Upload animation model failed: %v", err)
 	}
-	poseRefURL, err := client.UploadFile(poseRefPath, "", false)
+	poseRefURL, err := client.UploadFile(poseRefPath, "", false, rtx)
 	if err != nil {
 		t.Fatalf("Upload pose ref failed: %v", err)
 	}
-	mainViewURL, err := client.UploadFile(mainViewPath, "", false)
+	mainViewURL, err := client.UploadFile(mainViewPath, "", false, rtx)
 	if err != nil {
 		t.Fatalf("Upload main view failed: %v", err)
 	}
@@ -181,7 +181,7 @@ func TestAtomicAPI_DeleteModel(t *testing.T) {
 		"algorithm_model":     "VISVISE-PosingAI-V1.0.0",
 		"output_model_format": "fbx",
 	}
-	ids, err := api.BatchGenPose("delete_test", animModelURL, []string{poseRefURL, mainViewURL}, params)
+	ids, err := api.BatchGenPose("delete_test", animModelURL, []string{poseRefURL, mainViewURL}, params, rtx)
 	if err != nil {
 		t.Fatalf("BatchGenPose failed: %v", err)
 	}
@@ -190,19 +190,19 @@ func TestAtomicAPI_DeleteModel(t *testing.T) {
 	}
 	t.Logf("Created test model ids: %v", ids)
 
-	err = api.DeleteModel(ids[0])
+	err = api.DeleteModel(ids[0], rtx)
 	if err != nil {
 		t.Fatalf("DeleteModel failed: %v", err)
 	}
 	t.Logf("PASS: delete_model - deleted %s", ids[0])
 
-	err = api.BatchDeleteModel([]string{ids[1]})
+	err = api.BatchDeleteModel([]string{ids[1]}, rtx)
 	if err != nil {
 		t.Fatalf("BatchDeleteModel failed: %v", err)
 	}
 	t.Logf("PASS: batch_delete_model - batch deleted %s", ids[1])
 
-	models, _, err := api.GetModelList(ids, nil, nil, "", 10, 1)
+	models, _, err := api.GetModelList(ids, nil, nil, "", 10, 1, rtx)
 	if err != nil {
 		t.Fatalf("GetModelList failed: %v", err)
 	}

@@ -14,16 +14,16 @@ import (
 // input_view.main_view 和 prompt 必须传其中一个。
 //
 // Usage:
-//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_UID=xxx VISVISE_ENV=prod go run main.go
+//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
 func main() {
 	appID := os.Getenv("VISVISE_APP_ID")
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
-	uid := os.Getenv("VISVISE_UID")
+	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
 
-	if appID == "" || secretKey == "" || uid == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_UID")
+	if appID == "" || secretKey == "" || rtx == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
 	}
 
 	env := visvise.EnvProd
@@ -34,7 +34,7 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(env))
 
 	assetsDir := "./tests/assets"
@@ -48,7 +48,7 @@ func main() {
 		LeftView: assetsDir + "/tex_ref_left.jpg",
 	}
 
-	modelID, err := client.GenTexture(assetsDir+"/tex_model.obj",
+	modelID, err := client.GenTexture(assetsDir+"/tex_model.obj", rtx,
 		visvise.NewGenTextureOptions().
 			SetAlgorithmModel("hunyuan3D-TEX-v2.0").
 			SetInputView(inputView).
@@ -60,7 +60,7 @@ func main() {
 	}
 	fmt.Printf("[gen_texture] 任务已创建，model_id=%s\n", modelID)
 
-	model, err := client.WaitModel(modelID, &visvise.WaitOptions{
+	model, err := client.WaitModel(modelID, rtx, &visvise.WaitOptions{
 		Interval: 5.0,
 		Timeout:  900,
 	})

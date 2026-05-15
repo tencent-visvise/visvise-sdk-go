@@ -14,16 +14,16 @@ import (
 // SDK 内部自动构建 JSON 参数文件并打包成 zip 上传。
 //
 // Usage:
-//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_UID=xxx VISVISE_ENV=prod go run main.go
+//   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
 func main() {
 	appID := os.Getenv("VISVISE_APP_ID")
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
-	uid := os.Getenv("VISVISE_UID")
+	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
 
-	if appID == "" || secretKey == "" || uid == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_UID")
+	if appID == "" || secretKey == "" || rtx == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
 	}
 
 	env := visvise.EnvProd
@@ -34,7 +34,7 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey, uid,
+	client := visvise.NewClient(appID, secretKey,
 		visvise.NewClientOptions().SetEnv(env))
 
 	assetsDir := "./tests/assets"
@@ -44,7 +44,7 @@ func main() {
 
 	// SDK 自动将 model.fbx + 参数 JSON 打包成 zip 上传
 	// 无需手动准备 zip 包
-	modelID, err := client.GenRigging(modelPath,
+	modelID, err := client.GenRigging(modelPath, rtx,
 		visvise.NewGenRiggingOptions().
 			SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").
 			SetMeshCategory(visvise.MeshCategoryHumanoid). // 人形（默认）或 visvise.MeshCategoryTetrapod（四足）
@@ -54,7 +54,7 @@ func main() {
 	}
 	fmt.Printf("[gen_rigging] 任务已创建，model_id=%s\n", modelID)
 
-	model, err := client.WaitModel(modelID, &visvise.WaitOptions{
+	model, err := client.WaitModel(modelID, rtx, &visvise.WaitOptions{
 		Interval: 5.0,
 		Timeout:  600,
 	})
