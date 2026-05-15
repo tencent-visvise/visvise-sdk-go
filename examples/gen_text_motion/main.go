@@ -53,7 +53,7 @@ func main() {
 	fmt.Printf("[gen_text_motion] 任务已创建，共 %d 个版本：%v\n", len(modelIDs), modelIDs)
 
 	fmt.Println("[gen_text_motion] 等待第一个版本完成（可按需等待全部）...")
-	model, err := client.WaitModel(modelIDs[0], &visvise.WaitOptions{
+	model, err := client.WaitModel(modelIDs[0], rtx, &visvise.WaitOptions{
 		Interval: 5.0,
 		Timeout:  900,
 	})
