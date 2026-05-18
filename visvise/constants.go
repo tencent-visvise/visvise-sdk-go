@@ -97,3 +97,12 @@ const (
 	AnimationSubTypeVideo AnimationSubType = 1 // Video to animation
 	AnimationSubTypeText  AnimationSubType = 2 // Text to animation
 )
+
+type ImageGen360Style string
+
+const (
+	GRAY_MODEL ImageGen360Style = "灰模"
+	PHOTOREAL  ImageGen360Style = "超写实"
+	Q_TOON     ImageGen360Style = "Q版卡通"
+	PIXEL      ImageGen360Style = "像素风格"
+)

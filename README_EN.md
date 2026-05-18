@@ -206,7 +206,7 @@ opts := visvise.NewGen360Options().
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // optional, output format (default fbx)
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
     SetEnableAPose(true).                                 // optional, enable A-Pose
-    SetStyle("灰模").                                    // optional, style type
+    SetStyle(string(GRAY_MODEL)).                         // optional, style (VISVISE proprietary models only). Must be one of ImageGen360Style: GRAY_MODEL/PHOTOREAL/Q_TOON/PIXEL — any other value will be rejected
     SetBackView("path/to/back.png").                      // optional, back view
     SetLeftView("path/to/left.png").                      // optional, left view
     SetRightView("path/to/right.png")                     // optional, right view
