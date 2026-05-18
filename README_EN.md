@@ -564,7 +564,8 @@ All SDK errors inherit from `WeaverError`; you can catch the base class or any s
 |---|---|---|
 | `WeaverError` | any | Base error |
 | `NetworkError` | — | Connection / timeout errors |
-| `SignatureError` | 400 | Signature failure |
+| `SignatureError` | 410    | Signature failure |
+| `SignatureExpiredError` | 411    | Signature expired (clock skew between client and server) |
 | `InvalidParamsError` | 120008 | Invalid request parameters |
 | `UserNotFoundError` | 120017 | User not found |
 | `PermissionDeniedError` | 120018 | Permission denied |

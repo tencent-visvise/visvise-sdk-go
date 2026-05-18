@@ -560,11 +560,12 @@ prompts, err := api.GetText2MotionPromptList("zh", rtx)
 
 所有 SDK 错误均继承自 `WeaverError`，可以捕获基类也可以精确捕获子类。
 
-| 错误类 | 对应错误码 | 说明 |
-|---|---|---|
-| `WeaverError` | 任意 | 基础错误 |
-| `NetworkError` | — | 网络连接失败、超时等 |
-| `SignatureError` | 400 | 签名错误 |
+| 错误类 | 对应错误码  | 说明 |
+|---|--------|---|
+| `WeaverError` | 任意     | 基础错误 |
+| `NetworkError` | —      | 网络连接失败、超时等 |
+| `SignatureError` | 410    | 签名错误 |
+| `SignatureExpiredError` | 411    | 签名过期，本地时钟与服务端偏差过大 |
 | `InvalidParamsError` | 120008 | 请求参数错误 |
 | `UserNotFoundError` | 120017 | 用户未找到 |
 | `PermissionDeniedError` | 120018 | 用户无权限 |
@@ -573,8 +574,8 @@ prompts, err := api.GetText2MotionPromptList("zh", rtx)
 | `ServerNetworkError` | 120028 | 服务器网络错误 |
 | `ServerTimeoutError` | 120032 | 服务器处理超时 |
 | `RateLimitError` | 120040 | 请求过于频繁 |
-| `ModelGenerationError` | — | 模型生成失败（status=4） |
-| `PollingTimeoutError` | — | WaitModel 等待超时 |
+| `ModelGenerationError` | —      | 模型生成失败（status=4） |
+| `PollingTimeoutError` | —      | WaitModel 等待超时 |
 
 ```go
 import (
