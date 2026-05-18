@@ -186,8 +186,13 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 所有 `Gen*()` 方法采用 **Options 结构体** 模式，通过链式调用设置可选参数，使用更简洁：
 
 > **关于 `name` 参数：** 所有 Gen* 方法的 `name` 参数均为可选，默认值在 `New*Options()` 中设置（如 `gen_360`、`gen_high_model` 等）。可通过 `SetName()` 自定义。
->
+
 > **关于 `algorithmModel` 参数：** 所有 Gen* 方法的 `algorithmModel` 参数均为可选。若不传，SDK 将自动调用 `ListAlgorithmModel` 获取当前账号可用的第一个算法模型。
+
+> **关于文件输入：** 所有文件类参数（如 `main_view` / `model_path` / `video_path` / `input_images` 等）统一支持三种形式：
+> - **本地路径**（`str`）：直接传文件路径，SDK 自动上传。
+> - **VISVISE 平台 COS URL**（`str`）：传入 `https://...myqcloud.com/...` 形式的链接，SDK 不再上传。
+> - **二进制内容**（`bytes` / `io.Reader`）：SDK 自动通过 magic bytes 识别格式（图片 PNG/JPEG/GIF/BMP/WebP/TIFF、3D 模型 FBX/OBJ/GLB/GLTF、视频 MP4/MOV/WebM/AVI、ZIP），用 `<uuid>.<识别后缀>` 自动命名上传，无需用户提供文件名。
 
 ### Gen360 — 图生360
 

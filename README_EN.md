@@ -186,8 +186,13 @@ High-level methods bundle "COS upload + async task creation" into a single call.
 All `Gen*()` methods use **Options struct** pattern with fluent API for cleaner optional parameter handling:
 
 > **About `name`:** Every `Gen*` method's `name` is optional. Default values are set in `New*Options()` (e.g., `gen_360`, `gen_high_model`, etc.). Customize via `SetName()`.
->
+
 > **About `algorithmModel`:** Every `Gen*` method's `algorithmModel` is optional. When omitted, the SDK calls `ListAlgorithmModel` and uses the first available model for the current account.
+
+> **About file inputs:** All file parameters (e.g. `main_view` / `model_path` / `video_path` / `input_images`) accept three forms:
+> - **Local path** (`str`): the SDK uploads the file automatically.
+> - **VISVISE COS URL** (`str`): pass a `https://...myqcloud.com/...` link directly; the SDK skips upload.
+> - **Binary content** (`bytes` / `io.Reader`): the SDK auto-detects the format via magic bytes (images PNG/JPEG/GIF/BMP/WebP/TIFF, 3D models FBX/OBJ/GLB/GLTF, videos MP4/MOV/WebM/AVI, ZIP) and uploads as `<uuid>.<sniffed-ext>` — no filename required from the caller.
 
 ### Gen360 — Image to 360
 
