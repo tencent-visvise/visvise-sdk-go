@@ -115,8 +115,8 @@ func (e *PollingTimeoutError) Error() string {
 
 // errorCodeMapping maps error codes to error types
 var errorCodeMapping = map[int]func(WeaverError) error{
-	411:    func(e WeaverError) error { return &SignatureError{WeaverError: e} },
-	412:    func(e WeaverError) error { return &SignatureExpiredError{WeaverError: e} },
+	410:    func(e WeaverError) error { return &SignatureError{WeaverError: e} },
+	411:    func(e WeaverError) error { return &SignatureExpiredError{WeaverError: e} },
 	120008: func(e WeaverError) error { return &InvalidParamsError{WeaverError: e} },
 	120017: func(e WeaverError) error { return &UserNotFoundError{WeaverError: e} },
 	120018: func(e WeaverError) error { return &PermissionDeniedError{WeaverError: e} },
