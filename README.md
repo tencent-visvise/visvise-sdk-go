@@ -198,7 +198,6 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 // 默认 name="gen_360"，输出格式为 fbx，面数类型为三角面
 opts := visvise.NewGen360Options().
     SetName("my_360").                                    // 可选，默认 "gen_360"
-    SetAlgorithmModel("hunyuan3D-MultiView-v3.0").        // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式（默认 fbx）
     SetFaceType(visvise.FaceTypeTriangle).                // 可选，面数类型（默认三角面）
     SetEnableAPose(true).                                 // 可选，是否开启 A-Pose
@@ -219,7 +218,6 @@ modelID, err := client.Gen360("path/to/character.png", rtx, opts)
 ```go
 opts := visvise.NewGenHighModelOptions().
     SetName("my_high_model").                            // 可选，默认 "gen_high_model"
-    SetAlgorithmModel("hunyuan3D-v3.1").                 // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式（默认 fbx）
     SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型（默认三角面）
     SetFaceNum(500000).                                  // 可选，目标面数（1000~1500000）
@@ -239,7 +237,6 @@ modelID, err := client.GenHighModel("path/to/main.png", rtx, opts)
 ```go
 opts := visvise.NewGenMidModelOptions().
     SetName("my_mid_model").                             // 可选，默认 "gen_mid_model"
-    SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").         // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
     SetFaceType(visvise.FaceTypeTriangle).              // 可选，面数类型
     SetSegmentModelID("Model2026...")                    // 可选，2D 分割资产 ID
@@ -264,7 +261,6 @@ modelID, err := client.GenMidModel(
 ```go
 opts := visvise.NewGenLowModelOptions().
     SetName("my_low_model").                             // 可选，默认 "gen_low_model"
-    SetAlgorithmModel("Tripo-v1.0-快速生成").             // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
     SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型
     SetBackView("path/to/back.png").                     // 可选，背视图
@@ -283,7 +279,6 @@ modelID, err := client.GenLowModel("path/to/main.png", rtx, opts)
 ```go
 opts := visvise.NewGenMeshRefineOptions().
     SetName("my_mesh_refine").                           // 可选，默认 "gen_mesh_refine"
-    SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").      // 可选
     SetInputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输入模型格式（默认 fbx）
     SetMode(visvise.MeshRefineModeOptimize).             // 可选，布线优化模式
     SetColorModel("path/to/color.fbx")                   // 可选，色彩模型
@@ -330,7 +325,6 @@ reduceFaces := []visvise.ReduceFace{
 
 opts := visvise.NewGenLODOptions().
     SetName("my_lod").                                   // 可选，默认 "gen_lod"
-    SetAlgorithmModel("VISVISE-LOD-V1.0.0").              // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式（默认 fbx）
     SetGenTimes(3)                                       // 可选，抽卡次数（默认 3）
 
@@ -346,7 +340,6 @@ modelIDs, err := client.GenLOD("path/to/model.fbx", reduceFaces, rtx, opts)
 ```go
 opts := visvise.NewGenUVOptions().
     SetName("my_uv").                                     // 可选，默认 "gen_uv"
-    SetAlgorithmModel("hunyuan3D-UV-v2.0").              // 可选
     SetEnableAutoSmoothing(true)                          // 可选，是否启用自动平滑
 
 modelID, err := client.GenUV("path/to/model.fbx", rtx, opts)
@@ -365,7 +358,6 @@ view := &visvise.View{MainView: "path/to/ref.png"}
 
 opts := visvise.NewGenTextureOptions().
     SetName("my_texture").                               // 可选，默认 "gen_texture"
-    SetAlgorithmModel("hunyuan3D-TEX-v2.0").              // 可选
     SetInputView(view).                                   // 可选，原画视图（与 prompt 至少传一个）
     SetResolution(2048).                                  // 可选，分辨率
     SetUnwarpUV(true).                                    // 可选，是否同时展开 UV
@@ -383,7 +375,6 @@ modelID, err := client.GenTexture("path/to/model.fbx", rtx, opts)
 ```go
 opts := visvise.NewGenRiggingOptions().
     SetName("my_rigging").                                // 可选，默认 "gen_rigging"
-    SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").       // 可选
     SetMeshCategory(visvise.MeshCategoryHumanoid).       // 可选，人形（默认）或 visvise.MeshCategoryTetrapod（四足）
     SetTemplateSkeleton("path/to/skeleton.fbx")           // 可选，模板骨骼
 
@@ -402,7 +393,6 @@ jointNames := []string{"Bip001", "Bip001 Pelvis"}
 
 opts := visvise.NewGenSkinningOptions(meshNames, jointNames).
     SetName("my_skinning").                               // 可选，默认 "gen_skinning"
-    SetAlgorithmModel("VISVISE-GoSkinning-V1.0.0")        // 可选
 
 modelID, err := client.GenSkinning("path/to/rigged_model.fbx", rtx, opts)
 ```
@@ -416,7 +406,6 @@ modelID, err := client.GenSkinning("path/to/rigged_model.fbx", rtx, opts)
 ```go
 opts := visvise.NewGenVideoMotionOptions().
     SetName("my_video_motion").                           // 可选，默认 "gen_video_motion"
-    SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").  // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式
     SetWithHand(true).                                    // 可选，是否开启手部捕捉
     SetMultipleTrack(false).                              // 可选，是否开启多人捕捉
@@ -434,7 +423,6 @@ modelID, err := client.GenVideoMotion("path/to/model.fbx", "path/to/dance.mp4", 
 ```go
 opts := visvise.NewGenTextMotionOptions().
     SetName("my_text_motion").                            // 可选，默认 "gen_text_motion"
-    SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").       // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式
 
 modelIDs, err := client.GenTextMotion("path/to/model.fbx", "一个人在跳街舞", rtx, opts)
@@ -455,7 +443,6 @@ inputImages := []visvise.FileInput{
 
 opts := visvise.NewGenPoseOptions().
     SetName("my_pose").                                   // 可选，默认 "gen_pose"
-    SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").         // 可选
     SetOutputModelFormat(visvise.OutputModelFormatFBX)    // 可选，输出格式
 
 modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, rtx, opts)
@@ -474,7 +461,6 @@ onThinking := func(content string) {
 
 opts := visvise.NewGenSegment2DOptions().
     SetName("my_segment").                                // 可选，默认 "gen_segment_2d"
-    SetAlgorithmModel("VISVISE-Seg2D-V1.0.0").           // 可选
     SetInputView(&visvise.View{MainView: "path/to/ref.png"}) // 可选，输入视图
     SetSplitType(visvise.SegmentSplitFrontView).          // 可选，正视图/四视图拆分
     SetGranularity(visvise.SegmentGranularityMedium).     // 可选，颗粒度
