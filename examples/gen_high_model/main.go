@@ -55,13 +55,7 @@ func main() {
 		mainView = assetsDir + "/main_view.png"
 	}
 
-	algorithmModel := "Tripo-v3.1-ultra"
-
-	fmt.Printf("[gen_high_model] algorithm_model=%s\n", algorithmModel)
-	fmt.Println("[gen_high_model] 开始生成高模...")
-
 	opts := visvise.NewGenHighModelOptions().
-		SetAlgorithmModel(algorithmModel).
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetFaceType(visvise.FaceTypeTriangle).
 		SetName("example_gen_high_model")

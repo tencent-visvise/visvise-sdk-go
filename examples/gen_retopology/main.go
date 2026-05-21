@@ -43,7 +43,6 @@ func main() {
 	fmt.Println("[gen_retopology] 开始重拓扑...")
 
 	opts := visvise.NewGenRetopologyOptions().
-		SetAlgorithmModel("hunyuan3D-RTP-v1.5").
 		SetOutputModelFormat(visvise.OutputModelFormatFBX).
 		SetFaceType(visvise.FaceTypeQuad).
 		SetDetailLevel(visvise.DetailLevelHigh). // 混元模型用 detail_level

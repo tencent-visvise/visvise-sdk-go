@@ -41,7 +41,6 @@ func main() {
 
 	modelID, err := client.GenUV(modelPath, rtx,
 		visvise.NewGenUVOptions().
-			SetAlgorithmModel("hunyuan3D-UV-v2.0").
 			SetEnableAutoSmoothing(true).
 			SetName("example_gen_uv"))
 	if err != nil {

@@ -49,7 +49,6 @@ func main() {
 
 	modelIDs, err := client.GenLOD(modelPath, reduceFaces, rtx,
 		visvise.NewGenLODOptions().
-			SetAlgorithmModel("VISVISE-LOD-V1.0.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetGenTimes(1).
 			SetName("example_gen_lod"))

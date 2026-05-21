@@ -47,7 +47,6 @@ func main() {
 
 	modelIDs, err := client.GenPose(modelPath, inputImages, rtx,
 		visvise.NewGenPoseOptions().
-			SetAlgorithmModel("VISVISE-PosingAI-V1.0.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetName("example_gen_pose"))
 	if err != nil {

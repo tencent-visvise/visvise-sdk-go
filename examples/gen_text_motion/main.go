@@ -44,7 +44,6 @@ func main() {
 	// 一次生成 4 个版本供抽卡
 	modelIDs, err := client.GenTextMotion(modelPath, "一个人在跳街舞", rtx,
 		visvise.NewGenTextMotionOptions().
-			SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetName("example_gen_text_motion"))
 	if err != nil {

@@ -50,7 +50,6 @@ func main() {
 
 	modelID, err := client.GenTexture(assetsDir+"/tex_model.obj", rtx,
 		visvise.NewGenTextureOptions().
-			SetAlgorithmModel("hunyuan3D-TEX-v2.0").
 			SetInputView(inputView).
 			SetResolution(2048).
 			SetUnwarpUV(false).

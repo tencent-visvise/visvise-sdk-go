@@ -46,7 +46,6 @@ func main() {
 	// 无需手动准备 zip 包
 	modelID, err := client.GenRigging(modelPath, rtx,
 		visvise.NewGenRiggingOptions().
-			SetAlgorithmModel("VISVISE-GoRigging-V1.0.0").
 			SetMeshCategory(visvise.MeshCategoryHumanoid). // 人形（默认）或 visvise.MeshCategoryTetrapod（四足）
 			SetName("example_gen_rigging"))
 	if err != nil {

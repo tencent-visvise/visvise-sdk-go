@@ -43,7 +43,6 @@ func main() {
 
 	modelID, err := client.GenMeshRefine(modelPath, rtx,
 		visvise.NewGenMeshRefineOptions().
-			SetAlgorithmModel("VISVISE-MeshRefine-V1.0.0").
 			SetInputModelFormat("fbx").
 			SetName("example_gen_mesh_refine"))
 	if err != nil {

@@ -74,7 +74,6 @@ func main() {
 
 	modelID, err := client.GenSkinning(modelPath, rtx,
 		visvise.NewGenSkinningOptions(meshNames, jointNames).
-			SetAlgorithmModel("VISVISE-GoSkinning-V1.0.0").
 			SetName("example_gen_skinning"))
 	if err != nil {
 		log.Fatalf("[gen_skinning] 创建任务失败: %v", err)

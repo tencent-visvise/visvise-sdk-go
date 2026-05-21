@@ -64,7 +64,6 @@ func main() {
 
 	modelID, err := client.GenMidModel(mainView, backView, leftView, rightView, rtx,
 		visvise.NewGenMidModelOptions().
-			SetAlgorithmModel("VISVISE-MeshGen-V1.0.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetFaceType(visvise.FaceTypeTriangle).
 			SetName("example_gen_mid_model"))

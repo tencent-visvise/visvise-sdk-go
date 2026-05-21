@@ -43,7 +43,6 @@ func main() {
 
 	modelID, err := client.GenLowModel(mainView, rtx,
 		visvise.NewGenLowModelOptions().
-			SetAlgorithmModel("Tripo-v1.0-快速生成").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetFaceType(visvise.FaceTypeTriangle).
 			SetName("example_gen_low_model"))

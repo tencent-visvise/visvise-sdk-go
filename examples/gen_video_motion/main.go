@@ -44,7 +44,6 @@ func main() {
 
 	modelID, err := client.GenVideoMotion(modelPath, videoPath, rtx,
 		visvise.NewGenVideoMotionOptions().
-			SetAlgorithmModel("VISVISE-FramingAI-Base-V1.5.0").
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetWithHand(true).
 			SetName("example_gen_video_motion"))

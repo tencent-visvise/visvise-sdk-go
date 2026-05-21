@@ -40,7 +40,6 @@ func main() {
 	mainView := assetsDir + "/main_view.png"
 
 	opts := visvise.NewGen360Options().
-		SetAlgorithmModel("VISVISE-MultiView-V1.0.0").
 		SetName("example_gen_360")
 
 	fmt.Printf("[gen_360] 开始生成多视图，输入图片：%s\n", mainView)
