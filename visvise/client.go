@@ -1150,12 +1150,12 @@ func (c *Client) GenRigging(modelPath FileInput, rtx string, opts *GenRiggingOpt
 		},
 	}
 
-	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, "")
+	zipBytes, fileName, err := c.buildModelZip(modelPath, jsonData, "")
 	if err != nil {
 		return "", err
 	}
 
-	cosURL, err := c.uploadBytes(zipBytes, "", false, rtx)
+	cosURL, err := c.uploadBytes(zipBytes, fileName, false, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1210,12 +1210,12 @@ func (c *Client) GenSkinning(modelPath FileInput, rtx string, opts *GenSkinningO
 		},
 	}
 
-	zipBytes, _, err := c.buildModelZip(modelPath, jsonData, "")
+	zipBytes, fileName, err := c.buildModelZip(modelPath, jsonData, "")
 	if err != nil {
 		return "", err
 	}
 
-	cosURL, err := c.uploadBytes(zipBytes, "", false, rtx)
+	cosURL, err := c.uploadBytes(zipBytes, fileName, false, rtx)
 	if err != nil {
 		return "", err
 	}
