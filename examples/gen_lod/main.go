@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // Example: gen_lod —— LOD 减面（node_type=2）

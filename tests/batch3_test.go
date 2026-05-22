@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // TestBatch3_VideoMotionWithHand tests gen_video_motion with with_hand=True

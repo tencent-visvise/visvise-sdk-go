@@ -1,4 +1,4 @@
-module github.com/visvise/visvise-sdk-go
+module github.com/tencent-visvise/visvise-sdk-go
 
 go 1.18
 

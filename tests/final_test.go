@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // TestFinal_QueryYesterdayModels tests querying yesterday's batch2 model_id results

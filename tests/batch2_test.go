@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // TestBatch2_MidModelFaceType1 tests gen_mid_model with face_type=1 and fbx format

@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // Example: gen_texture —— 贴图纹理生成（node_type=8）

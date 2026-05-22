@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 	"log"
 	"os"
 )

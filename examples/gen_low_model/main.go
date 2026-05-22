@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // Example: gen_low_model —— 图生低模（node_type=13）

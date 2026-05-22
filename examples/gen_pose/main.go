@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // Example: gen_pose —— 批量图生 Pose（node_type=12）

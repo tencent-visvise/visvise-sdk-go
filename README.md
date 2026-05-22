@@ -56,7 +56,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {
@@ -111,7 +111,7 @@ func main() {
 ## 客户端初始化
 
 ```go
-import "github.com/visvise/visvise-sdk-go/visvise"
+import "github.com/tencent-visvise/visvise-sdk-go/visvise"
 
 // 必需参数
 client := visvise.NewClient(
@@ -143,7 +143,7 @@ client := visvise.NewClient("...", "...",
 SDK 提供以下常量，推荐使用常量替代硬编码数字/字符串：
 
 ```go
-import "github.com/visvise/visvise-sdk-go/visvise"
+import "github.com/tencent-visvise/visvise-sdk-go/visvise"
 
 // 面数类型
 visvise.FaceTypeTriangle // 1 - 三角面
@@ -571,7 +571,7 @@ prompts, err := api.GetText2MotionPromptList("zh", rtx)
 ```go
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 client := visvise.NewClient("...", "...", nil)
@@ -599,7 +599,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {
@@ -633,7 +633,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {
@@ -667,7 +667,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {

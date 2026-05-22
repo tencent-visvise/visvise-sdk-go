@@ -56,7 +56,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {
@@ -111,7 +111,7 @@ func main() {
 ## Client Initialization
 
 ```go
-import "github.com/visvise/visvise-sdk-go/visvise"
+import "github.com/tencent-visvise/visvise-sdk-go/visvise"
 
 // Required parameters
 client := visvise.NewClient(
@@ -143,7 +143,7 @@ client := visvise.NewClient("...", "...",
 The SDK exposes the following constants. Prefer them over hard-coded numbers/strings:
 
 ```go
-import "github.com/visvise/visvise-sdk-go/visvise"
+import "github.com/tencent-visvise/visvise-sdk-go/visvise"
 
 // Face type
 visvise.FaceTypeTriangle // 1 - triangle faces
@@ -571,7 +571,7 @@ All SDK errors inherit from `WeaverError`; you can catch the base class or any s
 ```go
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 client := visvise.NewClient("...", "...", nil)
@@ -599,7 +599,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {
@@ -633,7 +633,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {
@@ -667,7 +667,7 @@ package main
 
 import (
     "fmt"
-    "github.com/visvise/visvise-sdk-go/visvise"
+    "github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 func main() {

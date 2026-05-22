@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/visvise/visvise-sdk-go/visvise"
+	"github.com/tencent-visvise/visvise-sdk-go/visvise"
 )
 
 // TestAutoAlgorithmModel_Gen360 tests gen_360 without algorithm_model parameter
