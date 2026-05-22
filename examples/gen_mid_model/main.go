@@ -21,9 +21,10 @@ func main() {
 	secretKey := os.Getenv("VISVISE_SECRET_KEY")
 	rtx := os.Getenv("VISVISE_RTX")
 	envStr := os.Getenv("VISVISE_ENV")
+	mvModelID := os.Getenv("MV_360_MODEL_ID")
 
-	if appID == "" || secretKey == "" || rtx == "" {
-		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX")
+	if appID == "" || secretKey == "" || rtx == "" || mvModelID == "" {
+		log.Fatal("请设置环境变量: VISVISE_APP_ID, VISVISE_SECRET_KEY, VISVISE_RTX, MV_360_MODEL_ID")
 	}
 
 	env := visvise.EnvProd
@@ -34,31 +35,21 @@ func main() {
 		env = visvise.EnvTest
 	}
 
-	client := visvise.NewClient(appID, secretKey,
-		visvise.NewClientOptions().SetEnv(env))
-
-	assetsDir := "./tests/assets"
-	mvModelID := os.Getenv("MV_360_MODEL_ID")
+	client := visvise.NewClient(appID, secretKey, visvise.NewClientOptions().SetEnv(env))
 
 	var mainView, backView, leftView, rightView string
 
-	if mvModelID != "" {
-		fmt.Printf("[gen_mid_model] 从 gen_360 输出提取四视图 (model_id=%s)\n", mvModelID)
-		models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, nil, "", 10, 1, rtx)
-		if err != nil || len(models) == 0 {
-			log.Fatalf("[gen_mid_model] 获取模型失败: %v", err)
-		}
-		out := models[0].ImageGen360Output.OutputView
-		mainView = stripSign(out.MainView)
-		backView = stripSign(out.BackView)
-		leftView = stripSign(out.LeftView)
-		rightView = stripSign(out.RightView)
-	} else {
-		mainView = getEnvOrDefault("MV_MAIN", assetsDir+"/main_view.png")
-		backView = getEnvOrDefault("MV_BACK", assetsDir+"/back_view.png")
-		leftView = getEnvOrDefault("MV_LEFT", assetsDir+"/left_view.png")
-		rightView = getEnvOrDefault("MV_RIGHT", assetsDir+"/right_view.png")
+	fmt.Printf("[gen_mid_model] 从 gen_360 输出提取四视图 (model_id=%s)\n", mvModelID)
+
+	models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, []int{3}, "", 10, 1, rtx)
+	if err != nil || len(models) == 0 {
+		log.Fatalf("[gen_mid_model] 获取模型失败: %v", err)
 	}
+	out := models[0].ImageGen360Output.OutputView
+	mainView = stripSign(out.MainView)
+	backView = stripSign(out.BackView)
+	leftView = stripSign(out.LeftView)
+	rightView = stripSign(out.RightView)
 
 	fmt.Println("[gen_mid_model] 开始生成中模...")
 
