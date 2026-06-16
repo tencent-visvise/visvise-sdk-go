@@ -83,6 +83,7 @@ type GenHighModelOptions struct {
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	FaceType          FaceType          // optional, face type (default triangle)
 	FaceNum           *int              // optional, target face count (1000-1500000)
+	EnablePbr         bool              // optional, enable PBR (default false)
 	BackView          FileInput         // optional, back view to improve quality
 	LeftView          FileInput         // optional, left view
 	RightView         FileInput         // optional, right view
