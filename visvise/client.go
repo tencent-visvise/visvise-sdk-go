@@ -746,6 +746,7 @@ func (c *Client) GenHighModel(mainView FileInput, rtx string, opts *GenHighModel
 		"algorithm_model":     resolvedModel,
 		"output_model_format": opts.OutputModelFormat,
 		"face_type":           opts.FaceType,
+		"enable_pbr":          opts.EnablePbr,
 	}
 	if opts.FaceNum != nil {
 		imgParams["face_num"] = *opts.FaceNum
