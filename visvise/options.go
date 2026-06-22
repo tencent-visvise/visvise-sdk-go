@@ -153,6 +153,7 @@ type GenMidModelOptions struct {
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	FaceType          FaceType          // optional, face type (default triangle)
 	SegmentModelID    string            // optional, 2D segmentation asset ID
+	ModelID360        string            // optional, 360 model ID
 }
 
 // NewGenMidModelOptions creates GenMidModelOptions with common defaults
@@ -191,6 +192,12 @@ func (o *GenMidModelOptions) SetFaceType(faceType FaceType) *GenMidModelOptions 
 // SetSegmentModelID sets the 2D segmentation asset ID
 func (o *GenMidModelOptions) SetSegmentModelID(id string) *GenMidModelOptions {
 	o.SegmentModelID = id
+	return o
+}
+
+// SetModelID360 sets the 360 model ID
+func (o *GenMidModelOptions) SetModelID360(id string) *GenMidModelOptions {
+	o.ModelID360 = id
 	return o
 }
 
