@@ -9,10 +9,6 @@ import (
 )
 
 // Example: gen_mid_model —— 图生中模（node_type=3）
-//
-// 中模要求四视图全部必传。
-// 优先从环境变量 MV_360_MODEL_ID 读取 gen_360 的输出，自动提取四视图。
-//
 // Usage:
 //   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
@@ -37,31 +33,9 @@ func main() {
 
 	client := visvise.NewClient(appID, secretKey, visvise.NewClientOptions().SetEnv(env))
 
-	var mainView, backView, leftView, rightView string
-
-	fmt.Printf("[gen_mid_model] 从 gen_360 输出提取四视图 (model_id=%s)\n", mvModelID)
-
-	models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, []int{3}, "", 10, 1, rtx)
-	if err != nil || len(models) == 0 {
-		log.Fatalf("[gen_mid_model] 获取模型失败: %v", err)
-	}
-	out := models[0].ImageGen360Output.OutputView
-	mainView = stripSign(out.MainView)
-	backView = stripSign(out.BackView)
-	leftView = stripSign(out.LeftView)
-	rightView = stripSign(out.RightView)
-
-	fmt.Println("[gen_mid_model] 开始生成中模...")
-
-	modelID, err := client.GenMidModel(mainView, backView, leftView, rightView, rtx,
-		visvise.NewGenMidModelOptions().
-			SetOutputModelFormat(visvise.OutputModelFormatFBX).
-			SetFaceType(visvise.FaceTypeTriangle).
-			SetName("example_gen_mid_model"))
-	if err != nil {
-		log.Fatalf("[gen_mid_model] 创建任务失败: %v", err)
-	}
-	fmt.Printf("[gen_mid_model] 任务已创建，model_id=%s\n", modelID)
+	// modelID := example1(client, rtx)
+	// modelID := example2(client, mvModelID, rtx)
+	modelID := example3(client, mvModelID, rtx)
 
 	model, err := client.WaitModel(modelID, rtx, &visvise.WaitOptions{
 		Interval: 5.0,
@@ -73,6 +47,69 @@ func main() {
 
 	fmt.Printf("[gen_mid_model] 生成成功！耗时 %ds\n", model.TimeCost)
 	fmt.Printf("  output_model : %s\n", model.OutputModel)
+}
+
+// =================  使用场景一：用户上传原画视图  =====================
+func example1(client *visvise.Client, rtx string) string {
+	assetsDir := "./tests/assets"
+	mainView := assetsDir + "/main_view.png"
+	fmt.Println("[gen_mid_model] 开始生成中模...")
+	modelID, err := client.GenMidModel(stripSign(mainView), nil, nil, nil, rtx,
+		visvise.NewGenMidModelOptions().
+			SetName("example_gen_mid_model"))
+	if err != nil {
+		log.Fatalf("[gen_mid_model] 创建任务失败: %v", err)
+	}
+	fmt.Printf("[gen_mid_model] 任务已创建，model_id=%s\n", modelID)
+	return modelID
+}
+
+// =================  使用场景二：基于【图生360】的生成结果生成模型资产  =====================
+func example2(client *visvise.Client, mvModelID, rtx string) string {
+	if mvModelID == "" {
+		models, _, err := client.GetAPI().GetModelList(nil, []int{7}, []int{3}, "", 10, 1, rtx)
+		if err != nil || len(models) == 0 {
+			log.Fatalf("[gen_mid_model] 获取模型失败: %v", err)
+		}
+		mvModelID = models[0].ModelID
+	}
+
+	fmt.Printf("[gen_mid_model] gen_360 (model_id=%s)\n", mvModelID)
+
+	fmt.Println("[gen_mid_model] 开始生成中模...")
+	modelID, err := client.GenMidModel(nil, nil, nil, nil, rtx,
+		visvise.NewGenMidModelOptions().
+			SetName("example_gen_mid_model").
+			SetModelID360(mvModelID))
+	if err != nil {
+		log.Fatalf("[gen_mid_model] 创建任务失败: %v", err)
+	}
+	fmt.Printf("[gen_mid_model] 任务已创建，model_id=%s\n", modelID)
+	return modelID
+}
+
+// =================  使用场景三：基于【2D拆分】的生成结果生成模型资产  =====================
+func example3(client *visvise.Client, mvModelID, rtx string) string {
+	if mvModelID == "" {
+		models, _, err := client.GetAPI().GetModelList(nil, []int{14}, []int{3}, "", 10, 1, rtx)
+		if err != nil || len(models) == 0 {
+			log.Fatalf("[gen_mid_model] 获取模型失败: %v", err)
+		}
+		mvModelID = models[0].ModelID
+	}
+
+	fmt.Printf("[gen_mid_model] 2D拆分 (model_id=%s)\n", mvModelID)
+
+	fmt.Println("[gen_mid_model] 开始生成中模...")
+	modelID, err := client.GenMidModel(nil, nil, nil, nil, rtx,
+		visvise.NewGenMidModelOptions().
+			SetName("example_gen_mid_model").
+			SetSegmentModelID(mvModelID))
+	if err != nil {
+		log.Fatalf("[gen_mid_model] 创建任务失败: %v", err)
+	}
+	fmt.Printf("[gen_mid_model] 任务已创建，model_id=%s\n", modelID)
+	return modelID
 }
 
 func stripSign(url string) string {

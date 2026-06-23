@@ -243,15 +243,16 @@ modelID, err := client.GenHighModel("path/to/main.png", rtx, opts)
 opts := visvise.NewGenMidModelOptions().
     SetName("my_mid_model").                             // 可选，默认 "gen_mid_model"
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
-    SetFaceType(visvise.FaceTypeTriangle).              // 可选，面数类型
-    SetSegmentModelID("Model2026...")                    // 可选，2D 分割资产 ID
+    SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型
+    SetSegmentModelID("Model2026...").                   // 可选，2D 分割资产 ID
+	SetModelID360("Model2026...")                        // 可选，图生360 资产 ID
 
-// mainView, backView, leftView, rightView 四个视图必填
+// 若是用户上传原画视图，则(mainView)必填
 modelID, err := client.GenMidModel(
     "path/to/main.png",
-    "path/to/back.png",
-    "path/to/left.png",
-    "path/to/right.png",
+    nil,
+    nil,
+    nil,
     rtx,
     opts,
 )

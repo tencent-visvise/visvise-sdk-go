@@ -244,14 +244,15 @@ opts := visvise.NewGenMidModelOptions().
     SetName("my_mid_model").                             // optional, default "gen_mid_model"
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type
-    SetSegmentModelID("Model2026...")                    // optional, 2D segmentation asset ID
+    SetSegmentModelID("Model2026...").                   // optional, 2D segmentation asset ID
+	SetModelID360("Model2026...")                        // optional, Gen360 asset ID
 
-// mainView, backView, leftView, rightView are all required
+// If you upload reference views manually, mainView is required
 modelID, err := client.GenMidModel(
     "path/to/main.png",
-    "path/to/back.png",
-    "path/to/left.png",
-    "path/to/right.png",
+    nil,
+    nil,
+    nil,
     rtx,
     opts,
 )

@@ -771,36 +771,39 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	if opts == nil {
 		opts = NewGenMidModelOptions()
 	}
-
 	view := &View{}
-
-	// Resolve main view
-	mainURL, err := c.resolveFile(mainView, false, rtx)
-	if err != nil {
-		return "", err
+	if opts.ModelID360 == "" && opts.SegmentModelID == "" {
+		// Resolve main view (required)
+		mainURL, err := c.resolveFile(mainView, false, rtx)
+		if err != nil {
+			return "", err
+		}
+		view.MainView = mainURL
+		// Resolve back view
+		if backView != nil {
+			backURL, err := c.resolveFile(backView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			view.BackView = backURL
+		}
+		// Resolve left view
+		if leftView != nil {
+			leftURL, err := c.resolveFile(leftView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			view.LeftView = leftURL
+		}
+		// Resolve right view
+		if rightView != nil {
+			rightURL, err := c.resolveFile(rightView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			view.RightView = rightURL
+		}
 	}
-	view.MainView = mainURL
-
-	// Resolve back view (required)
-	backURL, err := c.resolveFile(backView, false, rtx)
-	if err != nil {
-		return "", err
-	}
-	view.BackView = backURL
-
-	// Resolve left view (required)
-	leftURL, err := c.resolveFile(leftView, false, rtx)
-	if err != nil {
-		return "", err
-	}
-	view.LeftView = leftURL
-
-	// Resolve right view (required)
-	rightURL, err := c.resolveFile(rightView, false, rtx)
-	if err != nil {
-		return "", err
-	}
-	view.RightView = rightURL
 
 	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DMid, nil, rtx)
 	if err != nil {
@@ -811,6 +814,9 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 		"algorithm_model":     resolvedModel,
 		"output_model_format": opts.OutputModelFormat,
 		"face_type":           opts.FaceType,
+	}
+	if opts.ModelID360 != "" {
+		imgParams["model_id_360"] = opts.ModelID360
 	}
 	if opts.SegmentModelID != "" {
 		imgParams["segment_model_id"] = opts.SegmentModelID
