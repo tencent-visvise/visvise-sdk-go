@@ -64,7 +64,7 @@ func example1(client *visvise.Client, rtx string) string {
 	return modelID
 }
 
-// =================  使用场景三：基于【图生360】的生成结果生成模型资产  =====================
+// =================  使用场景二：基于【图生360】的生成结果生成模型资产  =====================
 func example2(client *visvise.Client, mvModelID, rtx string) string {
 	if mvModelID == "" {
 		models, _, err := client.GetAPI().GetModelList(nil, []int{7}, []int{3}, "", 10, 1, rtx)
