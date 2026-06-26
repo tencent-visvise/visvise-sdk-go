@@ -378,23 +378,11 @@ modelID, err := client.GenTexture("path/to/model.fbx", rtx, opts)
 
 自动为模型生成骨骼（node_type=5）。SDK 自动将模型文件与参数 JSON 打包成 zip 上传，无需手动准备 zip 包。→ [示例代码](examples/gen_rigging/main.go)
 
-> 参数说明：
-> - `mesh_category`：骨骼类别，人形（默认）或四足
-> - `algo_scenario`：算法场景，1=默认一键自动生成；2=人形角色+上传模版；3=主体骨骼人形角色生成附加骨骼。只有 2 需要传 `template_skeleton`
-> - `generate_root`：是否生成 Root 骨骼
-> - `temperature` 和 `num_beams` 不同时使用，不用的传 -1（默认 temperature=-1）
-> - `mesh_names`：保留字段，内容可为空
-
 ```go
 opts := visvise.NewGenRiggingOptions().
     SetName("my_rigging").                                // 可选，默认 "gen_rigging"
-    SetMeshCategory(visvise.MeshCategoryHumanoid).       // 可选，人形（默认）或 visvise.MeshCategoryTetrapod（四足）或 visvise.MeshCategoryOther(其他)
-    SetAlgoScenario(1).                                  // 可选，生成方式 1=一键自动(默认)，visvise.RiggingAlgoScenarioTemplateSkeleton =人形+模版，visvise.RiggingAlgoScenarioAdditionalBones=附加骨骼
-    SetGenerateRoot(false).                              // 可选，是否生成 Root 骨骼
-    SetTemperature(-1).                                  // 可选，高级采样-自由度 与 num_beams 不同时使用。 取值范围：(0~1)
-    SetNumBeams(10).                                     // 可选，高级采样-搜索广度 与 temperature 不同时使用。取值范围：(5-15) 
-    SetMeshNames([]string{"pCube1", "pCube2"}).          // 可选，mesh_names，内容可为空
-    SetTemplateSkeleton("path/to/skeleton.fbx")           // 可选，模板骨骼（algo_scenario=2 时需要）
+    SetMeshCategory(visvise.MeshCategoryHumanoid).       // 可选，人形（默认）或 visvise.MeshCategoryTetrapod（四足）
+    SetTemplateSkeleton("path/to/skeleton.fbx")           // 可选，模板骨骼
 
 modelID, err := client.GenRigging("path/to/model.fbx", rtx, opts)
 ```

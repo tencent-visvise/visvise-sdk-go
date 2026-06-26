@@ -493,15 +493,10 @@ func (o *GenTextureOptions) SetPrompt(prompt string) *GenTextureOptions {
 
 // GenRiggingOptions defines optional parameters for GenRigging
 type GenRiggingOptions struct {
-	Name             string               // optional, task name (auto-generated if empty)
-	AlgorithmModel   string               // optional, algorithm model name
-	MeshCategory     MeshCategory         // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
-	TemplateSkeleton FileInput            // optional, template skeleton
-	MeshNames        []string             // optional, meshes
-	AlgoScenario     *RiggingAlgoScenario // optional, algo scenario
-	GenerateRoot     bool                 // optional, generate root
-	Temperature      float64              // optional, temperature
-	NumBeams         int                  // optional, number of beams
+	Name             string       // optional, task name (auto-generated if empty)
+	AlgorithmModel   string       // optional, algorithm model name
+	MeshCategory     MeshCategory // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
+	TemplateSkeleton FileInput    // optional, template skeleton
 }
 
 // NewGenRiggingOptions creates GenRiggingOptions with common defaults
@@ -509,8 +504,6 @@ func NewGenRiggingOptions() *GenRiggingOptions {
 	return &GenRiggingOptions{
 		Name:         "gen_rigging",
 		MeshCategory: MeshCategoryHumanoid,
-		Temperature:  -1,
-		NumBeams:     -1,
 	}
 }
 
@@ -535,36 +528,6 @@ func (o *GenRiggingOptions) SetMeshCategory(category MeshCategory) *GenRiggingOp
 // SetTemplateSkeleton sets the template skeleton
 func (o *GenRiggingOptions) SetTemplateSkeleton(skeleton FileInput) *GenRiggingOptions {
 	o.TemplateSkeleton = skeleton
-	return o
-}
-
-// SetMeshNames sets the mesh names
-func (o *GenRiggingOptions) SetMeshNames(names []string) *GenRiggingOptions {
-	o.MeshNames = names
-	return o
-}
-
-// SetAlgoScenario sets the algo scenario
-func (o *GenRiggingOptions) SetAlgoScenario(scenario RiggingAlgoScenario) *GenRiggingOptions {
-	o.AlgoScenario = &scenario
-	return o
-}
-
-// SetGenerateRoot sets whether to generate root skeleton
-func (o *GenRiggingOptions) SetGenerateRoot(generate bool) *GenRiggingOptions {
-	o.GenerateRoot = generate
-	return o
-}
-
-// SetTemperature sets the temperature
-func (o *GenRiggingOptions) SetTemperature(temp float64) *GenRiggingOptions {
-	o.Temperature = temp
-	return o
-}
-
-// SetNumBeams sets the number of beams
-func (o *GenRiggingOptions) SetNumBeams(beams int) *GenRiggingOptions {
-	o.NumBeams = beams
 	return o
 }
 

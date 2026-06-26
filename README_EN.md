@@ -378,23 +378,11 @@ modelID, err := client.GenTexture("path/to/model.fbx", rtx, opts)
 
 Auto-rigging (node_type=5). The SDK packages the raw model + JSON parameters into a zip automatically — no manual zipping required.→ [Example](examples/gen_rigging/main.go)
 
-> Parameter notes:
-> - `mesh_category`: rigging category, humanoid (default) or tetrapod
-> - `algo_scenario`: algorithm scenario, 1=default auto-generate; 2=humanoid + uploaded template; 3=main skeleton +附加 bones. Only scenario 2 requires `template_skeleton`
-> - `generate_root`: whether to generate a Root bone
-> - `temperature` and `num_beams` are mutually exclusive; pass -1 for the unused one (default temperature=-1)
-> - `mesh_names`: reserved field, content can be empty
-
 ```go
 opts := visvise.NewGenRiggingOptions().
     SetName("my_rigging").                              // optional, default "gen_rigging"
     SetMeshCategory(visvise.MeshCategoryHumanoid).      // optional, humanoid (default) or visvise.MeshCategoryTetrapod
-    SetAlgoScenario(1).                                 // optional, 1=auto-generate(default), visvise.RiggingAlgoScenarioTemplateSkeleton=humanoid+template, visvise.RiggingAlgoScenarioAdditionalBones =附加 bones 
-    SetGenerateRoot(false).                             // optional, whether to generate Root bone
-    SetTemperature(-1).                                 // optional, mutually exclusive with num_beams, pass -1 if unused range:(0~1)
-    SetNumBeams(10).                                    // optional, mutually exclusive with temperature, pass -1 if unused range:(5~15)
-    SetMeshNames([]string{"pCube1", "pCube2"}).         // optional, reserved field, content can be empty
-    SetTemplateSkeleton("path/to/skeleton.fbx")          // optional, template skeleton (required when algo_scenario=2)
+    SetTemplateSkeleton("path/to/skeleton.fbx")          // optional, template skeleton
 
 modelID, err := client.GenRigging("path/to/model.fbx", rtx, opts)
 ```
