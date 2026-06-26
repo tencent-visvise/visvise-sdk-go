@@ -1149,12 +1149,26 @@ func (c *Client) GenRigging(modelPath FileInput, rtx string, opts *GenRiggingOpt
 	if err != nil {
 		return "", err
 	}
+	if opts.MeshCategory == MeshCategoryHumanoid && opts.AlgoScenario == nil {
+		opts = opts.SetAlgoScenario(RiggingAlgoScenarioAutoGen)
+	}
+	config := map[string]interface{}{
+		"mesh_category": opts.MeshCategory,
+		"algo_name":     resolvedModel,
+		"generate_root": opts.GenerateRoot,
+		"temperature":   opts.Temperature,
+		"num_beams":     opts.NumBeams,
+		"algo_scenario": opts.AlgoScenario,
+	}
+
+	selection := map[string]interface{}{}
+	if len(opts.MeshNames) > 0 {
+		selection["mesh_names"] = opts.MeshNames
+	}
 
 	jsonData := map[string]interface{}{
-		"config": map[string]interface{}{
-			"mesh_category": opts.MeshCategory,
-			"algo_name":     resolvedModel,
-		},
+		"config":    config,
+		"selection": selection,
 	}
 
 	zipBytes, fileName, err := c.buildModelZip(modelPath, jsonData, "")
