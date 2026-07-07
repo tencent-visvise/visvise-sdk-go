@@ -518,7 +518,8 @@ cred, err := api.GetCosCred(true, rtx)
 
 // Query remaining quota
 quota, err := api.GetUserQuota(rtx)
-fmt.Println(quota.Quota) // remaining count
+fmt.Println(quota.ModelQuota)     // remaining model count
+fmt.Println(quota.AnimationQuota) // remaining animation count
 
 // Fetch model list
 models, total, err := api.GetModelList(

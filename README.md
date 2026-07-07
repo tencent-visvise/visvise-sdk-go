@@ -518,7 +518,8 @@ cred, err := api.GetCosCred(true, rtx)
 
 // 查询剩余配额
 quota, err := api.GetUserQuota(rtx)
-fmt.Println(quota.Quota) // 剩余次数
+fmt.Println(quota.ModelQuota)     // 模型剩余次数
+fmt.Println(quota.AnimationQuota) // 动画剩余次数
 
 // 拉取模型列表
 models, total, err := api.GetModelList(
@@ -592,7 +593,7 @@ if err != nil {
 
 ## 完整流程示例
 
-### 示例一：图片 → 高模（图生360 + 图生高模）
+### 示例一：图片 → 高模（图生360 + 图生高模，高模也支持单图直接生成）
 
 ```go
 package main

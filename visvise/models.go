@@ -63,8 +63,9 @@ type GetCosCredResult struct {
 
 // UserQuota represents the get_user_quota API response
 type UserQuota struct {
-	Quota    int   `json:"quota"`
-	ServerTS int64 `json:"server_ts"`
+	ModelQuota     int   `json:"model_quota"`
+	AnimationQuota int   `json:"animation_quota"`
+	ServerTS       int64 `json:"server_ts"`
 }
 
 // FailedReason represents the generation failure reason
