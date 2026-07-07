@@ -83,6 +83,7 @@ type GenHighModelOptions struct {
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	FaceType          FaceType          // optional, face type (default triangle)
 	FaceNum           *int              // optional, target face count (1000-1500000)
+	EnablePbr         bool              // optional, enable PBR (default false)
 	BackView          FileInput         // optional, back view to improve quality
 	LeftView          FileInput         // optional, left view
 	RightView         FileInput         // optional, right view
@@ -152,6 +153,7 @@ type GenMidModelOptions struct {
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	FaceType          FaceType          // optional, face type (default triangle)
 	SegmentModelID    string            // optional, 2D segmentation asset ID
+	ModelID360        string            // optional, 360 model ID
 }
 
 // NewGenMidModelOptions creates GenMidModelOptions with common defaults
@@ -190,6 +192,12 @@ func (o *GenMidModelOptions) SetFaceType(faceType FaceType) *GenMidModelOptions 
 // SetSegmentModelID sets the 2D segmentation asset ID
 func (o *GenMidModelOptions) SetSegmentModelID(id string) *GenMidModelOptions {
 	o.SegmentModelID = id
+	return o
+}
+
+// SetModelID360 sets the 360 model ID
+func (o *GenMidModelOptions) SetModelID360(id string) *GenMidModelOptions {
+	o.ModelID360 = id
 	return o
 }
 
@@ -485,10 +493,15 @@ func (o *GenTextureOptions) SetPrompt(prompt string) *GenTextureOptions {
 
 // GenRiggingOptions defines optional parameters for GenRigging
 type GenRiggingOptions struct {
-	Name             string       // optional, task name (auto-generated if empty)
-	AlgorithmModel   string       // optional, algorithm model name
-	MeshCategory     MeshCategory // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
-	TemplateSkeleton FileInput    // optional, template skeleton
+	Name             string               // optional, task name (auto-generated if empty)
+	AlgorithmModel   string               // optional, algorithm model name
+	MeshCategory     MeshCategory         // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
+	TemplateSkeleton FileInput            // optional, template skeleton
+	MeshNames        []string             // optional, meshes
+	AlgoScenario     *RiggingAlgoScenario // optional, algo scenario
+	GenerateRoot     bool                 // optional, generate root
+	Temperature      float64              // optional, temperature
+	NumBeams         int                  // optional, number of beams
 }
 
 // NewGenRiggingOptions creates GenRiggingOptions with common defaults
@@ -496,6 +509,8 @@ func NewGenRiggingOptions() *GenRiggingOptions {
 	return &GenRiggingOptions{
 		Name:         "gen_rigging",
 		MeshCategory: MeshCategoryHumanoid,
+		Temperature:  -1,
+		NumBeams:     -1,
 	}
 }
 
@@ -520,6 +535,36 @@ func (o *GenRiggingOptions) SetMeshCategory(category MeshCategory) *GenRiggingOp
 // SetTemplateSkeleton sets the template skeleton
 func (o *GenRiggingOptions) SetTemplateSkeleton(skeleton FileInput) *GenRiggingOptions {
 	o.TemplateSkeleton = skeleton
+	return o
+}
+
+// SetMeshNames sets the mesh names
+func (o *GenRiggingOptions) SetMeshNames(names []string) *GenRiggingOptions {
+	o.MeshNames = names
+	return o
+}
+
+// SetAlgoScenario sets the algo scenario
+func (o *GenRiggingOptions) SetAlgoScenario(scenario RiggingAlgoScenario) *GenRiggingOptions {
+	o.AlgoScenario = &scenario
+	return o
+}
+
+// SetGenerateRoot sets whether to generate root skeleton
+func (o *GenRiggingOptions) SetGenerateRoot(generate bool) *GenRiggingOptions {
+	o.GenerateRoot = generate
+	return o
+}
+
+// SetTemperature sets the temperature
+func (o *GenRiggingOptions) SetTemperature(temp float64) *GenRiggingOptions {
+	o.Temperature = temp
+	return o
+}
+
+// SetNumBeams sets the number of beams
+func (o *GenRiggingOptions) SetNumBeams(beams int) *GenRiggingOptions {
+	o.NumBeams = beams
 	return o
 }
 

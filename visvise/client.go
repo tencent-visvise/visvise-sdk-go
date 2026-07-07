@@ -746,6 +746,7 @@ func (c *Client) GenHighModel(mainView FileInput, rtx string, opts *GenHighModel
 		"algorithm_model":     resolvedModel,
 		"output_model_format": opts.OutputModelFormat,
 		"face_type":           opts.FaceType,
+		"enable_pbr":          opts.EnablePbr,
 	}
 	if opts.FaceNum != nil {
 		imgParams["face_num"] = *opts.FaceNum
@@ -770,36 +771,39 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	if opts == nil {
 		opts = NewGenMidModelOptions()
 	}
-
 	view := &View{}
-
-	// Resolve main view
-	mainURL, err := c.resolveFile(mainView, false, rtx)
-	if err != nil {
-		return "", err
+	if opts.ModelID360 == "" && opts.SegmentModelID == "" {
+		// Resolve main view (required)
+		mainURL, err := c.resolveFile(mainView, false, rtx)
+		if err != nil {
+			return "", err
+		}
+		view.MainView = mainURL
+		// Resolve back view
+		if backView != nil {
+			backURL, err := c.resolveFile(backView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			view.BackView = backURL
+		}
+		// Resolve left view
+		if leftView != nil {
+			leftURL, err := c.resolveFile(leftView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			view.LeftView = leftURL
+		}
+		// Resolve right view
+		if rightView != nil {
+			rightURL, err := c.resolveFile(rightView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			view.RightView = rightURL
+		}
 	}
-	view.MainView = mainURL
-
-	// Resolve back view (required)
-	backURL, err := c.resolveFile(backView, false, rtx)
-	if err != nil {
-		return "", err
-	}
-	view.BackView = backURL
-
-	// Resolve left view (required)
-	leftURL, err := c.resolveFile(leftView, false, rtx)
-	if err != nil {
-		return "", err
-	}
-	view.LeftView = leftURL
-
-	// Resolve right view (required)
-	rightURL, err := c.resolveFile(rightView, false, rtx)
-	if err != nil {
-		return "", err
-	}
-	view.RightView = rightURL
 
 	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeImgTo3DMid, nil, rtx)
 	if err != nil {
@@ -810,6 +814,9 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 		"algorithm_model":     resolvedModel,
 		"output_model_format": opts.OutputModelFormat,
 		"face_type":           opts.FaceType,
+	}
+	if opts.ModelID360 != "" {
+		imgParams["model_id_360"] = opts.ModelID360
 	}
 	if opts.SegmentModelID != "" {
 		imgParams["segment_model_id"] = opts.SegmentModelID
@@ -1142,12 +1149,26 @@ func (c *Client) GenRigging(modelPath FileInput, rtx string, opts *GenRiggingOpt
 	if err != nil {
 		return "", err
 	}
+	if opts.MeshCategory == MeshCategoryHumanoid && opts.AlgoScenario == nil {
+		opts = opts.SetAlgoScenario(RiggingAlgoScenarioAutoGen)
+	}
+	config := map[string]interface{}{
+		"mesh_category": opts.MeshCategory,
+		"algo_name":     resolvedModel,
+		"generate_root": opts.GenerateRoot,
+		"temperature":   opts.Temperature,
+		"num_beams":     opts.NumBeams,
+		"algo_scenario": opts.AlgoScenario,
+	}
+
+	selection := map[string]interface{}{}
+	if len(opts.MeshNames) > 0 {
+		selection["mesh_names"] = opts.MeshNames
+	}
 
 	jsonData := map[string]interface{}{
-		"config": map[string]interface{}{
-			"mesh_category": opts.MeshCategory,
-			"algo_name":     resolvedModel,
-		},
+		"config":    config,
+		"selection": selection,
 	}
 
 	zipBytes, fileName, err := c.buildModelZip(modelPath, jsonData, "")

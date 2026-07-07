@@ -244,14 +244,15 @@ opts := visvise.NewGenMidModelOptions().
     SetName("my_mid_model").                             // optional, default "gen_mid_model"
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type
-    SetSegmentModelID("Model2026...")                    // optional, 2D segmentation asset ID
+    SetSegmentModelID("Model2026...").                   // optional, 2D segmentation asset ID
+	SetModelID360("Model2026...")                        // optional, Gen360 asset ID
 
-// mainView, backView, leftView, rightView are all required
+// If you upload reference views manually, mainView is required
 modelID, err := client.GenMidModel(
     "path/to/main.png",
-    "path/to/back.png",
-    "path/to/left.png",
-    "path/to/right.png",
+    nil,
+    nil,
+    nil,
     rtx,
     opts,
 )
@@ -379,9 +380,14 @@ Auto-rigging (node_type=5). The SDK packages the raw model + JSON parameters int
 
 ```go
 opts := visvise.NewGenRiggingOptions().
-    SetName("my_rigging").                              // optional, default "gen_rigging"
-    SetMeshCategory(visvise.MeshCategoryHumanoid).      // optional, humanoid (default) or visvise.MeshCategoryTetrapod
-    SetTemplateSkeleton("path/to/skeleton.fbx")          // optional, template skeleton
+  SetName("my_rigging").                                           // optional, default "gen_rigging"
+  SetMeshCategory(visvise.MeshCategoryHumanoid).                  // optional, humanoid (default) or visvise.MeshCategoryTetrapod
+  SetAlgoScenario(visvise.RiggingAlgoScenarioTemplateSkeleton).   // optional, 1=auto-generate(default), visvise.RiggingAlgoScenarioTemplateSkeleton=humanoid+template, visvise.RiggingAlgoScenarioAdditionalBones =附加 bones 
+  SetGenerateRoot(false).                                        // optional, whether to generate Root bone
+  SetTemperature(-1).                                           // optional, mutually exclusive with num_beams, pass -1 if unused range:(0~1)
+  SetNumBeams(10).                                              // optional, mutually exclusive with temperature, pass -1 if unused range:(5~15)
+  SetMeshNames([]string{"pCube1", "pCube2"}).                   // optional, reserved field, content can be empty
+  SetTemplateSkeleton("path/to/skeleton.fbx")                   // optional, template skeleton (required when algo_scenario=2)
 
 modelID, err := client.GenRigging("path/to/model.fbx", rtx, opts)
 ```

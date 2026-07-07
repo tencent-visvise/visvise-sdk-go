@@ -88,6 +88,7 @@ type MeshCategory string
 const (
 	MeshCategoryHumanoid MeshCategory = "humanoid" // Humanoid (default)
 	MeshCategoryTetrapod MeshCategory = "tetrapod" // Tetrapod (four-legged)
+	MeshCategoryOther    MeshCategory = "other"
 )
 
 // AnimationSubType represents the animation sub-type
@@ -105,4 +106,12 @@ const (
 	PHOTOREAL  ImageGen360Style = "超写实"
 	Q_TOON     ImageGen360Style = "Q版卡通"
 	PIXEL      ImageGen360Style = "像素风格"
+)
+
+type RiggingAlgoScenario int
+
+const (
+	RiggingAlgoScenarioAutoGen          RiggingAlgoScenario = 1 // 自动生成
+	RiggingAlgoScenarioTemplateSkeleton RiggingAlgoScenario = 2 // 模板骨架
+	RiggingAlgoScenarioAdditionalBones  RiggingAlgoScenario = 3 // 附加骨骼
 )

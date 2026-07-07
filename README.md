@@ -243,15 +243,16 @@ modelID, err := client.GenHighModel("path/to/main.png", rtx, opts)
 opts := visvise.NewGenMidModelOptions().
     SetName("my_mid_model").                             // 可选，默认 "gen_mid_model"
     SetOutputModelFormat(visvise.OutputModelFormatFBX).  // 可选，输出格式
-    SetFaceType(visvise.FaceTypeTriangle).              // 可选，面数类型
-    SetSegmentModelID("Model2026...")                    // 可选，2D 分割资产 ID
+    SetFaceType(visvise.FaceTypeTriangle).               // 可选，面数类型
+    SetSegmentModelID("Model2026...").                   // 可选，2D 分割资产 ID
+	SetModelID360("Model2026...")                        // 可选，图生360 资产 ID
 
-// mainView, backView, leftView, rightView 四个视图必填
+// 若是用户上传原画视图，则(mainView)必填
 modelID, err := client.GenMidModel(
     "path/to/main.png",
-    "path/to/back.png",
-    "path/to/left.png",
-    "path/to/right.png",
+    nil,
+    nil,
+    nil,
     rtx,
     opts,
 )
@@ -380,8 +381,13 @@ modelID, err := client.GenTexture("path/to/model.fbx", rtx, opts)
 ```go
 opts := visvise.NewGenRiggingOptions().
     SetName("my_rigging").                                // 可选，默认 "gen_rigging"
-    SetMeshCategory(visvise.MeshCategoryHumanoid).       // 可选，人形（默认）或 visvise.MeshCategoryTetrapod（四足）
-    SetTemplateSkeleton("path/to/skeleton.fbx")           // 可选，模板骨骼
+    SetMeshCategory(visvise.MeshCategoryHumanoid).       // 可选，人形（默认）或 visvise.MeshCategoryTetrapod（四足）或 visvise.MeshCategoryOther(其他)
+    SetAlgoScenario(1).                                  // 可选，生成方式 1=一键自动(默认)，visvise.RiggingAlgoScenarioTemplateSkeleton =人形+模版，visvise.RiggingAlgoScenarioAdditionalBones=附加骨骼
+    SetGenerateRoot(false).                              // 可选，是否生成 Root 骨骼
+    SetTemperature(-1).                                  // 可选，高级采样-自由度 与 num_beams 不同时使用。 取值范围：(0~1)
+    SetNumBeams(10).                                     // 可选，高级采样-搜索广度 与 temperature 不同时使用。取值范围：(5-15) 
+    SetMeshNames([]string{"pCube1", "pCube2"}).          // 可选，mesh_names，内容可为空
+    SetTemplateSkeleton("path/to/skeleton.fbx")           // 可选，模板骨骼（algo_scenario=2 时需要）
 
 modelID, err := client.GenRigging("path/to/model.fbx", rtx, opts)
 ```
