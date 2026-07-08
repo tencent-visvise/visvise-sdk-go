@@ -84,6 +84,7 @@ type GenHighModelOptions struct {
 	FaceType          FaceType          // optional, face type (default triangle)
 	FaceNum           *int              // optional, target face count (1000-1500000)
 	EnablePbr         bool              // optional, enable PBR (default false)
+	StrictMode        bool              // optional, force generation by target face count instead of adjusting by geometric error
 	BackView          FileInput         // optional, back view to improve quality
 	LeftView          FileInput         // optional, left view
 	RightView         FileInput         // optional, right view
@@ -137,6 +138,12 @@ func (o *GenHighModelOptions) SetBackView(view FileInput) *GenHighModelOptions {
 // SetLeftView sets the left view
 func (o *GenHighModelOptions) SetLeftView(view FileInput) *GenHighModelOptions {
 	o.LeftView = view
+	return o
+}
+
+// SetStrictMode sets whether to force generation by target face count (instead of adjusting by geometric error)
+func (o *GenHighModelOptions) SetStrictMode(strict bool) *GenHighModelOptions {
+	o.StrictMode = strict
 	return o
 }
 
