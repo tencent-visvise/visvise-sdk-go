@@ -68,8 +68,9 @@ func (api *VisviseAPI) GetUserQuota(rtx string) (*UserQuota, error) {
 
 	if m, ok := data.(map[string]interface{}); ok {
 		return &UserQuota{
-			Quota:    int(getFloat64(m, "quota", 0)),
-			ServerTS: int64(getFloat64(m, "server_ts", 0)),
+			ModelQuota:     int(getFloat64(m, "model_quota", 0)),
+			AnimationQuota: int(getFloat64(m, "animation_quota", 0)),
+			ServerTS:       int64(getFloat64(m, "server_ts", 0)),
 		}, nil
 	}
 	return nil, nil

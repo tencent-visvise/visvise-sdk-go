@@ -29,11 +29,11 @@ func TestAtomicAPI_GetUserQuota(t *testing.T) {
 		t.Fatalf("GetUserQuota failed: %v", err)
 	}
 
-	if quota.Quota < 0 {
-		t.Errorf("Expected quota >= 0, got %d", quota.Quota)
+	if quota.ModelQuota < 0 {
+		t.Errorf("Expected model_quota >= 0, got %d", quota.ModelQuota)
 	}
 
-	t.Logf("PASS: get_user_quota - quota=%d server_ts=%d", quota.Quota, quota.ServerTS)
+	t.Logf("PASS: get_user_quota - model_quota=%d animation_quota=%d server_ts=%d", quota.ModelQuota, quota.AnimationQuota, quota.ServerTS)
 }
 
 // TestAtomicAPI_ListAlgorithmModel tests the list_algorithm_model API
