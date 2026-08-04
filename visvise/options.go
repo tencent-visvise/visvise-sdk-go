@@ -78,13 +78,14 @@ func (o *Gen360Options) SetFaceType(faceType FaceType) *Gen360Options {
 
 // GenStyleTransferOptions defines optional parameters for GenStyleTransfer.
 type GenStyleTransferOptions struct {
-	Name           string // optional, asset name (default "gen_style_transfer")
-	AlgorithmModel string // optional, algorithm model name; auto-selected if empty
+	Name           string    // optional, asset name (default "gen_style_transfer")
+	AlgorithmModel string    // optional, algorithm model name; auto-selected if empty
+	StyleType      StyleType // optional, style type (default StyleTypeGrayscale)
 }
 
 // NewGenStyleTransferOptions creates GenStyleTransferOptions with common defaults.
 func NewGenStyleTransferOptions() *GenStyleTransferOptions {
-	return &GenStyleTransferOptions{Name: "gen_style_transfer"}
+	return &GenStyleTransferOptions{Name: "gen_style_transfer", StyleType: StyleTypeGrayscale}
 }
 
 // SetName sets the asset name.
@@ -96,6 +97,12 @@ func (o *GenStyleTransferOptions) SetName(name string) *GenStyleTransferOptions 
 // SetAlgorithmModel sets the algorithm model.
 func (o *GenStyleTransferOptions) SetAlgorithmModel(model string) *GenStyleTransferOptions {
 	o.AlgorithmModel = model
+	return o
+}
+
+// SetStyleType sets the style type (default StyleTypeGrayscale).
+func (o *GenStyleTransferOptions) SetStyleType(styleType StyleType) *GenStyleTransferOptions {
+	o.StyleType = styleType
 	return o
 }
 

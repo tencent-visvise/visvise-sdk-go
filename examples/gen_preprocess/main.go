@@ -41,11 +41,12 @@ func main() {
 	switch mode := envOrDefault("VISVISE_PREPROCESS_MODE", "stylized"); mode {
 	case "stylized":
 		opts := visvise.NewGenStyleTransferOptions().
-			SetName(name)
+			SetName(name).
+			SetStyleType(styleType())
 		if algorithmModel != "" {
 			opts.SetAlgorithmModel(algorithmModel)
 		}
-		modelID, err = client.GenStyleTransfer(inputView, styleType(), rtx, opts)
+		modelID, err = client.GenStyleTransfer(inputView, rtx, opts)
 	case "auto-remove":
 		opts := visvise.NewGenPatterAutoRemoveOptions().SetName(name)
 		if algorithmModel != "" {

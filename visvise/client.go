@@ -633,8 +633,12 @@ func (c *Client) WaitModel(modelID string, rtx string, opts *WaitOptions) (*Mode
 	}
 }
 
+// ════════════════════════════════════════════════════════════════════
+// High-level methods: gen_xxx (simplified with Options)
+// ════════════════════════════════════════════════════════════════════
+
 // GenStyleTransfer runs a style transfer workflow and synchronously saves its result as an asset.
-func (c *Client) GenStyleTransfer(inputView FileInput, styleType StyleType, rtx string, opts *GenStyleTransferOptions) (string, error) {
+func (c *Client) GenStyleTransfer(inputView FileInput, rtx string, opts *GenStyleTransferOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenStyleTransferOptions()
 	}
@@ -649,7 +653,7 @@ func (c *Client) GenStyleTransfer(inputView FileInput, styleType StyleType, rtx 
 		return "", err
 	}
 
-	resultImage, err := c.api.StyleTransfer(inputURL, styleType, rtx)
+	resultImage, err := c.api.StyleTransfer(inputURL, opts.StyleType, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -659,7 +663,7 @@ func (c *Client) GenStyleTransfer(inputView FileInput, styleType StyleType, rtx 
 
 	return c.api.GenPreprocess(
 		opts.Name, inputURL, PreprocessTypeStylized, resolvedModel,
-		&StyleParam{StyleType: styleType, ResultImage: resultImage}, nil, rtx,
+		&StyleParam{StyleType: opts.StyleType, ResultImage: resultImage}, nil, rtx,
 	)
 }
 

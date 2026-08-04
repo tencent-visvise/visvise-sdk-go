@@ -17,8 +17,8 @@ VISVISE Weaver OpenAPI 的 Go SDK，提供：
 - [客户端初始化](#客户端初始化)
 - [枚举常量](#枚举常量)
 - [高阶方法参考](#高阶方法参考)
-  - [GenPreprocess — 2D预处理](#genpreprocess--2d预处理)
   - [Gen360 — 图生360](#gen360--图生360)
+  - [GenPreprocess — 2D预处理](#genpreprocess--2d预处理)
   - [GenHighModel — 图生高模](#genhighmodel--图生高模)
   - [GenMidModel — 图生中模](#genmidmodel--图生中模)
   - [GenLowModel — 图生低模](#genlowmodel--图生低模)
@@ -173,10 +173,11 @@ visvise.SegmentGranularityCoarse  // 1 - 粗
 visvise.SegmentGranularityMedium  // 2 - 中（默认）
 visvise.SegmentGranularityFine    // 3 - 细
 
-// 2D 预处理
-visvise.NodeTypePreprocess2D        // 16 - 2D 预处理
+// 2D 预处理方式
 visvise.PreprocessTypeStylized      // 1 - 原画风格化
 visvise.PreprocessTypePatterned     // 2 - 智能去花纹
+
+// 风格化
 visvise.StyleTypeGrayscale          // 1 - 灰模风
 visvise.StyleTypePixel              // 2 - 像素风
 visvise.StyleTypeRealistic          // 3 - 写实风
@@ -204,35 +205,6 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 > - **VISVISE 平台 COS URL**（`str`）：传入 `https://...myqcloud.com/...` 形式的链接，SDK 不再上传。
 > - **二进制内容**（`bytes` / `io.Reader`）：SDK 自动通过 magic bytes 识别格式（图片 PNG/JPEG/GIF/BMP/WebP/TIFF、3D 模型 FBX/OBJ/GLB/GLTF、视频 MP4/MOV/WebM/AVI、ZIP），用 `<uuid>.<识别后缀>` 自动命名上传，无需用户提供文件名。
 
-### GenStyleTransfer / GenPatterAutoRemove — 2D预处理
-
-对图片进行风格化或去花纹处理，并保存为2D预处理资产（node_type=16）。→ [示例代码](examples/gen_preprocess/main.go)
-
-```go
-// 原画风格化
-styleOpts := visvise.NewGenStyleTransferOptions().
-    SetName("gen_preprocess").                              // 可选，资产名称，默认 "gen_style_transfer"
-    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
-
-styledID, err := client.GenStyleTransfer(
-    "character.png",               // 必填，输入图片：本地路径、VISVISE 平台 COS URL、[]byte 或 io.Reader
-    visvise.StyleTypeGrayscale,    // 必填，风格类型：灰模/像素/写实/卡通手办风
-    rtx,                           // 必填，实际使用人的 RTX
-    styleOpts,
-)
-
-// 智能去花纹
-patternOpts := visvise.NewGenPatterAutoRemoveOptions().
-    SetName("gen_preprocess").                             // 可选，资产名称，默认 "gen_patter_auto_remove"
-    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
-
-patternedID, err := client.GenPatterAutoRemove(
-    "character.png", // 必填，输入图片：本地路径、VISVISE 平台 COS URL、[]byte 或 io.Reader
-    rtx,              // 必填，实际使用人的 RTX
-    patternOpts,
-)
-```
-
 ### Gen360 — 图生360
 
 从单张图片生成 360 度多视图。→ [示例代码](examples/gen_360/main.go)
@@ -251,6 +223,29 @@ opts := visvise.NewGen360Options().
     SetRightView("path/to/right.png")                     // 可选，右视图
 
 modelID, err := client.Gen360("path/to/character.png", rtx, opts)
+```
+
+---
+
+### GenStyleTransfer / GenPatterAutoRemove — 2D预处理
+
+对图片进行风格化或去花纹处理，并保存为2D预处理资产（node_type=16）。→ [示例代码](examples/gen_preprocess/main.go)
+
+```go
+// 原画风格化
+styleOpts := visvise.NewGenStyleTransferOptions().
+    SetName("gen_style_transfer").                         // 可选，资产名称，默认 "gen_style_transfer"
+    SetStyleType(visvise.StyleTypeGrayscale).               // 可选，风格类型，默认灰模风
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
+
+styledID, err := client.GenStyleTransfer("character.png", rtx, styleOpts)
+
+// 智能去花纹
+patternOpts := visvise.NewGenPatterAutoRemoveOptions().
+    SetName("gen_patter_auto_remove").                     // 可选，资产名称，默认 "gen_patter_auto_remove"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
+
+patternedID, err := client.GenPatterAutoRemove("character.png", rtx, patternOpts)
 ```
 
 ---
@@ -588,22 +583,6 @@ err = api.BatchDeleteModel([]string{"Model2026...", "Model2026..."}, rtx)
 
 // 去除背景
 outURL, err := api.RemoveBackground("https://cos.../image.png", rtx)
-
-// 2D 预处理：风格化 / 智能去花纹
-styledURL, err := api.StyleTransfer("https://cos.../image.png", visvise.StyleTypeGrayscale, rtx)
-autoRemovedURL, err := api.PatterAutoRemove("https://cos.../image.png", rtx)
-
-// result_image 是带临时签名的 URL，须原样传入保存接口。
-// 将处理结果保存为 node_type=16 的资产
-modelID, err := api.GenPreprocess(
-    "styled_asset",
-    "https://cos.../image.png",
-    visvise.PreprocessTypeStylized,
-    "",
-    &visvise.StyleParam{StyleType: visvise.StyleTypeGrayscale, ResultImage: styledURL},
-    nil,
-    rtx,
-)
 
 // 文生动画提示词列表
 prompts, err := api.GetText2MotionPromptList("zh", rtx)

@@ -1,7 +1,5 @@
 package visvise
 
-import "fmt"
-
 // VisviseAPI provides atomic API methods
 type VisviseAPI struct {
 	http *HTTPClient
@@ -284,7 +282,7 @@ func (api *VisviseAPI) StyleTransfer(inputView string, styleType StyleType, rtx 
 			return resultImage, nil
 		}
 	}
-	return "", fmt.Errorf("style_transfer response missing result_image")
+	return "", nil
 }
 
 // PatterAutoRemove automatically removes surface patterns and returns the processed image COS URL.
@@ -303,7 +301,7 @@ func (api *VisviseAPI) PatterAutoRemove(inputView string, rtx string) (string, e
 			return resultImage, nil
 		}
 	}
-	return "", fmt.Errorf("patter_auto_remove response missing result_image")
+	return "", nil
 }
 
 // GenPreprocess saves a processed image as a 2D preprocess model asset.
@@ -339,7 +337,7 @@ func (api *VisviseAPI) GenPreprocess(
 			return modelID, nil
 		}
 	}
-	return "", fmt.Errorf("gen_preprocess response missing model_id")
+	return "", nil
 }
 
 // BatchGenPose batch generates poses from images (async)

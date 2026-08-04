@@ -10,7 +10,6 @@ This directory contains complete example code for the VISVISE Go SDK, with each 
 examples/
 ├── gen_360/           # Image to 360 - Generate 360° multi-view from a single image
 ├── gen_preprocess/    # 2D Preprocessing - Stylize or remove patterns and save an asset
-
 ├── gen_high_model/    # Image to High-poly Model - Generate high-polygon 3D models
 ├── gen_mid_model/     # Image to Mid-poly Model - Generate medium-polygon 3D models
 ├── gen_low_model/     # Image to Low-poly Model - Generate low-polygon 3D models
