@@ -76,6 +76,52 @@ func (o *Gen360Options) SetFaceType(faceType FaceType) *Gen360Options {
 	return o
 }
 
+// GenStyleTransferOptions defines optional parameters for GenStyleTransfer.
+type GenStyleTransferOptions struct {
+	Name           string // optional, asset name (default "gen_style_transfer")
+	AlgorithmModel string // optional, algorithm model name; auto-selected if empty
+}
+
+// NewGenStyleTransferOptions creates GenStyleTransferOptions with common defaults.
+func NewGenStyleTransferOptions() *GenStyleTransferOptions {
+	return &GenStyleTransferOptions{Name: "gen_style_transfer"}
+}
+
+// SetName sets the asset name.
+func (o *GenStyleTransferOptions) SetName(name string) *GenStyleTransferOptions {
+	o.Name = name
+	return o
+}
+
+// SetAlgorithmModel sets the algorithm model.
+func (o *GenStyleTransferOptions) SetAlgorithmModel(model string) *GenStyleTransferOptions {
+	o.AlgorithmModel = model
+	return o
+}
+
+// GenPatterAutoRemoveOptions defines optional parameters for GenPatterAutoRemove.
+type GenPatterAutoRemoveOptions struct {
+	Name           string // optional, asset name (default "gen_patter_auto_remove")
+	AlgorithmModel string // optional, algorithm model name; auto-selected if empty
+}
+
+// NewGenPatterAutoRemoveOptions creates GenPatterAutoRemoveOptions with common defaults.
+func NewGenPatterAutoRemoveOptions() *GenPatterAutoRemoveOptions {
+	return &GenPatterAutoRemoveOptions{Name: "gen_patter_auto_remove"}
+}
+
+// SetName sets the asset name.
+func (o *GenPatterAutoRemoveOptions) SetName(name string) *GenPatterAutoRemoveOptions {
+	o.Name = name
+	return o
+}
+
+// SetAlgorithmModel sets the algorithm model.
+func (o *GenPatterAutoRemoveOptions) SetAlgorithmModel(model string) *GenPatterAutoRemoveOptions {
+	o.AlgorithmModel = model
+	return o
+}
+
 // GenHighModelOptions defines optional parameters for GenHighModel
 type GenHighModelOptions struct {
 	Name              string            // optional, task name (auto-generated if empty)

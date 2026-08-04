@@ -56,6 +56,7 @@ func TestAtomicAPI_ListAlgorithmModel(t *testing.T) {
 		{4, intPtr(2), "文生动画"},
 		{5, nil, "骨骼架设"},
 		{2, nil, "LOD"},
+		{16, nil, "2D预处理"},
 	}
 
 	for _, tc := range testCases {

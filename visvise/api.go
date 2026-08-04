@@ -1,5 +1,7 @@
 package visvise
 
+import "fmt"
+
 // VisviseAPI provides atomic API methods
 type VisviseAPI struct {
 	http *HTTPClient
@@ -263,6 +265,81 @@ func (api *VisviseAPI) RemoveBackground(imageURL string, rtx string) (string, er
 		}
 	}
 	return "", nil
+}
+
+// StyleTransfer stylizes an input image and returns the processed image COS URL.
+func (api *VisviseAPI) StyleTransfer(inputView string, styleType StyleType, rtx string) (string, error) {
+	body := map[string]interface{}{
+		"input_view": inputView,
+		"style_type": styleType,
+	}
+
+	data, err := api.http.Post("openapi/weaver/resource/style_transfer", body, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	if m, ok := data.(map[string]interface{}); ok {
+		if resultImage, ok := m["result_image"].(string); ok && resultImage != "" {
+			return resultImage, nil
+		}
+	}
+	return "", fmt.Errorf("style_transfer response missing result_image")
+}
+
+// PatterAutoRemove automatically removes surface patterns and returns the processed image COS URL.
+func (api *VisviseAPI) PatterAutoRemove(inputView string, rtx string) (string, error) {
+	body := map[string]interface{}{
+		"input_view": inputView,
+	}
+
+	data, err := api.http.Post("openapi/weaver/resource/patter_auto_remove", body, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	if m, ok := data.(map[string]interface{}); ok {
+		if resultImage, ok := m["result_image"].(string); ok && resultImage != "" {
+			return resultImage, nil
+		}
+	}
+	return "", fmt.Errorf("patter_auto_remove response missing result_image")
+}
+
+// GenPreprocess saves a processed image as a 2D preprocess model asset.
+func (api *VisviseAPI) GenPreprocess(
+	name, inputView string,
+	preprocessType PreprocessType,
+	algorithmModel string,
+	styleParam *StyleParam,
+	removePatternParam *RemovePatternParam,
+	rtx string,
+) (string, error) {
+	body := map[string]interface{}{
+		"name":            name,
+		"input_view":      inputView,
+		"preprocess_type": preprocessType,
+	}
+	if algorithmModel != "" {
+		body["algorithm_model"] = algorithmModel
+	}
+	if styleParam != nil {
+		body["style_param"] = styleParam
+	}
+	if removePatternParam != nil {
+		body["remove_pattern_param"] = removePatternParam
+	}
+
+	data, err := api.http.Post("openapi/weaver/resource/gen_preprocess", body, rtx)
+	if err != nil {
+		return "", err
+	}
+	if m, ok := data.(map[string]interface{}); ok {
+		if modelID, ok := m["model_id"].(string); ok && modelID != "" {
+			return modelID, nil
+		}
+	}
+	return "", fmt.Errorf("gen_preprocess response missing model_id")
 }
 
 // BatchGenPose batch generates poses from images (async)

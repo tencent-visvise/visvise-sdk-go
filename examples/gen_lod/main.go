@@ -42,9 +42,9 @@ func main() {
 	fmt.Println("[gen_lod] 开始 LOD 减面...")
 
 	reduceFaces := []visvise.ReduceFace{
-		{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-		{ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
-		{ReduceLevel: 3, ReducePercent: 13, FaceType: visvise.FaceTypeQuad},
+		{ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_full"},
+		{ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_fast_full"},
+		{ReduceLevel: 3, ReducePercent: 13, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_fast_full"},
 	}
 
 	modelIDs, err := client.GenLOD(modelPath, reduceFaces, rtx,

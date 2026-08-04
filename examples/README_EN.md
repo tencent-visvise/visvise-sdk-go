@@ -9,6 +9,8 @@ This directory contains complete example code for the VISVISE Go SDK, with each 
 ```
 examples/
 ├── gen_360/           # Image to 360 - Generate 360° multi-view from a single image
+├── gen_preprocess/    # 2D Preprocessing - Stylize or remove patterns and save an asset
+
 ├── gen_high_model/    # Image to High-poly Model - Generate high-polygon 3D models
 ├── gen_mid_model/     # Image to Mid-poly Model - Generate medium-polygon 3D models
 ├── gen_low_model/     # Image to Low-poly Model - Generate low-polygon 3D models
@@ -53,6 +55,24 @@ go run main.go
 
 ### gen_360 (Image to 360)
 Generate 360° multi-view from a single image. The output can be used as input for subsequent image-to-high/mid/low model generation.
+
+### gen_preprocess (2D Preprocessing)
+Creates a 2D preprocess asset from a local image or platform COS URL, using ``client.GenStyleTransfer()`` for stylization or ``client.GenPatterAutoRemove()`` for pattern removal. When the input environment variable is omitted, it uses `tests/assets/preprocess.png`. This synchronous workflow can take up to 120 seconds; the example sets the client timeout to 180 seconds.
+
+| Environment variable | Required | Description |
+|---|---|---|
+| `VISVISE_PREPROCESS_INPUT` | No | Local image path or VISVISE platform COS URL; defaults to `tests/assets/preprocess.png` |
+| `VISVISE_PREPROCESS_MODE` | No | `stylized` (default) or `auto-remove` |
+| `VISVISE_PREPROCESS_STYLE` | `stylized` only | `grayscale` (default), `pixel`, `realistic`, or `cartoon` |
+| `VISVISE_PREPROCESS_NAME` | No | Asset name; defaults to `example_gen_preprocess` |
+| `VISVISE_PREPROCESS_ALGORITHM_MODEL` | No | Explicit 2D preprocess model; auto-selects the first available model when omitted |
+
+```bash
+cd examples/gen_preprocess
+go run main.go
+```
+
+
 
 ### gen_high_model (Image to High-poly Model)
 Uses Tripo-v3.1-ultra algorithm, supports single image input (no need for four views).

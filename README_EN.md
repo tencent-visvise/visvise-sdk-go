@@ -17,6 +17,7 @@ Go SDK for the VISVISE Weaver OpenAPI. It provides:
 - [Client Initialization](#client-initialization)
 - [Enum Constants](#enum-constants)
 - [High-Level Methods](#high-level-methods)
+  - [GenPreprocess — 2D Preprocessing](#genpreprocess--2d-preprocessing)
   - [Gen360 — Image to 360](#gen360--image-to-360)
   - [GenHighModel — Image to High-poly](#genhighmodel--image-to-high-poly)
   - [GenMidModel — Image to Mid-poly](#genmidmodel--image-to-mid-poly)
@@ -172,6 +173,15 @@ visvise.SegmentGranularityCoarse  // 1 - coarse
 visvise.SegmentGranularityMedium  // 2 - medium (default)
 visvise.SegmentGranularityFine    // 3 - fine
 
+// 2D preprocessing
+visvise.NodeTypePreprocess2D       // 16 - 2D preprocessing
+visvise.PreprocessTypeStylized     // 1 - style transfer
+visvise.PreprocessTypePatterned    // 2 - automatic pattern removal
+visvise.StyleTypeGrayscale         // 1 - grayscale
+visvise.StyleTypePixel             // 2 - pixel art
+visvise.StyleTypeRealistic         // 3 - realistic
+visvise.StyleTypeCartoon           // 4 - cartoon figurine
+
 // Mesh category (for rigging)
 visvise.MeshCategoryHumanoid // "humanoid" - humanoid (default)
 visvise.MeshCategoryTetrapod // "tetrapod" - tetrapod (four-legged)
@@ -181,7 +191,7 @@ visvise.MeshCategoryTetrapod // "tetrapod" - tetrapod (four-legged)
 
 ## High-Level Methods
 
-High-level methods bundle "COS upload + async task creation" into a single call. Pass either a local file path or a VISVISE COS URL; each method returns a `model_id`.
+High-level methods bundle "COS upload + task creation" into a single call. Pass either a local file path or a VISVISE COS URL; each method returns a `model_id`. `GenPreprocess` is synchronous; other `Gen*()` methods usually create asynchronous tasks.
 
 All `Gen*()` methods use **Options struct** pattern with fluent API for cleaner optional parameter handling:
 
@@ -193,6 +203,35 @@ All `Gen*()` methods use **Options struct** pattern with fluent API for cleaner 
 > - **Local path** (`str`): the SDK uploads the file automatically.
 > - **VISVISE COS URL** (`str`): pass a `https://...myqcloud.com/...` link directly; the SDK skips upload.
 > - **Binary content** (`bytes` / `io.Reader`): the SDK auto-detects the format via magic bytes (images PNG/JPEG/GIF/BMP/WebP/TIFF, 3D models FBX/OBJ/GLB/GLTF, videos MP4/MOV/WebM/AVI, ZIP) and uploads as `<uuid>.<sniffed-ext>` — no filename required from the caller.
+
+### GenStyleTransfer / GenPatterAutoRemove — 2D Preprocessing
+
+Synchronously processes an input image and saves it as a `node_type=16` asset. It returns the `model_id` directly; `WaitModel()` is not required. → [Example](examples/gen_preprocess/main.go)
+
+```go
+// Style transfer
+styleOpts := visvise.NewGenStyleTransferOptions().
+    SetName("styled_character").                         // optional, asset name; default "gen_style_transfer"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")            // optional, algorithm model; the first available model is selected when omitted
+
+styledID, err := client.GenStyleTransfer(
+    "character.png",               // required, local path, VISVISE COS URL, []byte, or io.Reader input image
+    visvise.StyleTypeGrayscale,    // required, grayscale, pixel, realistic, or cartoon
+    rtx,                           // required, actual caller's RTX
+    styleOpts,
+)
+
+// Automatic pattern removal
+patternOpts := visvise.NewGenPatterAutoRemoveOptions().
+    SetName("pattern_removed_character").                 // optional, asset name; default "gen_patter_auto_remove"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")             // optional, algorithm model; the first available model is selected when omitted
+
+patternedID, err := client.GenPatterAutoRemove(
+    "character.png", // required, local path, VISVISE COS URL, []byte, or io.Reader input image
+    rtx,              // required, actual caller's RTX
+    patternOpts,
+)
+```
 
 ### Gen360 — Image to 360
 
@@ -323,10 +362,12 @@ modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
 
 Generate level-of-detail meshes (node_type=2), with multi-shot support. Default generation times is 3.→ [Example](examples/gen_lod/main.go)
 
+
+
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_full"},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_fast_full"},
 }
 
 opts := visvise.NewGenLODOptions().
@@ -547,6 +588,22 @@ err = api.BatchDeleteModel([]string{"Model2026...", "Model2026..."}, rtx)
 
 // Remove background
 outURL, err := api.RemoveBackground("https://cos.../image.png", rtx)
+
+// 2D preprocessing: style transfer / automatic pattern removal
+styledURL, err := api.StyleTransfer("https://cos.../image.png", visvise.StyleTypeGrayscale, rtx)
+autoRemovedURL, err := api.PatterAutoRemove("https://cos.../image.png", rtx)
+
+// result_image is a signed URL and must be passed unchanged to the save API.
+// Save a processed image as a node_type=16 asset
+modelID, err := api.GenPreprocess(
+    "styled_asset",
+    "https://cos.../image.png",
+    visvise.PreprocessTypeStylized,
+    "",
+    &visvise.StyleParam{StyleType: visvise.StyleTypeGrayscale, ResultImage: styledURL},
+    nil,
+    rtx,
+)
 
 // Text-to-motion prompt suggestions
 prompts, err := api.GetText2MotionPromptList("en", rtx)

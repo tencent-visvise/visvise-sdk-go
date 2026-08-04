@@ -28,11 +28,23 @@ func (v *View) ToMap() map[string]interface{} {
 	return m
 }
 
+// StyleParam represents a stylized image result used to create a 2D preprocess asset.
+type StyleParam struct {
+	StyleType   StyleType `json:"style_type"`
+	ResultImage string    `json:"result_image"`
+}
+
+// RemovePatternParam represents a pattern-removed image result used to create a 2D preprocess asset.
+type RemovePatternParam struct {
+	ResultImage string `json:"result_image"`
+}
+
 // ReduceFace represents the LOD single level reduce face configuration
 type ReduceFace struct {
 	ReduceLevel   int      `json:"reduce_level"`
 	ReducePercent int      `json:"reduce_percent"`
 	FaceType      FaceType `json:"face_type"` // 1: Triangle, 2: Quad
+	ProjectType   string   `json:"project_type"`
 }
 
 // ToMap converts ReduceFace to map
@@ -41,6 +53,7 @@ func (r *ReduceFace) ToMap() map[string]interface{} {
 		"reduce_level":   r.ReduceLevel,
 		"reduce_percent": r.ReducePercent,
 		"face_type":      r.FaceType,
+		"project_type":   r.ProjectType,
 	}
 }
 

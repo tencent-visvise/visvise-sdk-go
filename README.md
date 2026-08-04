@@ -17,6 +17,7 @@ VISVISE Weaver OpenAPI 的 Go SDK，提供：
 - [客户端初始化](#客户端初始化)
 - [枚举常量](#枚举常量)
 - [高阶方法参考](#高阶方法参考)
+  - [GenPreprocess — 2D预处理](#genpreprocess--2d预处理)
   - [Gen360 — 图生360](#gen360--图生360)
   - [GenHighModel — 图生高模](#genhighmodel--图生高模)
   - [GenMidModel — 图生中模](#genmidmodel--图生中模)
@@ -172,6 +173,15 @@ visvise.SegmentGranularityCoarse  // 1 - 粗
 visvise.SegmentGranularityMedium  // 2 - 中（默认）
 visvise.SegmentGranularityFine    // 3 - 细
 
+// 2D 预处理
+visvise.NodeTypePreprocess2D        // 16 - 2D 预处理
+visvise.PreprocessTypeStylized      // 1 - 原画风格化
+visvise.PreprocessTypePatterned     // 2 - 智能去花纹
+visvise.StyleTypeGrayscale          // 1 - 灰模风
+visvise.StyleTypePixel              // 2 - 像素风
+visvise.StyleTypeRealistic          // 3 - 写实风
+visvise.StyleTypeCartoon            // 4 - 卡通手办风
+
 // 骨骼类别（骨骼架设）
 visvise.MeshCategoryHumanoid // "humanoid" - 人形（默认）
 visvise.MeshCategoryTetrapod // "tetrapod" - 四足
@@ -181,7 +191,7 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 
 ## 高阶方法参考
 
-高阶方法封装了「COS 文件上传 + 创建异步任务」两步，传入文件路径（本地）或 COS URL 均可，返回 `model_id`。
+高阶方法封装了「COS 文件上传 + 创建任务」流程，传入文件路径（本地）或 COS URL 均可，返回 `model_id`。除 `GenPreprocess` 为同步处理外，其他 `Gen*()` 方法通常创建异步任务。
 
 所有 `Gen*()` 方法采用 **Options 结构体** 模式，通过链式调用设置可选参数，使用更简洁：
 
@@ -193,6 +203,35 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 > - **本地路径**（`str`）：直接传文件路径，SDK 自动上传。
 > - **VISVISE 平台 COS URL**（`str`）：传入 `https://...myqcloud.com/...` 形式的链接，SDK 不再上传。
 > - **二进制内容**（`bytes` / `io.Reader`）：SDK 自动通过 magic bytes 识别格式（图片 PNG/JPEG/GIF/BMP/WebP/TIFF、3D 模型 FBX/OBJ/GLB/GLTF、视频 MP4/MOV/WebM/AVI、ZIP），用 `<uuid>.<识别后缀>` 自动命名上传，无需用户提供文件名。
+
+### GenStyleTransfer / GenPatterAutoRemove — 2D预处理
+
+对图片进行风格化或去花纹处理，并保存为2D预处理资产（node_type=16）。→ [示例代码](examples/gen_preprocess/main.go)
+
+```go
+// 原画风格化
+styleOpts := visvise.NewGenStyleTransferOptions().
+    SetName("gen_preprocess").                              // 可选，资产名称，默认 "gen_style_transfer"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
+
+styledID, err := client.GenStyleTransfer(
+    "character.png",               // 必填，输入图片：本地路径、VISVISE 平台 COS URL、[]byte 或 io.Reader
+    visvise.StyleTypeGrayscale,    // 必填，风格类型：灰模/像素/写实/卡通手办风
+    rtx,                           // 必填，实际使用人的 RTX
+    styleOpts,
+)
+
+// 智能去花纹
+patternOpts := visvise.NewGenPatterAutoRemoveOptions().
+    SetName("gen_preprocess").                             // 可选，资产名称，默认 "gen_patter_auto_remove"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
+
+patternedID, err := client.GenPatterAutoRemove(
+    "character.png", // 必填，输入图片：本地路径、VISVISE 平台 COS URL、[]byte 或 io.Reader
+    rtx,              // 必填，实际使用人的 RTX
+    patternOpts,
+)
+```
 
 ### Gen360 — 图生360
 
@@ -323,10 +362,12 @@ modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
 
 生成多级细节模型（node_type=2），支持抽卡。默认抽卡次数为 3。→ [示例代码](examples/gen_lod/main.go)
 
+
+
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_full"},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_fast_full"},
 }
 
 opts := visvise.NewGenLODOptions().
@@ -547,6 +588,22 @@ err = api.BatchDeleteModel([]string{"Model2026...", "Model2026..."}, rtx)
 
 // 去除背景
 outURL, err := api.RemoveBackground("https://cos.../image.png", rtx)
+
+// 2D 预处理：风格化 / 智能去花纹
+styledURL, err := api.StyleTransfer("https://cos.../image.png", visvise.StyleTypeGrayscale, rtx)
+autoRemovedURL, err := api.PatterAutoRemove("https://cos.../image.png", rtx)
+
+// result_image 是带临时签名的 URL，须原样传入保存接口。
+// 将处理结果保存为 node_type=16 的资产
+modelID, err := api.GenPreprocess(
+    "styled_asset",
+    "https://cos.../image.png",
+    visvise.PreprocessTypeStylized,
+    "",
+    &visvise.StyleParam{StyleType: visvise.StyleTypeGrayscale, ResultImage: styledURL},
+    nil,
+    rtx,
+)
 
 // 文生动画提示词列表
 prompts, err := api.GetText2MotionPromptList("zh", rtx)

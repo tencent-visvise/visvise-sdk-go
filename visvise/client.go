@@ -633,9 +633,65 @@ func (c *Client) WaitModel(modelID string, rtx string, opts *WaitOptions) (*Mode
 	}
 }
 
-// ════════════════════════════════════════════════════════════════════
-// High-level methods: gen_xxx (simplified with Options)
-// ════════════════════════════════════════════════════════════════════
+// GenStyleTransfer runs a style transfer workflow and synchronously saves its result as an asset.
+func (c *Client) GenStyleTransfer(inputView FileInput, styleType StyleType, rtx string, opts *GenStyleTransferOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenStyleTransferOptions()
+	}
+
+	inputURL, err := c.resolveFile(inputView, false, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypePreprocess2D, nil, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	resultImage, err := c.api.StyleTransfer(inputURL, styleType, rtx)
+	if err != nil {
+		return "", err
+	}
+	if resultImage == "" {
+		return "", fmt.Errorf("style_transfer returned an empty result_image")
+	}
+
+	return c.api.GenPreprocess(
+		opts.Name, inputURL, PreprocessTypeStylized, resolvedModel,
+		&StyleParam{StyleType: styleType, ResultImage: resultImage}, nil, rtx,
+	)
+}
+
+// GenPatterAutoRemove runs a pattern auto-removal workflow and synchronously saves its result as an asset.
+func (c *Client) GenPatterAutoRemove(inputView FileInput, rtx string, opts *GenPatterAutoRemoveOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenPatterAutoRemoveOptions()
+	}
+
+	inputURL, err := c.resolveFile(inputView, false, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypePreprocess2D, nil, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	resultImage, err := c.api.PatterAutoRemove(inputURL, rtx)
+	if err != nil {
+		return "", err
+	}
+	if resultImage == "" {
+		return "", fmt.Errorf("patter_auto_remove returned an empty result_image")
+	}
+
+	return c.api.GenPreprocess(
+		opts.Name, inputURL, PreprocessTypePatterned, resolvedModel,
+		nil, &RemovePatternParam{ResultImage: resultImage}, rtx,
+	)
+}
 
 // Gen360 generates multi-view images from an image
 // Simplified version using Gen360Options
