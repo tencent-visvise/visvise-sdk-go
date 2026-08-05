@@ -175,7 +175,7 @@ func TestOptionalParams_LOD(t *testing.T) {
 
 	client := visvise.NewClient(appID, secretKey, nil)
 
-	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2, ProjectType: "lod_usr_full"}}
+	reduceFaces := []visvise.ReduceFace{{ReduceLevel: 1, ReducePercent: 50, FaceType: 2}}
 	opts := visvise.NewGenLODOptions().
 		SetAlgorithmModel("VISVISE-LOD-V1.0.0").
 		SetName("opt_lod_a2").

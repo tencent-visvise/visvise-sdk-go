@@ -361,8 +361,8 @@ modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
 
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_full"},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_fast_full"},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
 }
 
 opts := visvise.NewGenLODOptions().

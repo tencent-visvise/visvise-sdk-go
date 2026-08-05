@@ -44,7 +44,6 @@ type ReduceFace struct {
 	ReduceLevel   int      `json:"reduce_level"`
 	ReducePercent int      `json:"reduce_percent"`
 	FaceType      FaceType `json:"face_type"` // 1: Triangle, 2: Quad
-	ProjectType   string   `json:"project_type"`
 }
 
 // ToMap converts ReduceFace to map
@@ -53,7 +52,6 @@ func (r *ReduceFace) ToMap() map[string]interface{} {
 		"reduce_level":   r.ReduceLevel,
 		"reduce_percent": r.ReducePercent,
 		"face_type":      r.FaceType,
-		"project_type":   r.ProjectType,
 	}
 }
 

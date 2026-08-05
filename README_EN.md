@@ -367,8 +367,8 @@ Generate level-of-detail meshes (node_type=2), with multi-shot support. Default 
 
 ```go
 reduceFaces := []visvise.ReduceFace{
-    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_full"},
-    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad, ProjectType: "lod_usr_fast_full"},
+    {ReduceLevel: 1, ReducePercent: 50, FaceType: visvise.FaceTypeQuad},
+    {ReduceLevel: 2, ReducePercent: 25, FaceType: visvise.FaceTypeQuad},
 }
 
 opts := visvise.NewGenLODOptions().
