@@ -28,6 +28,17 @@ func (v *View) ToMap() map[string]interface{} {
 	return m
 }
 
+// StyleParam represents a stylized image result used to create a 2D preprocess asset.
+type StyleParam struct {
+	StyleType   StyleType `json:"style_type"`
+	ResultImage string    `json:"result_image"`
+}
+
+// RemovePatternParam represents a pattern-removed image result used to create a 2D preprocess asset.
+type RemovePatternParam struct {
+	ResultImage string `json:"result_image"`
+}
+
 // ReduceFace represents the LOD single level reduce face configuration
 type ReduceFace struct {
 	ReduceLevel   int      `json:"reduce_level"`

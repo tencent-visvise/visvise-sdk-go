@@ -4,20 +4,39 @@ package visvise
 type NodeType int
 
 const (
-	NodeTypeReTopology  NodeType = 1  // Re-topology
-	NodeTypeLOD         NodeType = 2  // LOD
-	NodeTypeImgTo3DHigh NodeType = 3  // Image to 3D (High)
-	NodeTypeAnimation   NodeType = 4  // Framing AI Animation
-	NodeTypeRigging     NodeType = 5  // Skeleton setup
-	NodeTypeSkinning    NodeType = 6  // Skinning
-	NodeTypeImgTo360    NodeType = 7  // Image to 360
-	NodeTypeTexture     NodeType = 8  // Texture
-	NodeTypeUV          NodeType = 9  // UV unwrap
-	NodeTypeMeshRefine  NodeType = 10 // Mesh refine
-	NodeTypeImgTo3DMid  NodeType = 11 // Image to 3D (Mid)
-	NodeTypeImgToPose   NodeType = 12 // Image to Pose
-	NodeTypeImgTo3DLow  NodeType = 13 // Image to 3D (Low)
-	NodeTypeSegment2D   NodeType = 14 // 2D Segmentation
+	NodeTypeReTopology   NodeType = 1  // Re-topology
+	NodeTypeLOD          NodeType = 2  // LOD
+	NodeTypeImgTo3DHigh  NodeType = 3  // Image to 3D (High)
+	NodeTypeAnimation    NodeType = 4  // Framing AI Animation
+	NodeTypeRigging      NodeType = 5  // Skeleton setup
+	NodeTypeSkinning     NodeType = 6  // Skinning
+	NodeTypeImgTo360     NodeType = 7  // Image to 360
+	NodeTypeTexture      NodeType = 8  // Texture
+	NodeTypeUV           NodeType = 9  // UV unwrap
+	NodeTypeMeshRefine   NodeType = 10 // Mesh refine
+	NodeTypeImgTo3DMid   NodeType = 11 // Image to 3D (Mid)
+	NodeTypeImgToPose    NodeType = 12 // Image to Pose
+	NodeTypeImgTo3DLow   NodeType = 13 // Image to 3D (Low)
+	NodeTypeSegment2D    NodeType = 14 // 2D Segmentation
+	NodeTypePreprocess2D NodeType = 16 // 2D Preprocess
+)
+
+// PreprocessType represents the 2D preprocess type.
+type PreprocessType int
+
+const (
+	PreprocessTypeStylized  PreprocessType = 1 // Stylized
+	PreprocessTypePatterned PreprocessType = 2 // Pattern removal
+)
+
+// StyleType represents the source image style type.
+type StyleType int
+
+const (
+	StyleTypeGrayscale StyleType = 1 // Grayscale
+	StyleTypePixel     StyleType = 2 // Pixel
+	StyleTypeRealistic StyleType = 3 // Realistic
+	StyleTypeCartoon   StyleType = 4 // Cartoon figurine
 )
 
 // ModelStatus represents the model asset status code

@@ -18,6 +18,7 @@ Go SDK for the VISVISE Weaver OpenAPI. It provides:
 - [Enum Constants](#enum-constants)
 - [High-Level Methods](#high-level-methods)
   - [Gen360 — Image to 360](#gen360--image-to-360)
+  - [GenPreprocess — 2D Preprocessing](#genpreprocess--2d-preprocessing)
   - [GenHighModel — Image to High-poly](#genhighmodel--image-to-high-poly)
   - [GenMidModel — Image to Mid-poly](#genmidmodel--image-to-mid-poly)
   - [GenLowModel — Image to Low-poly](#genlowmodel--image-to-low-poly)
@@ -172,6 +173,16 @@ visvise.SegmentGranularityCoarse  // 1 - coarse
 visvise.SegmentGranularityMedium  // 2 - medium (default)
 visvise.SegmentGranularityFine    // 3 - fine
 
+// 2D preprocessing
+visvise.PreprocessTypeStylized     // 1 - style transfer
+visvise.PreprocessTypePatterned    // 2 - automatic pattern removal
+
+// Stylized
+visvise.StyleTypeGrayscale         // 1 - grayscale
+visvise.StyleTypePixel             // 2 - pixel art
+visvise.StyleTypeRealistic         // 3 - realistic
+visvise.StyleTypeCartoon           // 4 - cartoon figurine
+
 // Mesh category (for rigging)
 visvise.MeshCategoryHumanoid // "humanoid" - humanoid (default)
 visvise.MeshCategoryTetrapod // "tetrapod" - tetrapod (four-legged)
@@ -181,7 +192,7 @@ visvise.MeshCategoryTetrapod // "tetrapod" - tetrapod (four-legged)
 
 ## High-Level Methods
 
-High-level methods bundle "COS upload + async task creation" into a single call. Pass either a local file path or a VISVISE COS URL; each method returns a `model_id`.
+High-level methods bundle "COS upload + task creation" into a single call. Pass either a local file path or a VISVISE COS URL; each method returns a `model_id`. `GenPreprocess` is synchronous; other `Gen*()` methods usually create asynchronous tasks.
 
 All `Gen*()` methods use **Options struct** pattern with fluent API for cleaner optional parameter handling:
 
@@ -215,6 +226,35 @@ modelID, err := client.Gen360("path/to/character.png", rtx, opts)
 ```
 
 ---
+
+### GenStyleTransfer / GenPatterAutoRemove — 2D Preprocessing
+
+Synchronously processes an input image and saves it as a `node_type=16` asset. It returns the `model_id` directly; `WaitModel()` is not required. → [Example](examples/gen_preprocess/main.go)
+
+```go
+// Style transfer
+styleOpts := visvise.NewGenStyleTransferOptions().
+    SetName("styled_character").                         // optional, asset name; default "gen_style_transfer"
+    SetStyleType(visvise.StyleTypeGrayscale).             // optional, style type; default grayscale
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")            // optional, algorithm model; the first available model is selected when omitted
+
+styledID, err := client.GenStyleTransfer(
+    "character.png",               // required, local path, VISVISE COS URL, []byte, or io.Reader input image
+    rtx,                           // required, actual caller's RTX
+    styleOpts,
+)
+
+// Automatic pattern removal
+patternOpts := visvise.NewGenPatterAutoRemoveOptions().
+    SetName("pattern_removed_character").                 // optional, asset name; default "gen_patter_auto_remove"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")             // optional, algorithm model; the first available model is selected when omitted
+
+patternedID, err := client.GenPatterAutoRemove(
+    "character.png", // required, local path, VISVISE COS URL, []byte, or io.Reader input image
+    rtx,              // required, actual caller's RTX
+    patternOpts,
+)
+```
 
 ### GenHighModel — Image to High-poly
 
@@ -322,6 +362,8 @@ modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
 ### GenLOD — LOD
 
 Generate level-of-detail meshes (node_type=2), with multi-shot support. Default generation times is 3.→ [Example](examples/gen_lod/main.go)
+
+
 
 ```go
 reduceFaces := []visvise.ReduceFace{

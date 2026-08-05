@@ -18,6 +18,7 @@ VISVISE Weaver OpenAPI 的 Go SDK，提供：
 - [枚举常量](#枚举常量)
 - [高阶方法参考](#高阶方法参考)
   - [Gen360 — 图生360](#gen360--图生360)
+  - [GenPreprocess — 2D预处理](#genpreprocess--2d预处理)
   - [GenHighModel — 图生高模](#genhighmodel--图生高模)
   - [GenMidModel — 图生中模](#genmidmodel--图生中模)
   - [GenLowModel — 图生低模](#genlowmodel--图生低模)
@@ -172,6 +173,16 @@ visvise.SegmentGranularityCoarse  // 1 - 粗
 visvise.SegmentGranularityMedium  // 2 - 中（默认）
 visvise.SegmentGranularityFine    // 3 - 细
 
+// 2D 预处理方式
+visvise.PreprocessTypeStylized      // 1 - 原画风格化
+visvise.PreprocessTypePatterned     // 2 - 智能去花纹
+
+// 风格化
+visvise.StyleTypeGrayscale          // 1 - 灰模风
+visvise.StyleTypePixel              // 2 - 像素风
+visvise.StyleTypeRealistic          // 3 - 写实风
+visvise.StyleTypeCartoon            // 4 - 卡通手办风
+
 // 骨骼类别（骨骼架设）
 visvise.MeshCategoryHumanoid // "humanoid" - 人形（默认）
 visvise.MeshCategoryTetrapod // "tetrapod" - 四足
@@ -181,7 +192,7 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 
 ## 高阶方法参考
 
-高阶方法封装了「COS 文件上传 + 创建异步任务」两步，传入文件路径（本地）或 COS URL 均可，返回 `model_id`。
+高阶方法封装了「COS 文件上传 + 创建任务」流程，传入文件路径（本地）或 COS URL 均可，返回 `model_id`。除 `GenPreprocess` 为同步处理外，其他 `Gen*()` 方法通常创建异步任务。
 
 所有 `Gen*()` 方法采用 **Options 结构体** 模式，通过链式调用设置可选参数，使用更简洁：
 
@@ -212,6 +223,29 @@ opts := visvise.NewGen360Options().
     SetRightView("path/to/right.png")                     // 可选，右视图
 
 modelID, err := client.Gen360("path/to/character.png", rtx, opts)
+```
+
+---
+
+### GenStyleTransfer / GenPatterAutoRemove — 2D预处理
+
+对图片进行风格化或去花纹处理，并保存为2D预处理资产（node_type=16）。→ [示例代码](examples/gen_preprocess/main.go)
+
+```go
+// 原画风格化
+styleOpts := visvise.NewGenStyleTransferOptions().
+    SetName("gen_style_transfer").                         // 可选，资产名称，默认 "gen_style_transfer"
+    SetStyleType(visvise.StyleTypeGrayscale).               // 可选，风格类型，默认灰模风
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
+
+styledID, err := client.GenStyleTransfer("character.png", rtx, styleOpts)
+
+// 智能去花纹
+patternOpts := visvise.NewGenPatterAutoRemoveOptions().
+    SetName("gen_patter_auto_remove").                     // 可选，资产名称，默认 "gen_patter_auto_remove"
+    SetAlgorithmModel("VISVISE-Pre2D-V1.0.0")              // 可选，算法模型；不传自动选择首个可用模型
+
+patternedID, err := client.GenPatterAutoRemove("character.png", rtx, patternOpts)
 ```
 
 ---
@@ -322,6 +356,8 @@ modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
 ### GenLOD — LOD
 
 生成多级细节模型（node_type=2），支持抽卡。默认抽卡次数为 3。→ [示例代码](examples/gen_lod/main.go)
+
+
 
 ```go
 reduceFaces := []visvise.ReduceFace{
