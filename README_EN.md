@@ -176,6 +176,8 @@ visvise.SegmentGranularityFine    // 3 - fine
 // 2D preprocessing
 visvise.PreprocessTypeStylized     // 1 - style transfer
 visvise.PreprocessTypePatterned    // 2 - automatic pattern removal
+
+// Stylized
 visvise.StyleTypeGrayscale         // 1 - grayscale
 visvise.StyleTypePixel             // 2 - pixel art
 visvise.StyleTypeRealistic         // 3 - realistic
