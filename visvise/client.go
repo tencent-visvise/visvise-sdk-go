@@ -1373,7 +1373,7 @@ func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, rtx string, opts
 
 // GenTextMotion generates animation from text prompts
 // Simplified version using GenTextMotionOptions
-func (c *Client) GenTextMotion(modelPath FileInput, prompt string, rtx string, opts *GenTextMotionOptions) ([]string, error) {
+func (c *Client) GenTextMotion(modelPath FileInput, rtx string, opts *GenTextMotionOptions) ([]string, error) {
 	if opts == nil {
 		opts = NewGenTextMotionOptions()
 	}
@@ -1401,10 +1401,10 @@ func (c *Client) GenTextMotion(modelPath FileInput, prompt string, rtx string, o
 		}
 		framing["segments"] = segments
 	} else {
-		if prompt == "" {
+		if opts.Prompt == "" {
 			return nil, errors.New("gen_text_motion requires either prompt (single-segment) or segments (multi-segment)")
 		}
-		framing["prompt"] = prompt
+		framing["prompt"] = opts.Prompt
 		// duration 仅在单段 prompt 模式下生效
 		if opts.Duration != nil {
 			framing["duration"] = *opts.Duration

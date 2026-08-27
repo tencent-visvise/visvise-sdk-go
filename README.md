@@ -470,7 +470,7 @@ modelID, err := client.GenVideoMotion("path/to/model.fbx", "path/to/dance.mp4", 
 通过提示词生成动画，一次返回 4 个模型供抽卡（node_type=4）。支持单段 `prompt` 与多段 `segments` 两种模式（`segments` 非空时以多段为准）。→ [示例代码](examples/gen_text_motion/main.go)
 
 ```go
-// 方式一：多段提示词 segments（1~15 段），prompt 传空字符串
+// 方式一：多段提示词 segments（1~15 段），无需 prompt
 numFrames60, numFrames90, overlap10 := 60, 90, 10
 segments := []visvise.MotionSegment{
     {Text: "从站立姿势开始，缓缓抬起右手", NumFrames: &numFrames60},
@@ -486,12 +486,12 @@ opts := visvise.NewGenTextMotionOptions().
     SetEnableLoop(false).                                 // 可选，是否循环播放
     SetLoopFrames(5)                                      // 可选，循环帧数（1~20）
 
-modelIDs, err := client.GenTextMotion("path/to/model.fbx", "", rtx, opts)
+modelIDs, err := client.GenTextMotion("path/to/model.fbx", rtx, opts)
 // modelIDs 包含 4 个 ID，等待其中你需要的那个即可
 
 // 方式二：单段提示词 prompt（segments 为空时回退使用）
-modelIDs, err = client.GenTextMotion("path/to/model.fbx", "一个人在跳街舞", rtx,
-    visvise.NewGenTextMotionOptions().SetName("my_text_motion"))
+modelIDs, err = client.GenTextMotion("path/to/model.fbx", rtx,
+    visvise.NewGenTextMotionOptions().SetName("my_text_motion").SetPrompt("一个人在跳街舞"))
 ```
 
 ---

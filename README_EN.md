@@ -476,7 +476,7 @@ modelID, err := client.GenVideoMotion("path/to/model.fbx", "path/to/dance.mp4", 
 Generate animation from text prompts; returns 4 candidate models (node_type=4). Supports single `prompt` and multi-segment `segments` (segments take priority when non-empty). → [Example](examples/gen_text_motion/main.go)
 
 ```go
-// Mode 1: multi-segment segments (1~15 segments); pass an empty prompt
+// Mode 1: multi-segment segments (1~15 segments); no prompt needed
 numFrames60, numFrames90, overlap10 := 60, 90, 10
 segments := []visvise.MotionSegment{
     {Text: "Raise the right hand slowly", NumFrames: &numFrames60},
@@ -492,12 +492,12 @@ opts := visvise.NewGenTextMotionOptions().
     SetEnableLoop(false).                               // optional, loop playback
     SetLoopFrames(5)                                    // optional, loop frames (1~20)
 
-modelIDs, err := client.GenTextMotion("path/to/model.fbx", "", rtx, opts)
+modelIDs, err := client.GenTextMotion("path/to/model.fbx", rtx, opts)
 // modelIDs contains 4 IDs, wait for whichever you prefer
 
 // Mode 2: single prompt (fallback when segments is empty)
-modelIDs, err = client.GenTextMotion("path/to/model.fbx", "a person breakdancing", rtx,
-    visvise.NewGenTextMotionOptions().SetName("my_text_motion"))
+modelIDs, err = client.GenTextMotion("path/to/model.fbx", rtx,
+    visvise.NewGenTextMotionOptions().SetName("my_text_motion").SetPrompt("a person breakdancing"))
 ```
 
 ---

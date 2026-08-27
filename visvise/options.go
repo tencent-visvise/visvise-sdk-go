@@ -743,6 +743,7 @@ type GenTextMotionOptions struct {
 	AlgorithmModel    string            // optional, algorithm model name
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	Segments          []MotionSegment   // optional, multi-segment timeline (takes priority over prompt)
+	Prompt            string            // optional, single-segment prompt (ignored when segments is non-empty)
 	EnableRewrite     *bool             // optional, enable rewrite option (default true)
 	Duration          *int              // optional, animation duration in seconds (single-segment prompt mode only)
 	EnableLoop        *bool             // optional, enable loop playback
@@ -776,9 +777,15 @@ func (o *GenTextMotionOptions) SetOutputModelFormat(format OutputModelFormat) *G
 }
 
 // SetSegments sets the multi-segment timeline. Non-empty segments take
-// priority over the single prompt argument.
+// priority over the single prompt.
 func (o *GenTextMotionOptions) SetSegments(segments []MotionSegment) *GenTextMotionOptions {
 	o.Segments = segments
+	return o
+}
+
+// SetPrompt sets the single-segment prompt (ignored when segments is non-empty)
+func (o *GenTextMotionOptions) SetPrompt(prompt string) *GenTextMotionOptions {
+	o.Prompt = prompt
 	return o
 }
 

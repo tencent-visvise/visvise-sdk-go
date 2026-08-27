@@ -55,7 +55,7 @@ func main() {
 		{Text: "向前走两步", NumFrames: &numFrames90, OverlapFramesWithPrev: &overlap10},
 		{Text: "转身并挥手告别", NumFrames: &numFrames60, OverlapFramesWithPrev: &overlap10},
 	}
-	modelIDs, err := client.GenTextMotion(modelPath, "", rtx,
+	modelIDs, err := client.GenTextMotion(modelPath, rtx,
 		visvise.NewGenTextMotionOptions().
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
 			SetSegments(segments).

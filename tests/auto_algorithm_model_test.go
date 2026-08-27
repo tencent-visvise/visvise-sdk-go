@@ -322,7 +322,7 @@ func TestAutoAlgorithmModel_GenTextMotion(t *testing.T) {
 
 	opts := visvise.NewGenTextMotionOptions()
 
-	modelIDs, err := client.GenTextMotion(modelPath, "一个人在原地踏步", rtx, opts)
+	modelIDs, err := client.GenTextMotion(modelPath, rtx, opts.SetPrompt("一个人在原地踏步"))
 	if err != nil {
 		t.Fatalf("GenTextMotion failed: %v", err)
 	}
