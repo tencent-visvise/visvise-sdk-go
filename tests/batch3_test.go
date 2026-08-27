@@ -93,7 +93,7 @@ func TestBatch3_TextMotionWave(t *testing.T) {
 	opts := visvise.NewGenTextMotionOptions().
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0")
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", rtx, opts)
+	modelIDs, err := client.GenTextMotion(animModelPath, rtx, opts.SetPrompt("一个人在挥手打招呼"))
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=挥手 failed: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestBatch3_TextMotionStep(t *testing.T) {
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 		SetOutputModelFormat(visvise.OutputModelFormatGLB)
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在原地踏步", rtx, opts)
+	modelIDs, err := client.GenTextMotion(animModelPath, rtx, opts.SetPrompt("一个人在原地踏步"))
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=踏步 glb failed: %v", err)
 	}

@@ -212,6 +212,7 @@ type GenMidModelOptions struct {
 	AlgorithmModel    string            // optional, algorithm model name
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	FaceType          FaceType          // optional, face type (default triangle)
+	FaceNum           *int              // optional, target face count (0-30000, 0 = auto)
 	SegmentModelID    string            // optional, 2D segmentation asset ID
 	ModelID360        string            // optional, 360 model ID
 }
@@ -246,6 +247,12 @@ func (o *GenMidModelOptions) SetOutputModelFormat(format OutputModelFormat) *Gen
 // SetFaceType sets the face type
 func (o *GenMidModelOptions) SetFaceType(faceType FaceType) *GenMidModelOptions {
 	o.FaceType = faceType
+	return o
+}
+
+// SetFaceNum sets the target face count
+func (o *GenMidModelOptions) SetFaceNum(faceNum int) *GenMidModelOptions {
+	o.FaceNum = &faceNum
 	return o
 }
 
@@ -329,6 +336,7 @@ type GenMeshRefineOptions struct {
 	AlgorithmModel   string            // optional, algorithm model name
 	InputModelFormat OutputModelFormat // optional, input model format (default fbx)
 	Mode             *MeshRefineMode   // optional, MeshRefineModeOptimize(1) or MeshRefineModeDensify(2)
+	FaceNum          *int              // optional, target face count for optimize mode (0-50000, 0 = not set)
 	ColorModel       FileInput         // optional, color model for texture preservation
 }
 
@@ -361,6 +369,12 @@ func (o *GenMeshRefineOptions) SetInputModelFormat(format OutputModelFormat) *Ge
 // SetMode sets the refine mode
 func (o *GenMeshRefineOptions) SetMode(mode MeshRefineMode) *GenMeshRefineOptions {
 	o.Mode = &mode
+	return o
+}
+
+// SetFaceNum sets the target face count for optimize mode
+func (o *GenMeshRefineOptions) SetFaceNum(faceNum int) *GenMeshRefineOptions {
+	o.FaceNum = &faceNum
 	return o
 }
 
@@ -728,6 +742,12 @@ type GenTextMotionOptions struct {
 	Name              string            // optional, task name (auto-generated if empty)
 	AlgorithmModel    string            // optional, algorithm model name
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
+	Segments          []MotionSegment   // optional, multi-segment timeline (takes priority over prompt)
+	Prompt            string            // optional, single-segment prompt (ignored when segments is non-empty)
+	EnableRewrite     *bool             // optional, enable rewrite option (default true)
+	Duration          *int              // optional, animation duration in seconds (single-segment prompt mode only)
+	EnableLoop        *bool             // optional, enable loop playback
+	LoopFrames        *int              // optional, loop frames (1~20)
 }
 
 // NewGenTextMotionOptions creates GenTextMotionOptions with common defaults
@@ -753,6 +773,43 @@ func (o *GenTextMotionOptions) SetAlgorithmModel(model string) *GenTextMotionOpt
 // SetOutputModelFormat sets the output model format
 func (o *GenTextMotionOptions) SetOutputModelFormat(format OutputModelFormat) *GenTextMotionOptions {
 	o.OutputModelFormat = format
+	return o
+}
+
+// SetSegments sets the multi-segment timeline. Non-empty segments take
+// priority over the single prompt.
+func (o *GenTextMotionOptions) SetSegments(segments []MotionSegment) *GenTextMotionOptions {
+	o.Segments = segments
+	return o
+}
+
+// SetPrompt sets the single-segment prompt (ignored when segments is non-empty)
+func (o *GenTextMotionOptions) SetPrompt(prompt string) *GenTextMotionOptions {
+	o.Prompt = prompt
+	return o
+}
+
+// SetEnableRewrite sets whether to enable the rewrite option
+func (o *GenTextMotionOptions) SetEnableRewrite(enable bool) *GenTextMotionOptions {
+	o.EnableRewrite = &enable
+	return o
+}
+
+// SetDuration sets the animation duration in seconds (single-segment prompt mode only)
+func (o *GenTextMotionOptions) SetDuration(duration int) *GenTextMotionOptions {
+	o.Duration = &duration
+	return o
+}
+
+// SetEnableLoop sets whether to enable loop playback
+func (o *GenTextMotionOptions) SetEnableLoop(enable bool) *GenTextMotionOptions {
+	o.EnableLoop = &enable
+	return o
+}
+
+// SetLoopFrames sets the loop frames (1~20)
+func (o *GenTextMotionOptions) SetLoopFrames(loopFrames int) *GenTextMotionOptions {
+	o.LoopFrames = &loopFrames
 	return o
 }
 

@@ -284,6 +284,7 @@ opts := visvise.NewGenMidModelOptions().
     SetName("my_mid_model").                             // optional, default "gen_mid_model"
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
     SetFaceType(visvise.FaceTypeTriangle).               // optional, face type
+    SetFaceNum(30000).                                   // optional, target face count (0-30000, 0 = default)
     SetSegmentModelID("Model2026...").                   // optional, 2D segmentation asset ID
 	SetModelID360("Model2026...")                        // optional, Gen360 asset ID
 
@@ -327,6 +328,7 @@ opts := visvise.NewGenMeshRefineOptions().
     SetName("my_mesh_refine").                          // optional, default "gen_mesh_refine"
     SetInputModelFormat(visvise.OutputModelFormatFBX).  // optional, input format (default fbx)
     SetMode(visvise.MeshRefineModeOptimize).            // optional, refine mode
+    SetFaceNum(50000).                                   // optional, target face count (optimize mode only, 0-50000, 0 = unset)
     SetColorModel("path/to/color.fbx")                   // optional, color model
 
 modelID, err := client.GenMeshRefine("path/to/model.fbx", rtx, opts)
@@ -471,15 +473,31 @@ modelID, err := client.GenVideoMotion("path/to/model.fbx", "path/to/dance.mp4", 
 
 ### GenTextMotion — Text to Animation
 
-Generate animation from a text prompt; returns 4 candidate models (node_type=4).→ [Example](examples/gen_text_motion/main.go)
+Generate animation from text prompts; returns 4 candidate models (node_type=4). Supports single `prompt` and multi-segment `segments` (segments take priority when non-empty). → [Example](examples/gen_text_motion/main.go)
 
 ```go
+// Mode 1: multi-segment segments (1~15 segments); no prompt needed
+numFrames60, numFrames90, overlap10 := 60, 90, 10
+segments := []visvise.MotionSegment{
+    {Text: "Raise the right hand slowly", NumFrames: &numFrames60},
+    {Text: "Walk two steps forward", NumFrames: &numFrames90, OverlapFramesWithPrev: &overlap10},
+}
+
 opts := visvise.NewGenTextMotionOptions().
     SetName("my_text_motion").                          // optional, default "gen_text_motion"
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
+    SetSegments(segments).                              // optional, multi-segment timeline (priority over prompt)
+    SetEnableRewrite(true).                             // optional, enable rewrite (default true)
+    SetDuration(10).                                    // optional, duration in seconds (single-prompt mode only)
+    SetEnableLoop(false).                               // optional, loop playback
+    SetLoopFrames(5)                                    // optional, loop frames (1~20)
 
-modelIDs, err := client.GenTextMotion("path/to/model.fbx", "a person breakdancing", rtx, opts)
+modelIDs, err := client.GenTextMotion("path/to/model.fbx", rtx, opts)
 // modelIDs contains 4 IDs, wait for whichever you prefer
+
+// Mode 2: single prompt (fallback when segments is empty)
+modelIDs, err = client.GenTextMotion("path/to/model.fbx", rtx,
+    visvise.NewGenTextMotionOptions().SetName("my_text_motion").SetPrompt("a person breakdancing"))
 ```
 
 ---

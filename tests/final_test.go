@@ -162,7 +162,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 		SetName("opt_tm_a_final")
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", rtx, opts3)
+	modelIDs, err := client.GenTextMotion(animModelPath, rtx, opts3.SetPrompt("一个人在挥手打招呼"))
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=挥手 failed: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestFinal_AnimationTests(t *testing.T) {
 		SetOutputModelFormat(visvise.OutputModelFormatGLB).
 		SetName("opt_tm_b_final")
 
-	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", rtx, opts4)
+	modelIDs, err = client.GenTextMotion(animModelPath, rtx, opts4.SetPrompt("一个人在原地踏步"))
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=踏步 glb failed: %v", err)
 	}

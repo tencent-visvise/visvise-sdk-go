@@ -244,7 +244,7 @@ func TestOptionalParams_TextMotion(t *testing.T) {
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 		SetName("opt_tm_a2")
 
-	modelIDs, err := client.GenTextMotion(animModelPath, "一个人在挥手打招呼", rtx, opts)
+	modelIDs, err := client.GenTextMotion(animModelPath, rtx, opts.SetPrompt("一个人在挥手打招呼"))
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=挥手 failed: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestOptionalParams_TextMotion(t *testing.T) {
 		SetAlgorithmModel("VISVISE-TextMotion-V1.1.0").
 		SetName("opt_tm_b2")
 
-	modelIDs, err = client.GenTextMotion(animModelPath, "一个人在原地踏步", rtx, opts)
+	modelIDs, err = client.GenTextMotion(animModelPath, rtx, opts.SetPrompt("一个人在原地踏步"))
 	if err != nil {
 		t.Fatalf("GenTextMotion prompt=踏步 failed: %v", err)
 	}
