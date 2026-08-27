@@ -12,6 +12,10 @@ import (
 //
 // 通过提示词描述动作自动生成 3D 动画，一次返回 4 个版本供抽卡选择。
 //
+// 支持两种模式（segments 非空时以多段为准）：
+//  1. 多段提示词 segments（时间轴分段，1~15 段）
+//  2. 单段提示词 prompt（segments 为空时回退使用）
+//
 // Usage:
 //   VISVISE_APP_ID=xxx VISVISE_SECRET_KEY=xxx VISVISE_RTX=xxx VISVISE_ENV=prod go run main.go
 
@@ -39,13 +43,23 @@ func main() {
 	assetsDir := "./tests/assets"
 	modelPath := assetsDir + "/animation_model.fbx"
 
-	fmt.Println("[gen_text_motion] 开始文本生动画...")
+	fmt.Println("[gen_text_motion] 开始文本生动画（多段 segments）...")
 
-	// 一次生成 4 个版本供抽卡
-	modelIDs, err := client.GenTextMotion(modelPath, "一个人在跳街舞", rtx,
+	// 多段提示词：时间轴分段，1~15 段；每段 num_frames / duration 二选一。
+	// 非空 segments 优先于 prompt（以多段为准）。
+	numFrames60 := 60
+	numFrames90 := 90
+	overlap10 := 10
+	segments := []visvise.MotionSegment{
+		{Text: "从站立姿势开始，缓缓抬起右手", NumFrames: &numFrames60},
+		{Text: "向前走两步", NumFrames: &numFrames90, OverlapFramesWithPrev: &overlap10},
+		{Text: "转身并挥手告别", NumFrames: &numFrames60, OverlapFramesWithPrev: &overlap10},
+	}
+	modelIDs, err := client.GenTextMotion(modelPath, "", rtx,
 		visvise.NewGenTextMotionOptions().
 			SetOutputModelFormat(visvise.OutputModelFormatFBX).
-			SetName("example_gen_text_motion"))
+			SetSegments(segments).
+			SetName("example_gen_text_motion_multi"))
 	if err != nil {
 		log.Fatalf("[gen_text_motion] 创建任务失败: %v", err)
 	}

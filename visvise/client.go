@@ -882,6 +882,9 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	if opts.SegmentModelID != "" {
 		imgParams["segment_model_id"] = opts.SegmentModelID
 	}
+	if opts.FaceNum != nil {
+		imgParams["face_num"] = *opts.FaceNum
+	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DMid),
 		map[string]interface{}{"image_gen_model_params": imgParams},
@@ -982,6 +985,9 @@ func (c *Client) GenMeshRefine(modelPath FileInput, rtx string, opts *GenMeshRef
 	}
 	if opts.Mode != nil {
 		params["mode"] = *opts.Mode
+	}
+	if opts.FaceNum != nil {
+		params["face_num"] = *opts.FaceNum
 	}
 	if opts.ColorModel != nil {
 		colorURL, err := c.resolveModelFile(opts.ColorModel, false, rtx)
@@ -1383,12 +1389,39 @@ func (c *Client) GenTextMotion(modelPath FileInput, prompt string, rtx string, o
 		return nil, err
 	}
 
+	framing := map[string]interface{}{
+		"algorithm_model":     resolvedModel,
+		"output_model_format": opts.OutputModelFormat,
+	}
+	if len(opts.Segments) > 0 {
+		// segments 优先：以多段为准，忽略 prompt
+		segments := make([]map[string]interface{}, len(opts.Segments))
+		for i, seg := range opts.Segments {
+			segments[i] = seg.ToMap()
+		}
+		framing["segments"] = segments
+	} else {
+		if prompt == "" {
+			return nil, errors.New("gen_text_motion requires either prompt (single-segment) or segments (multi-segment)")
+		}
+		framing["prompt"] = prompt
+		// duration 仅在单段 prompt 模式下生效
+		if opts.Duration != nil {
+			framing["duration"] = *opts.Duration
+		}
+	}
+	if opts.EnableRewrite != nil {
+		framing["enable_rewrite"] = *opts.EnableRewrite
+	}
+	if opts.EnableLoop != nil {
+		framing["enable_loop"] = *opts.EnableLoop
+	}
+	if opts.LoopFrames != nil {
+		framing["loop_frames"] = *opts.LoopFrames
+	}
+
 	return c.api.Gen3DModel(opts.Name, int(NodeTypeAnimation),
-		map[string]interface{}{"framing_ai_params": map[string]interface{}{
-			"algorithm_model":     resolvedModel,
-			"output_model_format": opts.OutputModelFormat,
-			"prompt":              prompt,
-		}},
+		map[string]interface{}{"framing_ai_params": framing},
 		nil, modelURL, "", "", rtx)
 }
 

@@ -56,7 +56,8 @@ func example1(client *visvise.Client, rtx string) string {
 	fmt.Println("[gen_mid_model] 开始生成中模...")
 	modelID, err := client.GenMidModel(stripSign(mainView), nil, nil, nil, rtx,
 		visvise.NewGenMidModelOptions().
-			SetName("example_gen_mid_model"))
+			SetName("example_gen_mid_model").
+			SetFaceNum(30000))
 	if err != nil {
 		log.Fatalf("[gen_mid_model] 创建任务失败: %v", err)
 	}
