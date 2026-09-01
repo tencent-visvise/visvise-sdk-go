@@ -44,7 +44,7 @@ func main() {
 
 	if mvModelID != "" {
 		fmt.Printf("[gen_high_model] 从 gen_360 输出提取四视图 (model_id=%s)\n", mvModelID)
-		models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, nil, "", 10, 1, rtx)
+		models, _, err := client.GetAPI().GetModelList([]string{mvModelID}, nil, nil, "", 10, 1, 0, nil, nil, rtx)
 		if err != nil || len(models) == 0 {
 			log.Fatalf("[gen_high_model] 获取模型失败: %v", err)
 		}

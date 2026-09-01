@@ -11,10 +11,13 @@ func NewVisviseAPI(httpClient *HTTPClient) *VisviseAPI {
 }
 
 // GetCosCred retrieves COS temporary credentials for direct file upload
-func (api *VisviseAPI) GetCosCred(isTemp bool, rtx string) (*GetCosCredResult, error) {
+func (api *VisviseAPI) GetCosCred(isTemp bool, isPublic bool, rtx string) (*GetCosCredResult, error) {
 	body := map[string]interface{}{}
 	if isTemp {
 		body["is_temp"] = true
+	}
+	if isPublic {
+		body["is_public"] = true
 	}
 
 	data, err := api.http.Post("openapi/weaver/resource/get_cos_cred", body, rtx)
@@ -68,9 +71,10 @@ func (api *VisviseAPI) GetUserQuota(rtx string) (*UserQuota, error) {
 
 	if m, ok := data.(map[string]interface{}); ok {
 		return &UserQuota{
-			ModelQuota:     int(getFloat64(m, "model_quota", 0)),
-			AnimationQuota: int(getFloat64(m, "animation_quota", 0)),
-			ServerTS:       int64(getFloat64(m, "server_ts", 0)),
+			ModelQuota:           int(getFloat64(m, "model_quota", 0)),
+			AnimationQuota:       int(getFloat64(m, "animation_quota", 0)),
+			ServerTS:             int64(getFloat64(m, "server_ts", 0)),
+			ImageProcessingQuota: int(getFloat64(m, "image_processing_quota", 0)),
 		}, nil
 	}
 	return nil, nil
@@ -154,6 +158,9 @@ func (api *VisviseAPI) GetModelList(
 	keyword string,
 	limit int,
 	page int,
+	lastTs uint64,
+	modelTypeList []int,
+	sorter *Sorter,
 	rtx string,
 ) ([]ModelInfo, int, error) {
 	body := map[string]interface{}{
@@ -173,12 +180,24 @@ func (api *VisviseAPI) GetModelList(
 	if keyword != "" {
 		body["keyword"] = keyword
 	}
+	if len(modelTypeList) > 0 {
+		body["model_type_list"] = modelTypeList
+	}
+	if lastTs > 0 {
+		body["last_ts"] = lastTs
+	}
+	if sorter != nil && sorter.Name != "" {
+		body["sorter"] = sorter
+	}
 
 	data, err := api.http.Post("openapi/weaver/resource/get_model_list", body, rtx)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	if data == nil {
+		return nil, 0, nil
+	}
 	models, totalCount := ParseModelList(data.(map[string]interface{}))
 	return models, totalCount, nil
 }
@@ -243,6 +262,20 @@ func (api *VisviseAPI) BatchDeleteModel(modelIDs []string, rtx string) error {
 		"model_ids": modelIDs,
 	}
 	_, err := api.http.Post("openapi/weaver/resource/batch_delete_model", body, rtx)
+	return err
+}
+
+// RegenerateModel regenerates an existing model asset in place.
+// Only node_type=AUTO_LUV (2UV, NodeTypeAutoLUV) assets are supported.
+// If params is nil, the server reuses the asset's previous generation parameters.
+func (api *VisviseAPI) RegenerateModel(modelID string, params map[string]interface{}, rtx string) error {
+	body := map[string]interface{}{
+		"model_id": modelID,
+	}
+	if params != nil {
+		body["params"] = params
+	}
+	_, err := api.http.Post("openapi/weaver/resource/regenerate_model", body, rtx)
 	return err
 }
 
@@ -433,4 +466,229 @@ func (api *VisviseAPI) InitSegment(
 	}
 
 	return api.http.PostSSE("openapi/weaver/component/init_segment", body, readTimeout, rtx)
+}
+
+// BeginSegment enters the segment state and specifies the component to split.
+func (api *VisviseAPI) BeginSegment(clientID string, componentLabel int32, viewType SegmentViewType, rtx string) (*OperatorResult, error) {
+	body := map[string]interface{}{
+		"client_id":       clientID,
+		"view_type":       viewType,
+		"component_label": componentLabel,
+	}
+	data, err := api.http.Post("openapi/weaver/component/begin_segment", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result OperatorResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// SegmentComponent marks the region to split out in the segment state (repeatable).
+func (api *VisviseAPI) SegmentComponent(
+	clientID string,
+	viewType SegmentViewType,
+	addPixels []*Pixel,
+	removePixels []*Pixel,
+	rects []*Rect,
+	rtx string,
+) (*OperatorResult, error) {
+	body := map[string]interface{}{
+		"client_id": clientID,
+		"view_type": viewType,
+	}
+	if len(addPixels) > 0 {
+		body["add_pixels"] = addPixels
+	}
+	if len(removePixels) > 0 {
+		body["remove_pixels"] = removePixels
+	}
+	if len(rects) > 0 {
+		body["rects"] = rects
+	}
+	data, err := api.http.Post("openapi/weaver/component/segment", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result OperatorResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// ConfirmSegment finalizes the current segmentation result.
+func (api *VisviseAPI) ConfirmSegment(clientID string, viewType SegmentViewType, rtx string) (*OperatorResult, error) {
+	body := map[string]interface{}{
+		"client_id": clientID,
+		"view_type": viewType,
+	}
+	data, err := api.http.Post("openapi/weaver/component/confirm_segment", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result OperatorResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// CancelSegment cancels the current segmentation and reverts to the pre-segment state.
+func (api *VisviseAPI) CancelSegment(clientID string, viewType SegmentViewType, rtx string) (*OperatorResult, error) {
+	body := map[string]interface{}{
+		"client_id": clientID,
+		"view_type": viewType,
+	}
+	data, err := api.http.Post("openapi/weaver/component/cancel_segment", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result OperatorResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// MergeComponent merges multiple components into one connected component.
+func (api *VisviseAPI) MergeComponent(clientID string, componentLabels []int32, viewType SegmentViewType, rtx string) (*MultiViewSegmentResult, error) {
+	body := map[string]interface{}{
+		"client_id":        clientID,
+		"component_labels": componentLabels,
+		"view_type":        viewType,
+	}
+	data, err := api.http.Post("openapi/weaver/component/merge", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result MultiViewSegmentResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// AutoMergeComponent automatically merges all adjacent connected components.
+func (api *VisviseAPI) AutoMergeComponent(clientID string, rtx string) (*MultiViewSegmentResult, error) {
+	body := map[string]interface{}{
+		"client_id": clientID,
+	}
+	data, err := api.http.Post("openapi/weaver/component/auto_merge", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result MultiViewSegmentResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// BoundaryAdjust adjusts a component boundary via a painted mask region.
+func (api *VisviseAPI) BoundaryAdjust(clientID string, viewType SegmentViewType, componentLabel int32, paintMask string, rtx string) (*OperatorResult, error) {
+	body := map[string]interface{}{
+		"client_id":       clientID,
+		"view_type":       viewType,
+		"paint_mask":      paintMask,
+		"component_label": componentLabel,
+	}
+	data, err := api.http.Post("openapi/weaver/component/boundary_adjust", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result OperatorResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// RenameComponent renames a component, syncing across all views in the four-view stage.
+func (api *VisviseAPI) RenameComponent(clientID string, viewType SegmentViewType, componentLabel int32, newName string, rtx string) (*MultiViewSegmentResult, error) {
+	body := map[string]interface{}{
+		"client_id":       clientID,
+		"view_type":       viewType,
+		"component_label": componentLabel,
+		"new_name":        newName,
+	}
+	data, err := api.http.Post("openapi/weaver/component/part_rename", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result MultiViewSegmentResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// SaveSegment persists the current segmentation result as a standalone 2D split asset (node_type=14).
+func (api *VisviseAPI) SaveSegment(clientID string, name string, algorithmModel string, openedModelID string, rtx string) (*ModelInfo, error) {
+	body := map[string]interface{}{
+		"client_id":       clientID,
+		"name":            name,
+		"algorithm_model": algorithmModel,
+	}
+	if openedModelID != "" {
+		body["opened_model_id"] = openedModelID
+	}
+	data, err := api.http.Post("openapi/weaver/component/save_segment", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	m, ok := data.(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+	info := parseModelInfo(m)
+	return &info, nil
+}
+
+// OpenSegment opens a saved 2D split asset for re-editing, returning a new client_id.
+func (api *VisviseAPI) OpenSegment(modelID string, rtx string) (*MultiViewSegmentResult, error) {
+	body := map[string]interface{}{
+		"model_id": modelID,
+	}
+	data, err := api.http.Post("openapi/weaver/component/open_segment", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	var result MultiViewSegmentResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
 }

@@ -18,6 +18,7 @@ const (
 	NodeTypeImgToPose    NodeType = 12 // Image to Pose
 	NodeTypeImgTo3DLow   NodeType = 13 // Image to 3D (Low)
 	NodeTypeSegment2D    NodeType = 14 // 2D Segmentation
+	NodeTypeAutoLUV      NodeType = 15 // Auto LUV (2UV, regenerate_model)
 	NodeTypePreprocess2D NodeType = 16 // 2D Preprocess
 )
 
@@ -99,6 +100,16 @@ const (
 	SegmentGranularityCoarse SegmentGranularity = 1 // Coarse (x50%)
 	SegmentGranularityMedium SegmentGranularity = 2 // Medium (x70%, default)
 	SegmentGranularityFine   SegmentGranularity = 3 // Fine (x100%)
+)
+
+// SegmentViewType represents the view type for 2D split re-edit operations
+type SegmentViewType int
+
+const (
+	SegmentViewMain  SegmentViewType = 0 // Main view (front, default)
+	SegmentViewLeft  SegmentViewType = 1 // Left view
+	SegmentViewRight SegmentViewType = 2 // Right view
+	SegmentViewBack  SegmentViewType = 3 // Back view
 )
 
 // MeshCategory represents the mesh category for rigging

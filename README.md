@@ -574,7 +574,7 @@ fmt.Println(modelInfo.TimeCost)   // 耗时（秒）
 api := client.GetAPI()
 
 // 获取临时上传凭证
-cred, err := api.GetCosCred(true, rtx)
+cred, err := api.GetCosCred(true, false, rtx)
 
 // 查询剩余配额
 quota, err := api.GetUserQuota(rtx)
@@ -584,7 +584,7 @@ fmt.Println(quota.AnimationQuota) // 动画剩余次数
 // 拉取模型列表
 models, total, err := api.GetModelList(
     []string{"Model2026..."},
-    nil, nil, "", 10, 1, rtx,
+    nil, nil, "", 10, 1, 0, nil, nil, rtx,
 )
 
 // 获取算法模型列表

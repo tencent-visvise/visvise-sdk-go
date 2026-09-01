@@ -203,7 +203,7 @@ func TestAtomicAPI_DeleteModel(t *testing.T) {
 	}
 	t.Logf("PASS: batch_delete_model - batch deleted %s", ids[1])
 
-	models, _, err := api.GetModelList(ids, nil, nil, "", 10, 1, rtx)
+	models, _, err := api.GetModelList(ids, nil, nil, "", 10, 1, 0, nil, nil, rtx)
 	if err != nil {
 		t.Fatalf("GetModelList failed: %v", err)
 	}

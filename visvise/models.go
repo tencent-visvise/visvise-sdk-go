@@ -5,12 +5,17 @@ import (
 	"time"
 )
 
-// View represents the multi-view structure
+// View represents the multi-view structure (9 fields, aligned with proto “View“)
 type View struct {
-	MainView  string `json:"main_view"`
-	BackView  string `json:"back_view,omitempty"`
-	LeftView  string `json:"left_view,omitempty"`
-	RightView string `json:"right_view,omitempty"`
+	MainView       string `json:"main_view"`
+	BackView       string `json:"back_view,omitempty"`
+	LeftView       string `json:"left_view,omitempty"`
+	RightView      string `json:"right_view,omitempty"`
+	TopView        string `json:"top_view,omitempty"`
+	BottomView     string `json:"bottom_view,omitempty"`
+	FrontView      string `json:"front_view,omitempty"`
+	FrontLeftView  string `json:"front_left_view,omitempty"`
+	FrontRightView string `json:"front_right_view,omitempty"`
 }
 
 // ToMap converts View to map
@@ -25,7 +30,78 @@ func (v *View) ToMap() map[string]interface{} {
 	if v.RightView != "" {
 		m["right_view"] = v.RightView
 	}
+	if v.TopView != "" {
+		m["top_view"] = v.TopView
+	}
+	if v.BottomView != "" {
+		m["bottom_view"] = v.BottomView
+	}
+	if v.FrontView != "" {
+		m["front_view"] = v.FrontView
+	}
+	if v.FrontLeftView != "" {
+		m["front_left_view"] = v.FrontLeftView
+	}
+	if v.FrontRightView != "" {
+		m["front_right_view"] = v.FrontRightView
+	}
 	return m
+}
+
+// Pixel represents a pixel coordinate (2D split re-edit)
+type Pixel struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// Rect represents a rectangle selection (2D split re-edit)
+type Rect struct {
+	LeftTopPixel     *Pixel `json:"left_top_pixel"`
+	RightBottomPixel *Pixel `json:"right_bottom_pixel"`
+}
+
+// SegmentComponent represents a single segmented component (2D split)
+type SegmentComponent struct {
+	Label int    `json:"label"`
+	Color string `json:"color"`
+	Name  string `json:"name"`
+}
+
+// SegmentData represents the segmentation result data (2D split)
+type SegmentData struct {
+	Components    []SegmentComponent `json:"components"`
+	MaskImage     string             `json:"mask_image,omitempty"`
+	Shape         []int              `json:"shape,omitempty"`
+	DataPath      string             `json:"data_path,omitempty"`
+	MaskImagePath string             `json:"mask_image_path,omitempty"`
+}
+
+// OperatorResult represents a single-view operation result (2D split re-edit)
+type OperatorResult struct {
+	ClientID     string       `json:"client_id"`
+	SegmentData  *SegmentData `json:"segment_data,omitempty"`
+	EnableRevoke bool         `json:"enable_revoke"`
+	EnableRedo   bool         `json:"enable_redo"`
+	OriginView   *View        `json:"origin_view,omitempty"`
+}
+
+// MultiViewSegmentResult represents the multi-view result (2D split re-edit)
+type MultiViewSegmentResult struct {
+	MainViewData  *OperatorResult `json:"main_view_data,omitempty"`
+	LeftViewData  *OperatorResult `json:"left_view_data,omitempty"`
+	RightViewData *OperatorResult `json:"right_view_data,omitempty"`
+	BackViewData  *OperatorResult `json:"back_view_data,omitempty"`
+	ClientID      string          `json:"client_id,omitempty"`
+	OriginView    *View           `json:"origin_view,omitempty"`
+}
+
+// decodeData re-marshals an already-decoded JSON value into the target struct.
+func decodeData(data interface{}, v interface{}) error {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
 }
 
 // StyleParam represents a stylized image result used to create a 2D preprocess asset.
@@ -44,15 +120,24 @@ type ReduceFace struct {
 	ReduceLevel   int      `json:"reduce_level"`
 	ReducePercent int      `json:"reduce_percent"`
 	FaceType      FaceType `json:"face_type"` // 1: Triangle, 2: Quad
+	FaceNum       int      `json:"face_num,omitempty"`
+	FaceTab       int      `json:"face_tab,omitempty"`
 }
 
-// ToMap converts ReduceFace to map
+// ToMap converts ReduceFace to map, omitting empty optional fields
 func (r *ReduceFace) ToMap() map[string]interface{} {
-	return map[string]interface{}{
+	m := map[string]interface{}{
 		"reduce_level":   r.ReduceLevel,
 		"reduce_percent": r.ReducePercent,
 		"face_type":      r.FaceType,
 	}
+	if r.FaceNum != 0 {
+		m["face_num"] = r.FaceNum
+	}
+	if r.FaceTab != 0 {
+		m["face_tab"] = r.FaceTab
+	}
+	return m
 }
 
 // MotionSegment represents a single segment in a text-to-motion timeline.
@@ -85,6 +170,12 @@ func (s *MotionSegment) ToMap() map[string]interface{} {
 	return m
 }
 
+// Sorter represents a sort rule for the model list query
+type Sorter struct {
+	Name  string `json:"name"`  // 排序字段 (e.g. create_time)
+	Order string `json:"order"` // 排序顺序 (asc/desc)
+}
+
 // CosCred represents the COS temporary credentials
 type CosCred struct {
 	TmpSecretID  string `json:"tmp_secret_id"`
@@ -104,15 +195,17 @@ type GetCosCredResult struct {
 
 // UserQuota represents the get_user_quota API response
 type UserQuota struct {
-	ModelQuota     int   `json:"model_quota"`
-	AnimationQuota int   `json:"animation_quota"`
-	ServerTS       int64 `json:"server_ts"`
+	ModelQuota           int   `json:"model_quota"`
+	AnimationQuota       int   `json:"animation_quota"`
+	ServerTS             int64 `json:"server_ts"`
+	ImageProcessingQuota int   `json:"image_processing_quota"`
 }
 
 // FailedReason represents the generation failure reason
 type FailedReason struct {
-	Code   int    `json:"code"`
-	Reason string `json:"reason"`
+	Code       int    `json:"code"`
+	Reason     string `json:"reason"`
+	RealReason string `json:"real_reason,omitempty"`
 }
 
 // LODFile represents a single LOD level output
@@ -124,14 +217,18 @@ type LODFile struct {
 
 // LODOutput represents the LOD output file collection
 type LODOutput struct {
-	LODFiles []LODFile `json:"lod_files"`
-	ZipFile  string    `json:"zip_file,omitempty"`
+	LODFiles      []LODFile `json:"lod_files"`
+	ZipFile       string    `json:"zip_file,omitempty"`
+	DelTimes      int       `json:"del_times,omitempty"`
+	DelCardIndexs []uint32  `json:"del_card_indexs,omitempty"`
 }
 
 // ImageGen360Output represents the image to 360 output result
 type ImageGen360Output struct {
-	OutputView          *View  `json:"output_view,omitempty"`
-	HorizontalViewVideo string `json:"horizontal_view_video,omitempty"`
+	OutputView                *View  `json:"output_view,omitempty"`
+	HorizontalViewVideo       string `json:"horizontal_view_video,omitempty"`
+	VerticalViewVideo         string `json:"vertical_view_video,omitempty"`
+	HorizontalViewVideoFrames string `json:"horizontal_view_video_frames,omitempty"`
 }
 
 // Text2Motion represents a single text-to-motion output
@@ -143,16 +240,28 @@ type Text2Motion struct {
 // FramingAIOutput represents the Framing AI output result
 type FramingAIOutput struct {
 	Text2MotionResult []Text2Motion `json:"text2_motion_result"`
+	RewritePrompts    []string      `json:"rewrite_prompts,omitempty"`
+	RewriteApplied    bool          `json:"rewrite_applied,omitempty"`
+}
+
+// FeedbackItem represents a single user feedback entry
+type FeedbackItem struct {
+	ResultIndex  int      `json:"result_index"`
+	FeedbackType int      `json:"feedback_type"`
+	Tags         []string `json:"tags,omitempty"`
+	Content      string   `json:"content,omitempty"`
 }
 
 // ModelInfo represents the model asset information
 type ModelInfo struct {
 	ModelID           string             `json:"model_id"`
+	ParentModelID     string             `json:"parent_model_id,omitempty"`
 	Name              string             `json:"name"`
 	Status            int                `json:"status"`
 	NodeType          int                `json:"node_type"`
 	CreateTS          int64              `json:"create_ts,omitempty"`
 	CreateUser        string             `json:"create_user,omitempty"`
+	WorksID           string             `json:"works_id,omitempty"`
 	PreviewImg        string             `json:"preview_img,omitempty"`
 	OutputModel       string             `json:"output_model,omitempty"`
 	InputModel        string             `json:"input_model,omitempty"`
@@ -167,6 +276,10 @@ type ModelInfo struct {
 	Params            interface{}        `json:"params,omitempty"`
 	InputView         interface{}        `json:"input_view,omitempty"`
 	AlgorithmModel    string             `json:"algorithm_model,omitempty"`
+	PreviewModel      string             `json:"preview_model,omitempty"`
+	Feedbacks         []FeedbackItem     `json:"feedbacks,omitempty"`
+	ModelType         int                `json:"model_type,omitempty"`
+	RewritePrompts    []string           `json:"rewrite_prompts,omitempty"`
 }
 
 // IsSuccess returns true if the model generation succeeded
@@ -215,6 +328,9 @@ func parseModelInfo(m map[string]interface{}) ModelInfo {
 	if v, ok := m["model_id"].(string); ok {
 		info.ModelID = v
 	}
+	if v, ok := m["parent_model_id"].(string); ok {
+		info.ParentModelID = v
+	}
 	if v, ok := m["name"].(string); ok {
 		info.Name = v
 	}
@@ -229,6 +345,9 @@ func parseModelInfo(m map[string]interface{}) ModelInfo {
 	}
 	if v, ok := m["create_user"].(string); ok {
 		info.CreateUser = v
+	}
+	if v, ok := m["works_id"].(string); ok {
+		info.WorksID = v
 	}
 	if v, ok := m["preview_img"].(string); ok {
 		info.PreviewImg = v
@@ -253,8 +372,9 @@ func parseModelInfo(m map[string]interface{}) ModelInfo {
 	}
 	if v, ok := m["failed_reason"].(map[string]interface{}); ok {
 		info.FailedReason = &FailedReason{
-			Code:   int(getFloat64(v, "code", -1)),
-			Reason: getString(v, "reason", ""),
+			Code:       int(getFloat64(v, "code", -1)),
+			Reason:     getString(v, "reason", ""),
+			RealReason: getString(v, "real_reason", ""),
 		}
 	}
 	if v, ok := m["lod_output"].(map[string]interface{}); ok {
@@ -269,6 +389,18 @@ func parseModelInfo(m map[string]interface{}) ModelInfo {
 	if v, ok := m["algorithm_model"].(string); ok {
 		info.AlgorithmModel = v
 	}
+	if v, ok := m["preview_model"].(string); ok {
+		info.PreviewModel = v
+	}
+	if v, ok := m["model_type"].(float64); ok {
+		info.ModelType = int(v)
+	}
+	if v, ok := m["rewrite_prompts"].([]interface{}); ok {
+		info.RewritePrompts = toStringSlice(v)
+	}
+	if v, ok := m["feedbacks"].([]interface{}); ok {
+		info.Feedbacks = parseFeedbackItems(v)
+	}
 	return info
 }
 
@@ -276,6 +408,16 @@ func parseLODOutput(m map[string]interface{}) *LODOutput {
 	output := &LODOutput{}
 	if v, ok := m["zip_file"].(string); ok {
 		output.ZipFile = v
+	}
+	if v, ok := m["del_times"].(float64); ok {
+		output.DelTimes = int(v)
+	}
+	if v, ok := m["del_card_indexs"].([]interface{}); ok {
+		for _, idx := range v {
+			if f, ok := idx.(float64); ok {
+				output.DelCardIndexs = append(output.DelCardIndexs, uint32(f))
+			}
+		}
 	}
 	if lodFilesRaw, ok := m["lod_files"].([]interface{}); ok {
 		for _, f := range lodFilesRaw {
@@ -297,12 +439,23 @@ func parseImageGen360Output(m map[string]interface{}) *ImageGen360Output {
 	if v, ok := m["horizontal_view_video"].(string); ok {
 		output.HorizontalViewVideo = v
 	}
+	if v, ok := m["vertical_view_video"].(string); ok {
+		output.VerticalViewVideo = v
+	}
+	if v, ok := m["horizontal_view_video_frames"].(string); ok {
+		output.HorizontalViewVideoFrames = v
+	}
 	if ov, ok := m["output_view"].(map[string]interface{}); ok {
 		view := &View{
-			MainView:  getString(ov, "main_view", ""),
-			BackView:  getString(ov, "back_view", ""),
-			LeftView:  getString(ov, "left_view", ""),
-			RightView: getString(ov, "right_view", ""),
+			MainView:       getString(ov, "main_view", ""),
+			BackView:       getString(ov, "back_view", ""),
+			LeftView:       getString(ov, "left_view", ""),
+			RightView:      getString(ov, "right_view", ""),
+			TopView:        getString(ov, "top_view", ""),
+			BottomView:     getString(ov, "bottom_view", ""),
+			FrontView:      getString(ov, "front_view", ""),
+			FrontLeftView:  getString(ov, "front_left_view", ""),
+			FrontRightView: getString(ov, "front_right_view", ""),
 		}
 		if view.MainView != "" || view.BackView != "" {
 			output.OutputView = view
@@ -324,7 +477,45 @@ func parseFramingAIOutput(m map[string]interface{}) *FramingAIOutput {
 			}
 		}
 	}
+	if v, ok := m["rewrite_prompts"].([]interface{}); ok {
+		output.RewritePrompts = toStringSlice(v)
+	}
+	if v, ok := m["rewrite_applied"].(bool); ok {
+		output.RewriteApplied = v
+	}
 	return output
+}
+
+// toStringSlice converts an []interface{} of strings into []string.
+func toStringSlice(raw []interface{}) []string {
+	result := make([]string, 0, len(raw))
+	for _, item := range raw {
+		if s, ok := item.(string); ok {
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
+// parseFeedbackItems converts an []interface{} of feedback entries into []FeedbackItem.
+func parseFeedbackItems(raw []interface{}) []FeedbackItem {
+	items := make([]FeedbackItem, 0, len(raw))
+	for _, item := range raw {
+		fm, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		fb := FeedbackItem{
+			ResultIndex:  int(getFloat64(fm, "result_index", 0)),
+			FeedbackType: int(getFloat64(fm, "feedback_type", 0)),
+			Content:      getString(fm, "content", ""),
+		}
+		if tagsRaw, ok := fm["tags"].([]interface{}); ok {
+			fb.Tags = toStringSlice(tagsRaw)
+		}
+		items = append(items, fb)
+	}
+	return items
 }
 
 func getString(m map[string]interface{}, key, defaultVal string) string {

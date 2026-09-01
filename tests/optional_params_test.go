@@ -282,7 +282,7 @@ func TestOptionalParams_QueryYesterdayModels(t *testing.T) {
 	}
 
 	for _, m := range yesterdayModels {
-		models, _, err := api.GetModelList([]string{m.id}, nil, nil, "", 10, 1, rtx)
+		models, _, err := api.GetModelList([]string{m.id}, nil, nil, "", 10, 1, 0, nil, nil, rtx)
 		if err != nil {
 			t.Logf("Query model %s failed: %v", m.id, err)
 			continue
