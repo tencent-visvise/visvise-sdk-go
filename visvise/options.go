@@ -141,6 +141,8 @@ type GenHighModelOptions struct {
 	BackView          FileInput         // optional, back view to improve quality
 	LeftView          FileInput         // optional, left view
 	RightView         FileInput         // optional, right view
+	SegmentModelID    string            // optional, 2D segmentation asset ID (single-part generation)
+	ComponentLabel    *int32            // optional, target component label within the segmentation asset
 }
 
 // NewGenHighModelOptions creates GenHighModelOptions with common defaults
@@ -206,6 +208,19 @@ func (o *GenHighModelOptions) SetRightView(view FileInput) *GenHighModelOptions 
 	return o
 }
 
+// SetSegmentModelID sets the 2D segmentation asset ID for single-part generation.
+// Requires ComponentLabel to be set as well.
+func (o *GenHighModelOptions) SetSegmentModelID(id string) *GenHighModelOptions {
+	o.SegmentModelID = id
+	return o
+}
+
+// SetComponentLabel sets the target component label within the segmentation asset.
+func (o *GenHighModelOptions) SetComponentLabel(label int32) *GenHighModelOptions {
+	o.ComponentLabel = &label
+	return o
+}
+
 // GenMidModelOptions defines optional parameters for GenMidModel
 type GenMidModelOptions struct {
 	Name              string            // optional, task name (auto-generated if empty)
@@ -215,6 +230,10 @@ type GenMidModelOptions struct {
 	FaceNum           *int              // optional, target face count (0-30000, 0 = auto)
 	SegmentModelID    string            // optional, 2D segmentation asset ID
 	ModelID360        string            // optional, 360 model ID
+	ComponentLabel    *int32            // optional, target component label within the segmentation asset
+	GroupIDs          FileInput         // optional, custom part grouping NPZ file (final_group_ids.npz)
+	PartMeshPath      FileInput         // optional, OBJ file containing all parts
+	LabelToID         FileInput         // optional, part-name to part-id mapping JSON file
 }
 
 // NewGenMidModelOptions creates GenMidModelOptions with common defaults
@@ -265,6 +284,30 @@ func (o *GenMidModelOptions) SetSegmentModelID(id string) *GenMidModelOptions {
 // SetModelID360 sets the 360 model ID
 func (o *GenMidModelOptions) SetModelID360(id string) *GenMidModelOptions {
 	o.ModelID360 = id
+	return o
+}
+
+// SetComponentLabel sets the target component label within the segmentation asset.
+func (o *GenMidModelOptions) SetComponentLabel(label int32) *GenMidModelOptions {
+	o.ComponentLabel = &label
+	return o
+}
+
+// SetGroupIDs sets the custom part grouping NPZ file (final_group_ids.npz).
+func (o *GenMidModelOptions) SetGroupIDs(groupIDs FileInput) *GenMidModelOptions {
+	o.GroupIDs = groupIDs
+	return o
+}
+
+// SetPartMeshPath sets the OBJ file containing all parts.
+func (o *GenMidModelOptions) SetPartMeshPath(partMeshPath FileInput) *GenMidModelOptions {
+	o.PartMeshPath = partMeshPath
+	return o
+}
+
+// SetLabelToID sets the part-name to part-id mapping JSON file.
+func (o *GenMidModelOptions) SetLabelToID(labelToID FileInput) *GenMidModelOptions {
+	o.LabelToID = labelToID
 	return o
 }
 
@@ -338,6 +381,7 @@ type GenMeshRefineOptions struct {
 	Mode             *MeshRefineMode   // optional, MeshRefineModeOptimize(1) or MeshRefineModeDensify(2)
 	FaceNum          *int              // optional, target face count for optimize mode (0-50000, 0 = not set)
 	ColorModel       FileInput         // optional, color model for texture preservation
+	BaseColorImage   FileInput         // optional, base color image for texture preservation
 }
 
 // NewGenMeshRefineOptions creates GenMeshRefineOptions with common defaults
@@ -381,6 +425,12 @@ func (o *GenMeshRefineOptions) SetFaceNum(faceNum int) *GenMeshRefineOptions {
 // SetColorModel sets the color model
 func (o *GenMeshRefineOptions) SetColorModel(model FileInput) *GenMeshRefineOptions {
 	o.ColorModel = model
+	return o
+}
+
+// SetBaseColorImage sets the base color image
+func (o *GenMeshRefineOptions) SetBaseColorImage(image FileInput) *GenMeshRefineOptions {
+	o.BaseColorImage = image
 	return o
 }
 
@@ -567,15 +617,16 @@ func (o *GenTextureOptions) SetPrompt(prompt string) *GenTextureOptions {
 
 // GenRiggingOptions defines optional parameters for GenRigging
 type GenRiggingOptions struct {
-	Name             string               // optional, task name (auto-generated if empty)
-	AlgorithmModel   string               // optional, algorithm model name
-	MeshCategory     MeshCategory         // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
-	TemplateSkeleton FileInput            // optional, template skeleton
-	MeshNames        []string             // optional, meshes
-	AlgoScenario     *RiggingAlgoScenario // optional, algo scenario
-	GenerateRoot     bool                 // optional, generate root
-	Temperature      float64              // optional, temperature
-	NumBeams         int                  // optional, number of beams
+	Name               string               // optional, task name (auto-generated if empty)
+	AlgorithmModel     string               // optional, algorithm model name
+	MeshCategory       MeshCategory         // optional, MeshCategoryHumanoid (default) or MeshCategoryTetrapod
+	TemplateSkeleton   FileInput            // optional, template skeleton
+	MeshNames          []string             // optional, meshes
+	AlgoScenario       *RiggingAlgoScenario // optional, algo scenario
+	GenerateRoot       bool                 // optional, generate root
+	Temperature        float64              // optional, temperature
+	NumBeams           int                  // optional, number of beams
+	EnableAutoSkinning *bool                // optional, enable one-click skeleton + skinning (algo_scenario=4)
 }
 
 // NewGenRiggingOptions creates GenRiggingOptions with common defaults
@@ -639,6 +690,12 @@ func (o *GenRiggingOptions) SetTemperature(temp float64) *GenRiggingOptions {
 // SetNumBeams sets the number of beams
 func (o *GenRiggingOptions) SetNumBeams(beams int) *GenRiggingOptions {
 	o.NumBeams = beams
+	return o
+}
+
+// SetEnableAutoSkinning enables one-click skeleton + skinning (algo_scenario=4)
+func (o *GenRiggingOptions) SetEnableAutoSkinning(enable bool) *GenRiggingOptions {
+	o.EnableAutoSkinning = &enable
 	return o
 }
 

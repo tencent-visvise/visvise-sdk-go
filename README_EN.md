@@ -580,7 +580,7 @@ Access low-level endpoints via `client.GetAPI().xxx()`:
 api := client.GetAPI()
 
 // Get temporary upload credentials
-cred, err := api.GetCosCred(true, rtx)
+cred, err := api.GetCosCred(true, false, rtx)
 
 // Query remaining quota
 quota, err := api.GetUserQuota(rtx)
@@ -590,7 +590,7 @@ fmt.Println(quota.AnimationQuota) // remaining animation count
 // Fetch model list
 models, total, err := api.GetModelList(
     []string{"Model2026..."},
-    nil, nil, "", 10, 1, rtx,
+    nil, nil, "", 10, 1, 0, nil, nil, rtx,
 )
 
 // Fetch algorithm models for a node type

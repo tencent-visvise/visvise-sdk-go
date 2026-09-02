@@ -263,7 +263,7 @@ func (c *Client) resolveFile(source FileInput, isTemp bool, rtx string) (string,
 }
 
 func (c *Client) uploadFile(path string, filename string, isTemp bool, rtx string) (string, error) {
-	cred, err := c.api.GetCosCred(isTemp, rtx)
+	cred, err := c.api.GetCosCred(isTemp, false, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -278,7 +278,7 @@ func (c *Client) uploadFile(path string, filename string, isTemp bool, rtx strin
 }
 
 func (c *Client) uploadBytes(data []byte, filename string, isTemp bool, rtx string) (string, error) {
-	cred, err := c.api.GetCosCred(isTemp, rtx)
+	cred, err := c.api.GetCosCred(isTemp, false, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -581,7 +581,7 @@ func (c *Client) WaitModel(modelID string, rtx string, opts *WaitOptions) (*Mode
 			return nil, NewPollingTimeoutError(modelID, opts.Timeout)
 		}
 
-		models, _, err := c.api.GetModelList([]string{modelID}, nil, nil, "", 10, 1, rtx)
+		models, _, err := c.api.GetModelList([]string{modelID}, nil, nil, "", 10, 1, 0, nil, nil, rtx)
 		if err != nil {
 			// Network errors: log and continue retry
 			if _, ok := err.(*NetworkError); ok {
@@ -812,6 +812,12 @@ func (c *Client) GenHighModel(mainView FileInput, rtx string, opts *GenHighModel
 	if opts.FaceNum != nil {
 		imgParams["face_num"] = *opts.FaceNum
 	}
+	if opts.SegmentModelID != "" {
+		imgParams["segment_model_id"] = opts.SegmentModelID
+	}
+	if opts.ComponentLabel != nil {
+		imgParams["component_label"] = *opts.ComponentLabel
+	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DHigh),
 		map[string]interface{}{"image_gen_model_params": imgParams},
@@ -884,6 +890,30 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	}
 	if opts.FaceNum != nil {
 		imgParams["face_num"] = *opts.FaceNum
+	}
+	if opts.ComponentLabel != nil {
+		imgParams["component_label"] = *opts.ComponentLabel
+	}
+	if opts.GroupIDs != nil {
+		groupIDsURL, err := c.resolveFile(opts.GroupIDs, false, rtx)
+		if err != nil {
+			return "", err
+		}
+		imgParams["group_ids"] = groupIDsURL
+	}
+	if opts.PartMeshPath != nil {
+		partMeshURL, err := c.resolveFile(opts.PartMeshPath, false, rtx)
+		if err != nil {
+			return "", err
+		}
+		imgParams["part_mesh_path"] = partMeshURL
+	}
+	if opts.LabelToID != nil {
+		labelToIDURL, err := c.resolveFile(opts.LabelToID, false, rtx)
+		if err != nil {
+			return "", err
+		}
+		imgParams["label_to_id"] = labelToIDURL
 	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DMid),
@@ -995,6 +1025,13 @@ func (c *Client) GenMeshRefine(modelPath FileInput, rtx string, opts *GenMeshRef
 			return "", err
 		}
 		params["color_model"] = colorURL
+	}
+	if opts.BaseColorImage != nil {
+		imageURL, err := c.resolveFile(opts.BaseColorImage, false, rtx)
+		if err != nil {
+			return "", err
+		}
+		params["basecolor_image"] = imageURL
 	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeMeshRefine),
@@ -1257,6 +1294,9 @@ func (c *Client) GenRigging(modelPath FileInput, rtx string, opts *GenRiggingOpt
 			return "", err
 		}
 		goRiggingParams["template_skeleton"] = skeletonURL
+	}
+	if opts.EnableAutoSkinning != nil {
+		goRiggingParams["enable_auto_skinning"] = *opts.EnableAutoSkinning
 	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeRigging),
@@ -1573,6 +1613,74 @@ done:
 		return "", NewModelGenerationError("2D segmentation did not return model_id", -1, "", "")
 	}
 	return newModelID, nil
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// 2D split re-edit operations
+// ══════════════════════════════════════════════════════════════════════════
+
+// BeginSegment enters the segment state and specifies the component to split.
+func (c *Client) BeginSegment(clientID string, componentLabel int32, viewType SegmentViewType, rtx string) (*OperatorResult, error) {
+	return c.api.BeginSegment(clientID, componentLabel, viewType, rtx)
+}
+
+// SegmentComponent marks the region to split out in the segment state (repeatable).
+func (c *Client) SegmentComponent(clientID string, viewType SegmentViewType, addPixels, removePixels []*Pixel, rects []*Rect, rtx string) (*OperatorResult, error) {
+	return c.api.SegmentComponent(clientID, viewType, addPixels, removePixels, rects, rtx)
+}
+
+// ConfirmSegment finalizes the current segmentation result.
+func (c *Client) ConfirmSegment(clientID string, viewType SegmentViewType, rtx string) (*OperatorResult, error) {
+	return c.api.ConfirmSegment(clientID, viewType, rtx)
+}
+
+// CancelSegment cancels the current segmentation and reverts to the pre-segment state.
+func (c *Client) CancelSegment(clientID string, viewType SegmentViewType, rtx string) (*OperatorResult, error) {
+	return c.api.CancelSegment(clientID, viewType, rtx)
+}
+
+// MergeComponent merges multiple components into one connected component.
+func (c *Client) MergeComponent(clientID string, componentLabels []int32, viewType SegmentViewType, rtx string) (*MultiViewSegmentResult, error) {
+	return c.api.MergeComponent(clientID, componentLabels, viewType, rtx)
+}
+
+// AutoMergeComponent automatically merges all adjacent connected components.
+func (c *Client) AutoMergeComponent(clientID string, rtx string) (*MultiViewSegmentResult, error) {
+	return c.api.AutoMergeComponent(clientID, rtx)
+}
+
+// BoundaryAdjust adjusts a component boundary via a painted mask region.
+func (c *Client) BoundaryAdjust(clientID string, viewType SegmentViewType, componentLabel int32, paintMask string, rtx string) (*OperatorResult, error) {
+	return c.api.BoundaryAdjust(clientID, viewType, componentLabel, paintMask, rtx)
+}
+
+// RenameComponent renames a component, syncing across all views in the four-view stage.
+func (c *Client) RenameComponent(clientID string, viewType SegmentViewType, componentLabel int32, newName string, rtx string) (*MultiViewSegmentResult, error) {
+	return c.api.RenameComponent(clientID, viewType, componentLabel, newName, rtx)
+}
+
+// SaveSegment persists the current segmentation result as a standalone 2D split asset
+// (node_type=14). If algorithmModel is empty, the first available 2D split model is
+// auto-selected.
+func (c *Client) SaveSegment(clientID string, name string, algorithmModel string, openedModelID string, rtx string) (*ModelInfo, error) {
+	resolvedModel, err := c.resolveAlgorithmModel(algorithmModel, NodeTypeSegment2D, nil, rtx)
+	if err != nil {
+		return nil, err
+	}
+	return c.api.SaveSegment(clientID, name, resolvedModel, openedModelID, rtx)
+}
+
+// OpenSegment opens a saved 2D split asset for re-editing, returning a new client_id.
+func (c *Client) OpenSegment(modelID string, rtx string) (*MultiViewSegmentResult, error) {
+	return c.api.OpenSegment(modelID, rtx)
+}
+
+// RegenerateModel regenerates an existing model asset in place.
+// Only node_type=AUTO_LUV (2UV, NodeTypeAutoLUV) assets are supported.
+// Regeneration overwrites in place and increments redo_count; no new model_id is returned.
+// If params is nil, the server reuses the asset's previous generation parameters.
+func (c *Client) RegenerateModel(modelID string, params map[string]interface{}, rtx string) error {
+	return c.api.RegenerateModel(modelID, params, rtx)
 }
 
 // UploadFile uploads a local file to COS and returns the COS URL
