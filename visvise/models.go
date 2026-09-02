@@ -5,17 +5,12 @@ import (
 	"time"
 )
 
-// View represents the multi-view structure (9 fields, aligned with proto “View“)
+// View represents the multi-view structure
 type View struct {
-	MainView       string `json:"main_view"`
-	BackView       string `json:"back_view,omitempty"`
-	LeftView       string `json:"left_view,omitempty"`
-	RightView      string `json:"right_view,omitempty"`
-	TopView        string `json:"top_view,omitempty"`
-	BottomView     string `json:"bottom_view,omitempty"`
-	FrontView      string `json:"front_view,omitempty"`
-	FrontLeftView  string `json:"front_left_view,omitempty"`
-	FrontRightView string `json:"front_right_view,omitempty"`
+	MainView  string `json:"main_view"`
+	BackView  string `json:"back_view,omitempty"`
+	LeftView  string `json:"left_view,omitempty"`
+	RightView string `json:"right_view,omitempty"`
 }
 
 // ToMap converts View to map
@@ -29,21 +24,6 @@ func (v *View) ToMap() map[string]interface{} {
 	}
 	if v.RightView != "" {
 		m["right_view"] = v.RightView
-	}
-	if v.TopView != "" {
-		m["top_view"] = v.TopView
-	}
-	if v.BottomView != "" {
-		m["bottom_view"] = v.BottomView
-	}
-	if v.FrontView != "" {
-		m["front_view"] = v.FrontView
-	}
-	if v.FrontLeftView != "" {
-		m["front_left_view"] = v.FrontLeftView
-	}
-	if v.FrontRightView != "" {
-		m["front_right_view"] = v.FrontRightView
 	}
 	return m
 }
@@ -447,15 +427,10 @@ func parseImageGen360Output(m map[string]interface{}) *ImageGen360Output {
 	}
 	if ov, ok := m["output_view"].(map[string]interface{}); ok {
 		view := &View{
-			MainView:       getString(ov, "main_view", ""),
-			BackView:       getString(ov, "back_view", ""),
-			LeftView:       getString(ov, "left_view", ""),
-			RightView:      getString(ov, "right_view", ""),
-			TopView:        getString(ov, "top_view", ""),
-			BottomView:     getString(ov, "bottom_view", ""),
-			FrontView:      getString(ov, "front_view", ""),
-			FrontLeftView:  getString(ov, "front_left_view", ""),
-			FrontRightView: getString(ov, "front_right_view", ""),
+			MainView:  getString(ov, "main_view", ""),
+			BackView:  getString(ov, "back_view", ""),
+			LeftView:  getString(ov, "left_view", ""),
+			RightView: getString(ov, "right_view", ""),
 		}
 		if view.MainView != "" || view.BackView != "" {
 			output.OutputView = view
