@@ -520,6 +520,10 @@ modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, rtx, opts)
 
 Component segmentation over multi-views from Gen360 (node_type=14, SSE protocol). The resulting `model_id` can be passed as `segmentModelID` for `GenMidModel`.→ [Example](examples/gen_segment_2d/main.go)
 
+Gen360 can also be skipped: upload local artwork directly (six views as needed, local paths are
+uploaded to COS automatically) with `SetSkip360Preprocess(true)`, optionally
+`SetSkipRemoveBackground(true)`. → [Example](examples/gen_segment_2d_skip360/main.go)
+
 > With `SetSkip360Preprocess(true)` the Gen360 preprocess is skipped and the views passed via `SetInputView` are split directly (modelID is ignored). Background removal runs by default; use `SetSkipRemoveBackground(true)` for assets that already have an alpha channel or a plain background.
 >
 > Multi-view split (`SegmentSplitFourView`) splits by the views actually provided, 1~6 views (front/back/left/right/top/bottom); top/bottom only take part when the 360 preprocess is skipped.

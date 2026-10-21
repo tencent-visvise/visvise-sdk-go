@@ -23,7 +23,8 @@ examples/
 ├── gen_video_motion/  # 视频生动画 - 从视频提取动作驱动模型
 ├── gen_text_motion/   # 文本生动画 - 通过文字描述生成动画
 ├── gen_pose/          # 批量图生Pose - 从图片提取姿态驱动模型
-├── gen_segment_2d/    # 2D拆分 - 对多视图进行组件分割
+├── gen_segment_2d/           # 2D拆分 - 对图生360的多视图进行组件分割
+├── gen_segment_2d_skip360/   # 2D拆分（跳过360）- 上传本地六视图原画，跳过360前置与去背景
 └── assets/            # 示例资源文件目录
 ```
 
@@ -95,3 +96,8 @@ go run main.go
 ### gen_segment_2d (2D拆分)
 需要先运行 `gen_360` 获取 `MV_360_MODEL_ID`。
 分割结果可作为 `gen_mid_model` 的 `SegmentModelID` 参数。
+
+### gen_segment_2d_skip360 (2D拆分 - 跳过360 + 跳过去背景 + 上传六视图)
+不需要 `MV_360_MODEL_ID`，直接上传本地原画（`SEG_ASSETS_DIR`，默认 `./tests/assets`），
+并跳过 360 前置与去背景预处理，原始图原样送拆分算法。
+`split_type=2` 支持 1~6 个视图，素材缺失的视图会自动跳过。

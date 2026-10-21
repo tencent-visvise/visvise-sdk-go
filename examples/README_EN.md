@@ -23,7 +23,8 @@ examples/
 ├── gen_video_motion/ # Video to Animation - Extract motion from video to drive models
 ├── gen_text_motion/  # Text to Animation - Generate animations from text descriptions
 ├── gen_pose/          # Batch Image to Pose - Extract poses from images to drive models
-├── gen_segment_2d/    # 2D Segmentation - Segment components from multi-view images
+├── gen_segment_2d/           # 2D Segmentation - Segment components from Gen360 multi-views
+├── gen_segment_2d_skip360/   # 2D Segmentation (skip 360) - Upload local six views, skip the 360 preprocess and background removal
 └── assets/           # Example resource files directory
 ```
 
@@ -110,3 +111,9 @@ Extract poses from reference images.
 ### gen_segment_2d (2D Segmentation)
 Requires running `gen_360` first to get `MV_360_MODEL_ID`.
 The segmentation result can be used as the `SegmentModelID` parameter for `gen_mid_model`.
+
+### gen_segment_2d_skip360 (2D Segmentation - skip 360 + skip background removal + six views)
+No `MV_360_MODEL_ID` needed: uploads local artwork directly (`SEG_ASSETS_DIR`, defaults to
+`./tests/assets`) and skips both the 360 preprocess and background removal, so the raw images
+are sent to the segmentation algorithm as-is.
+`split_type=2` accepts 1~6 views; views without a local asset are skipped automatically.

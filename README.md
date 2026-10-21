@@ -514,6 +514,10 @@ modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, rtx, opts)
 
 对图生 360 输出的多视图进行组件分割（node_type=14，SSE 协议）。生成的分割资产 `model_id` 可作为图生中模的 `segmentModelID` 输入。→ [示例代码](examples/gen_segment_2d/main.go)
 
+也支持不经过图生360：直接上传本地原画（六视图按需，本地路径自动上传 COS），并设置
+`SetSkip360Preprocess(true)` 跳过 360 前置、可选 `SetSkipRemoveBackground(true)` 跳过去背景。
+→ [示例代码](examples/gen_segment_2d_skip360/main.go)
+
 > `SetSkip360Preprocess(true)` 时不做图生360前置，直接用 `SetInputView` 传入的视图拆分（此时 modelID 不生效）。默认会对输入图做去背景，已自带透明通道或纯色背景的素材可用 `SetSkipRemoveBackground(true)` 跳过。
 >
 > 多视图拆分（`SegmentSplitFourView`）按实际传入的视图拆分，支持 1~6 个视图（正/背/左/右/顶/底）；只有跳过 360 前置时顶/底视图才会参与。
