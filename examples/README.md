@@ -25,6 +25,7 @@ examples/
 ├── gen_pose/          # 批量图生Pose - 从图片提取姿态驱动模型
 ├── gen_segment_2d/           # 2D拆分 - 对图生360的多视图进行组件分割
 ├── gen_segment_2d_skip360/   # 2D拆分（跳过360）- 上传本地六视图原画，跳过360前置与去背景
+├── gen_segment_2d_zip/       # 2D拆分 - 获取拆分产物 zip_path 的两种方式（详情 / SSE reply）
 └── assets/            # 示例资源文件目录
 ```
 
@@ -101,3 +102,11 @@ go run main.go
 不需要 `MV_360_MODEL_ID`，直接上传本地原画（`SEG_ASSETS_DIR`，默认 `./tests/assets`），
 并跳过 360 前置与去背景预处理，原始图原样送拆分算法。
 `split_type=2` 支持 1~6 个视图，素材缺失的视图会自动跳过。
+
+### gen_segment_2d_zip (2D拆分 - 获取拆分产物 zip_path)
+需要先运行 `gen_360` 获取 `MV_360_MODEL_ID`（方式二还需账号下有可用的 2D 拆分算法模型）。
+演示两种取 zip_path 的方式：
+1. `GenSegment2D` + `WaitModel` → `ModelInfo.SegmentOutput.ZipPath`（推荐，可同时拿到各视图部件表 / npz / 彩色预览图）
+2. 底层 `GetAPI().InitSegment` 自己遍历 SSE 帧，从 `reply` 帧直接取 `zip_path`（生成瞬间拿到，不用再查一次）
+
+两种方式拿到的是同一个带签名的 COS URL，24h 内直接 GET 即可下载（无需鉴权头）。

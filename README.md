@@ -559,6 +559,14 @@ modelInfo, err := client.WaitModel(
 
 fmt.Println(modelInfo.OutputModel) // 输出模型下载 URL
 fmt.Println(modelInfo.TimeCost)   // 耗时（秒）
+
+// 2D 拆分资产（node_type=14）可取完整拆分产物
+if so := modelInfo.SegmentOutput; so != nil {
+    fmt.Println(so.ZipPath)                        // 算法拆分产物 zip（签名 URL，24h）
+    fmt.Println(so.MainView.DataPath)              // 正视图 npz
+    fmt.Println(so.MainView.Components[0].Label)   // 部件 label（可作为 component_label 送中模）
+    fmt.Println(so.ColorImgs.MainView)             // 正视图彩色预览图
+}
 ```
 
 **错误：**
