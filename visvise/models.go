@@ -43,6 +43,8 @@ type SegmentParams struct {
 	// SkipRemoveBackground 是否跳过去背景预处理（默认 false，即跳过 360 时默认去背景）。
 	// 仅在 Skip360Preprocess=true 时生效：为 true 时原始输入图直接送拆分算法
 	SkipRemoveBackground *bool
+	// DecompositionPlan 拆解 plan 的 COS 路径，为空时不下发给算法
+	DecompositionPlan string
 }
 
 // ToMap converts SegmentParams to map（只包含显式传入的字段）
@@ -56,6 +58,9 @@ func (p *SegmentParams) ToMap() map[string]interface{} {
 	}
 	if p.SkipRemoveBackground != nil {
 		m["skip_remove_background"] = *p.SkipRemoveBackground
+	}
+	if p.DecompositionPlan != "" {
+		m["decomposition_plan"] = p.DecompositionPlan
 	}
 	return m
 }
@@ -105,6 +110,35 @@ type MultiViewSegmentResult struct {
 	BackViewData  *OperatorResult `json:"back_view_data,omitempty"`
 	ClientID      string          `json:"client_id,omitempty"`
 	OriginView    *View           `json:"origin_view,omitempty"`
+}
+
+// SegmentViewData 资产详情中单个视图的分割数据。
+// 字段与二次编辑返回的 SegmentData 完全一致，此处直接复用，避免重复定义。
+type SegmentViewData = SegmentData
+
+// SegmentColorImgs 各视图彩色预览图（COS 预签名 URL，24h 有效）
+type SegmentColorImgs struct {
+	MainView   string `json:"main_view,omitempty"`
+	BackView   string `json:"back_view,omitempty"`
+	LeftView   string `json:"left_view,omitempty"`
+	RightView  string `json:"right_view,omitempty"`
+	TopView    string `json:"top_view,omitempty"`
+	BottomView string `json:"bottom_view,omitempty"`
+}
+
+// SegmentOutput 2D 拆分产物，仅 node_type=14（2D 拆分）的资产有值。
+// 各视图按实际参与拆分的情况填充：正视图必有；顶/底仅在 skip_360_preprocess=true
+// 且传入了对应视图时才有值。
+type SegmentOutput struct {
+	MainView   *SegmentViewData  `json:"main_view,omitempty"`
+	LeftView   *SegmentViewData  `json:"left_view,omitempty"`
+	RightView  *SegmentViewData  `json:"right_view,omitempty"`
+	BackView   *SegmentViewData  `json:"back_view,omitempty"`
+	TopView    *SegmentViewData  `json:"top_view,omitempty"`
+	BottomView *SegmentViewData  `json:"bottom_view,omitempty"`
+	OriginView *View             `json:"origin_view,omitempty"` // 送算法的原始视图
+	ColorImgs  *SegmentColorImgs `json:"color_imgs,omitempty"`
+	ZipPath    string            `json:"zip_path,omitempty"` // 算法拆分产物 zip（预签名，24h 有效）
 }
 
 // decodeData re-marshals an already-decoded JSON value into the target struct.
@@ -285,6 +319,7 @@ type ModelInfo struct {
 	LODOutput         *LODOutput         `json:"lod_output,omitempty"`
 	ImageGen360Output *ImageGen360Output `json:"image_gen_360_output,omitempty"`
 	FramingAIOutput   *FramingAIOutput   `json:"framing_ai_output,omitempty"`
+	SegmentOutput     *SegmentOutput     `json:"segment_output,omitempty"` // 2D 拆分产物，仅 node_type=14 有值
 	Params            interface{}        `json:"params,omitempty"`
 	InputView         interface{}        `json:"input_view,omitempty"`
 	AlgorithmModel    string             `json:"algorithm_model,omitempty"`

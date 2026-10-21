@@ -23,7 +23,9 @@ examples/
 ├── gen_video_motion/ # Video to Animation - Extract motion from video to drive models
 ├── gen_text_motion/  # Text to Animation - Generate animations from text descriptions
 ├── gen_pose/          # Batch Image to Pose - Extract poses from images to drive models
-├── gen_segment_2d/    # 2D Segmentation - Segment components from multi-view images
+├── gen_segment_2d/           # 2D Segmentation - Segment components from Gen360 multi-views
+├── gen_segment_2d_skip360/   # 2D Segmentation (skip 360) - Upload local six views, skip the 360 preprocess and background removal
+├── gen_segment_2d_zip/       # 2D Segmentation - Two ways to get the output zip_path (model info / SSE reply)
 └── assets/           # Example resource files directory
 ```
 
@@ -110,3 +112,20 @@ Extract poses from reference images.
 ### gen_segment_2d (2D Segmentation)
 Requires running `gen_360` first to get `MV_360_MODEL_ID`.
 The segmentation result can be used as the `SegmentModelID` parameter for `gen_mid_model`.
+
+### gen_segment_2d_skip360 (2D Segmentation - skip 360 + skip background removal + six views)
+No `MV_360_MODEL_ID` needed: uploads local artwork directly (`SEG_ASSETS_DIR`, defaults to
+`./tests/assets`) and skips both the 360 preprocess and background removal, so the raw images
+are sent to the segmentation algorithm as-is.
+`split_type=2` accepts 1~6 views; views without a local asset are skipped automatically.
+
+### gen_segment_2d_zip (2D Segmentation - get the output zip_path)
+Requires running `gen_360` first to get `MV_360_MODEL_ID` (way 2 also needs an available
+2D segmentation algorithm model on the account).
+Shows two ways to get `zip_path`:
+1. `GenSegment2D` + `WaitModel` → `ModelInfo.SegmentOutput.ZipPath` (recommended; also gives
+   per-view components / npz / color preview images)
+2. Iterate the SSE frames of the low-level `GetAPI().InitSegment` and read `zip_path` from the
+   `reply` frame (available the moment generation finishes, no extra query needed)
+
+Both return the same pre-signed COS URL: a plain GET within 24h downloads the zip, no auth headers.
