@@ -166,12 +166,7 @@ visvise.MeshRefineModeDensify  // 2 - mesh densification
 
 // 2D segmentation split type
 visvise.SegmentSplitFrontView // 1 - front-view split (default)
-visvise.SegmentSplitFourView  // 2 - four-view split
-
-// 2D segmentation granularity
-visvise.SegmentGranularityCoarse  // 1 - coarse
-visvise.SegmentGranularityMedium  // 2 - medium (default)
-visvise.SegmentGranularityFine    // 3 - fine
+visvise.SegmentSplitFourView  // 2 - multi-view split (splits by the views actually provided, 1~6)
 
 // 2D preprocessing
 visvise.PreprocessTypeStylized     // 1 - style transfer
@@ -525,19 +520,23 @@ modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, rtx, opts)
 
 Component segmentation over multi-views from Gen360 (node_type=14, SSE protocol). The resulting `model_id` can be passed as `segmentModelID` for `GenMidModel`.→ [Example](examples/gen_segment_2d/main.go)
 
+> With `SetSkip360Preprocess(true)` the Gen360 preprocess is skipped and the views passed via `SetInputView` are split directly (modelID is ignored). Background removal runs by default; use `SetSkipRemoveBackground(true)` for assets that already have an alpha channel or a plain background.
+>
+> Multi-view split (`SegmentSplitFourView`) splits by the views actually provided, 1~6 views (front/back/left/right/top/bottom); top/bottom only take part when the 360 preprocess is skipped.
+
 ```go
 onThinking := func(content string) {
     fmt.Println("[thinking]", content)
 }
 
 opts := visvise.NewGenSegment2DOptions().
-    SetName("my_segment").                              // optional, default "gen_segment_2d"
-    SetInputView(&visvise.View{MainView: "path/to/ref.png"}) // optional, input view
-    SetSplitType(visvise.SegmentSplitFrontView).         // optional, split type
-    SetGranularity(visvise.SegmentGranularityMedium).    // optional, granularity
-    SetPrompt("segment by body parts").                 // optional, natural language prompt
-    SetOnThinking(onThinking).                           // optional, thinking callback
-    SetReadTimeout(120)                                  // optional, SSE read timeout (seconds)
+    SetName("my_segment").                                  // optional, default "gen_segment_2d"
+    SetInputView(&visvise.View{MainView: "path/to/ref.png"}) // optional, input view (either this or modelID)
+    SetSplitType(visvise.SegmentSplitFrontView).            // optional, 1 front-view (default) / 2 multi-view
+    SetSkip360Preprocess(true).                             // optional, skip the Gen360 preprocess and split input_view directly, default false
+    SetSkipRemoveBackground(false).                         // optional, skip background removal, default false; only effective when SetSkip360Preprocess(true)
+    SetOnThinking(onThinking).                              // optional, thinking callback
+    SetReadTimeout(120)                                     // optional, SSE read timeout (seconds)
 
 segModelID, err := client.GenSegment2D("Model2026...", rtx, opts)
 // Use the result as segmentModelID for GenMidModel

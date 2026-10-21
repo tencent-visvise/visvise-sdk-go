@@ -166,12 +166,7 @@ visvise.MeshRefineModeDensify  // 2 - 布线加密
 
 // 2D 拆分方式
 visvise.SegmentSplitFrontView // 1 - 生成正视图拆分（默认）
-visvise.SegmentSplitFourView  // 2 - 生成四视图拆分
-
-// 2D 拆分颗粒度
-visvise.SegmentGranularityCoarse  // 1 - 粗
-visvise.SegmentGranularityMedium  // 2 - 中（默认）
-visvise.SegmentGranularityFine    // 3 - 细
+visvise.SegmentSplitFourView  // 2 - 生成多视图拆分（按实际传入的视图拆分，支持 1~6 个）
 
 // 2D 预处理方式
 visvise.PreprocessTypeStylized      // 1 - 原画风格化
@@ -519,19 +514,23 @@ modelIDs, err := client.GenPose("path/to/model.fbx", inputImages, rtx, opts)
 
 对图生 360 输出的多视图进行组件分割（node_type=14，SSE 协议）。生成的分割资产 `model_id` 可作为图生中模的 `segmentModelID` 输入。→ [示例代码](examples/gen_segment_2d/main.go)
 
+> `SetSkip360Preprocess(true)` 时不做图生360前置，直接用 `SetInputView` 传入的视图拆分（此时 modelID 不生效）。默认会对输入图做去背景，已自带透明通道或纯色背景的素材可用 `SetSkipRemoveBackground(true)` 跳过。
+>
+> 多视图拆分（`SegmentSplitFourView`）按实际传入的视图拆分，支持 1~6 个视图（正/背/左/右/顶/底）；只有跳过 360 前置时顶/底视图才会参与。
+
 ```go
 onThinking := func(content string) {
     fmt.Println("[思考]", content)
 }
 
 opts := visvise.NewGenSegment2DOptions().
-    SetName("my_segment").                                // 可选，默认 "gen_segment_2d"
-    SetInputView(&visvise.View{MainView: "path/to/ref.png"}) // 可选，输入视图
-    SetSplitType(visvise.SegmentSplitFrontView).          // 可选，正视图/四视图拆分
-    SetGranularity(visvise.SegmentGranularityMedium).     // 可选，颗粒度
-    SetPrompt("segment by body parts").                   // 可选，自然语言描述拆分规则
-    SetOnThinking(onThinking).                            // 可选，处理 thinking 事件的回调
-    SetReadTimeout(120)                                   // 可选，SSE 读取超时（秒）
+    SetName("my_segment").                                    // 可选，默认 "gen_segment_2d"
+    SetInputView(&visvise.View{MainView: "path/to/ref.png"})   // 可选，输入视图（与 modelID 二选一）
+    SetSplitType(visvise.SegmentSplitFrontView).              // 可选，1 正视图拆分（默认） / 2 多视图拆分
+    SetSkip360Preprocess(true).                               // 可选，跳过图生360前置，直接用 input_view 拆分，默认 false
+    SetSkipRemoveBackground(false).                           // 可选，是否跳过去背景，默认 false；仅 SetSkip360Preprocess(true) 时生效
+    SetOnThinking(onThinking).                                // 可选，处理 thinking 事件的回调
+    SetReadTimeout(120)                                       // 可选，SSE 读取超时（秒）
 
 segModelID, err := client.GenSegment2D("Model2026...", rtx, opts)
 // 后续可作为 segmentModelID 传给 GenMidModel
