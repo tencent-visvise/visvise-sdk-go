@@ -439,8 +439,7 @@ func (api *VisviseAPI) InitSegment(
 	modelID string,
 	inputView *View,
 	splitType *SegmentSplitType,
-	granularity *SegmentGranularity,
-	prompt string,
+	params *SegmentParams,
 	readTimeout int,
 	rtx string,
 ) (*SSEIterator, error) {
@@ -458,11 +457,10 @@ func (api *VisviseAPI) InitSegment(
 	if splitType != nil {
 		body["split_type"] = *splitType
 	}
-	if granularity != nil {
-		body["granularity"] = *granularity
-	}
-	if prompt != "" {
-		body["prompt"] = prompt
+	if params != nil {
+		for k, v := range params.ToMap() {
+			body[k] = v
+		}
 	}
 
 	return api.http.PostSSE("openapi/weaver/component/init_segment", body, readTimeout, rtx)

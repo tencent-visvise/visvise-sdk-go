@@ -905,14 +905,16 @@ func (o *GenPoseOptions) SetOutputModelFormat(format OutputModelFormat) *GenPose
 
 // GenSegment2DOptions defines optional parameters for GenSegment2D
 type GenSegment2DOptions struct {
-	Name           string              // optional, task name (auto-generated if empty)
-	AlgorithmModel string              // optional, algorithm model name
-	InputView      *View               // optional, input view (with model_id_360)
-	SplitType      *SegmentSplitType   // optional, split type
-	Granularity    *SegmentGranularity // optional, granularity
-	Prompt         string              // optional, natural language prompt
-	OnThinking     ThinkingCallback    // optional, callback for thinking events
-	ReadTimeout    int
+	Name              string            // optional, task name (auto-generated if empty)
+	AlgorithmModel    string            // optional, algorithm model name
+	InputView         *View             // optional, input view (with model_id_360)
+	SplitType         *SegmentSplitType // optional, split type
+	Skip360Preprocess *bool             // optional, skip 360 preprocess (default false)
+	// SkipRemoveBackground 是否跳过去背景预处理（默认 false，即跳过 360 时默认去背景）。
+	// 仅在 Skip360Preprocess=true 时生效：为 true 时原始输入图直接送拆分算法
+	SkipRemoveBackground *bool
+	OnThinking           ThinkingCallback // optional, callback for thinking events
+	ReadTimeout          int
 }
 
 // NewGenSegment2DOptions creates GenSegment2DOptions with common defaults
@@ -946,15 +948,17 @@ func (o *GenSegment2DOptions) SetSplitType(splitType SegmentSplitType) *GenSegme
 	return o
 }
 
-// SetGranularity sets the granularity
-func (o *GenSegment2DOptions) SetGranularity(granularity SegmentGranularity) *GenSegment2DOptions {
-	o.Granularity = &granularity
+// SetSkip360Preprocess sets whether to skip the 360 preprocess
+func (o *GenSegment2DOptions) SetSkip360Preprocess(skip bool) *GenSegment2DOptions {
+	o.Skip360Preprocess = &skip
 	return o
 }
 
-// SetPrompt sets the prompt
-func (o *GenSegment2DOptions) SetPrompt(prompt string) *GenSegment2DOptions {
-	o.Prompt = prompt
+// SetSkipRemoveBackground sets whether to skip the background removal preprocess.
+// Only takes effect when Skip360Preprocess is true; when true, the raw input images
+// are sent to the segmentation algorithm without background removal.
+func (o *GenSegment2DOptions) SetSkipRemoveBackground(skip bool) *GenSegment2DOptions {
+	o.SkipRemoveBackground = &skip
 	return o
 }
 

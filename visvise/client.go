@@ -1542,6 +1542,20 @@ func (c *Client) GenSegment2D(modelID360 string, rtx string, opts *GenSegment2DO
 			}
 			resolvedView.RightView = url
 		}
+		if opts.InputView.TopView != "" {
+			url, err := c.resolveFile(opts.InputView.TopView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			resolvedView.TopView = url
+		}
+		if opts.InputView.BottomView != "" {
+			url, err := c.resolveFile(opts.InputView.BottomView, false, rtx)
+			if err != nil {
+				return "", err
+			}
+			resolvedView.BottomView = url
+		}
 	}
 
 	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeSegment2D, nil, rtx)
@@ -1549,7 +1563,11 @@ func (c *Client) GenSegment2D(modelID360 string, rtx string, opts *GenSegment2DO
 		return "", err
 	}
 
-	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, opts.Granularity, opts.Prompt, opts.ReadTimeout, rtx)
+	params := &SegmentParams{
+		Skip360Preprocess:    opts.Skip360Preprocess,
+		SkipRemoveBackground: opts.SkipRemoveBackground,
+	}
+	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, params, opts.ReadTimeout, rtx)
 	if err != nil {
 		return "", err
 	}

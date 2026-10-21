@@ -7,10 +7,12 @@ import (
 
 // View represents the multi-view structure
 type View struct {
-	MainView  string `json:"main_view"`
-	BackView  string `json:"back_view,omitempty"`
-	LeftView  string `json:"left_view,omitempty"`
-	RightView string `json:"right_view,omitempty"`
+	MainView   string `json:"main_view"`
+	BackView   string `json:"back_view,omitempty"`
+	LeftView   string `json:"left_view,omitempty"`
+	RightView  string `json:"right_view,omitempty"`
+	TopView    string `json:"top_view,omitempty"`
+	BottomView string `json:"bottom_view,omitempty"`
 }
 
 // ToMap converts View to map
@@ -24,6 +26,36 @@ func (v *View) ToMap() map[string]interface{} {
 	}
 	if v.RightView != "" {
 		m["right_view"] = v.RightView
+	}
+	if v.TopView != "" {
+		m["top_view"] = v.TopView
+	}
+	if v.BottomView != "" {
+		m["bottom_view"] = v.BottomView
+	}
+	return m
+}
+
+// SegmentParams 2D 拆分的可选参数：跳过 360 前置 + 算法可控参数。
+// 全部字段为指针 / 空值表示「不传」，由后端按默认值补齐。
+type SegmentParams struct {
+	Skip360Preprocess *bool // 是否跳过图生360前置处理（默认 false）
+	// SkipRemoveBackground 是否跳过去背景预处理（默认 false，即跳过 360 时默认去背景）。
+	// 仅在 Skip360Preprocess=true 时生效：为 true 时原始输入图直接送拆分算法
+	SkipRemoveBackground *bool
+}
+
+// ToMap converts SegmentParams to map（只包含显式传入的字段）
+func (p *SegmentParams) ToMap() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	m := map[string]interface{}{}
+	if p.Skip360Preprocess != nil {
+		m["skip_360_preprocess"] = *p.Skip360Preprocess
+	}
+	if p.SkipRemoveBackground != nil {
+		m["skip_remove_background"] = *p.SkipRemoveBackground
 	}
 	return m
 }

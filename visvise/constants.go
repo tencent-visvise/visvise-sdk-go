@@ -90,16 +90,7 @@ type SegmentSplitType int
 
 const (
 	SegmentSplitFrontView SegmentSplitType = 1 // Front view (default)
-	SegmentSplitFourView  SegmentSplitType = 2 // Four view
-)
-
-// SegmentGranularity represents the 2D segmentation granularity
-type SegmentGranularity int
-
-const (
-	SegmentGranularityCoarse SegmentGranularity = 1 // Coarse (x50%)
-	SegmentGranularityMedium SegmentGranularity = 2 // Medium (x70%, default)
-	SegmentGranularityFine   SegmentGranularity = 3 // Fine (x100%)
+	SegmentSplitFourView  SegmentSplitType = 2 // Multi view (back/left/right/top/bottom as provided)
 )
 
 // SegmentViewType represents the view type for 2D split re-edit operations
