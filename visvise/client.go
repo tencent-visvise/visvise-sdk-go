@@ -1566,6 +1566,7 @@ func (c *Client) GenSegment2D(modelID360 string, rtx string, opts *GenSegment2DO
 	params := &SegmentParams{
 		Skip360Preprocess:    opts.Skip360Preprocess,
 		SkipRemoveBackground: opts.SkipRemoveBackground,
+		DecompositionPlan:    opts.DecompositionPlan,
 	}
 	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, params, opts.ReadTimeout, rtx)
 	if err != nil {

@@ -913,8 +913,10 @@ type GenSegment2DOptions struct {
 	// SkipRemoveBackground 是否跳过去背景预处理（默认 false，即跳过 360 时默认去背景）。
 	// 仅在 Skip360Preprocess=true 时生效：为 true 时原始输入图直接送拆分算法
 	SkipRemoveBackground *bool
-	OnThinking           ThinkingCallback // optional, callback for thinking events
-	ReadTimeout          int
+	// DecompositionPlan 拆解 plan 的 COS 路径，为空时不下发给算法
+	DecompositionPlan string
+	OnThinking        ThinkingCallback // optional, callback for thinking events
+	ReadTimeout       int
 }
 
 // NewGenSegment2DOptions creates GenSegment2DOptions with common defaults
@@ -959,6 +961,13 @@ func (o *GenSegment2DOptions) SetSkip360Preprocess(skip bool) *GenSegment2DOptio
 // are sent to the segmentation algorithm without background removal.
 func (o *GenSegment2DOptions) SetSkipRemoveBackground(skip bool) *GenSegment2DOptions {
 	o.SkipRemoveBackground = &skip
+	return o
+}
+
+// SetDecompositionPlan sets the decomposition plan COS path.
+// When empty, the field is not sent and the algorithm infers the plan itself.
+func (o *GenSegment2DOptions) SetDecompositionPlan(plan string) *GenSegment2DOptions {
+	o.DecompositionPlan = plan
 	return o
 }
 

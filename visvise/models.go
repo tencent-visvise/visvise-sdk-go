@@ -43,6 +43,8 @@ type SegmentParams struct {
 	// SkipRemoveBackground 是否跳过去背景预处理（默认 false，即跳过 360 时默认去背景）。
 	// 仅在 Skip360Preprocess=true 时生效：为 true 时原始输入图直接送拆分算法
 	SkipRemoveBackground *bool
+	// DecompositionPlan 拆解 plan 的 COS 路径，为空时不下发给算法
+	DecompositionPlan string
 }
 
 // ToMap converts SegmentParams to map（只包含显式传入的字段）
@@ -56,6 +58,9 @@ func (p *SegmentParams) ToMap() map[string]interface{} {
 	}
 	if p.SkipRemoveBackground != nil {
 		m["skip_remove_background"] = *p.SkipRemoveBackground
+	}
+	if p.DecompositionPlan != "" {
+		m["decomposition_plan"] = p.DecompositionPlan
 	}
 	return m
 }
