@@ -262,6 +262,37 @@ func (c *Client) resolveFile(source FileInput, isTemp bool, rtx string) (string,
 	return "", fmt.Errorf("unsupported file input type")
 }
 
+// resolveDecompositionPlan resolves the decomposition plan (a json file) to a COS URL.
+// Local paths keep their original filename; bytes / io.Reader have no magic number to
+// sniff as json, so they fall back to the ".json" extension.
+// Returns "" when not set, in which case the field is omitted from the request.
+func (c *Client) resolveDecompositionPlan(plan FileInput, rtx string) (string, error) {
+	if plan == nil {
+		return "", nil
+	}
+	if s, ok := plan.(string); ok {
+		if s == "" {
+			return "", nil
+		}
+		return c.resolveFile(s, false, rtx)
+	}
+
+	var data []byte
+	switch v := plan.(type) {
+	case []byte:
+		data = v
+	case io.Reader:
+		b, err := io.ReadAll(v)
+		if err != nil {
+			return "", fmt.Errorf("failed to read decomposition plan: %w", err)
+		}
+		data = b
+	default:
+		return "", errors.New("unsupported file input type for decomposition plan")
+	}
+	return c.uploadBytes(data, genRandomFilename(sniffExtension(data, ".json")), false, rtx)
+}
+
 func (c *Client) uploadFile(path string, filename string, isTemp bool, rtx string) (string, error) {
 	cred, err := c.api.GetCosCred(isTemp, false, rtx)
 	if err != nil {
@@ -1563,10 +1594,16 @@ func (c *Client) GenSegment2D(modelID360 string, rtx string, opts *GenSegment2DO
 		return "", err
 	}
 
+	// 拆解 plan 为 json 文件，支持本地路径（自动上传）/ bytes / Reader / COS URL
+	resolvedPlan, err := c.resolveDecompositionPlan(opts.DecompositionPlan, rtx)
+	if err != nil {
+		return "", err
+	}
+
 	params := &SegmentParams{
 		Skip360Preprocess:    opts.Skip360Preprocess,
 		SkipRemoveBackground: opts.SkipRemoveBackground,
-		DecompositionPlan:    opts.DecompositionPlan,
+		DecompositionPlan:    resolvedPlan,
 	}
 	iter, err := c.api.InitSegment(opts.Name, resolvedModel, modelID360, resolvedView, opts.SplitType, params, opts.ReadTimeout, rtx)
 	if err != nil {

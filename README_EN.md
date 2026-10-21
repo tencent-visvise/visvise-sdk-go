@@ -535,7 +535,7 @@ opts := visvise.NewGenSegment2DOptions().
     SetSplitType(visvise.SegmentSplitFrontView).            // optional, 1 front-view (default) / 2 multi-view
     SetSkip360Preprocess(true).                             // optional, skip the Gen360 preprocess and split input_view directly, default false
     SetSkipRemoveBackground(false).                         // optional, skip background removal, default false; only effective when SetSkip360Preprocess(true)
-    SetDecompositionPlan("cos/path/plan.json").             // optional, decomposition plan COS path, omitted when empty
+    SetDecompositionPlan("path/to/plan.json").             // optional, decomposition plan (json file), local path uploaded automatically; omitted when empty
     SetOnThinking(onThinking).                              // optional, thinking callback
     SetReadTimeout(120)                                     // optional, SSE read timeout (seconds)
 

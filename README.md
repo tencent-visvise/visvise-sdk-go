@@ -529,7 +529,7 @@ opts := visvise.NewGenSegment2DOptions().
     SetSplitType(visvise.SegmentSplitFrontView).              // 可选，1 正视图拆分（默认） / 2 多视图拆分
     SetSkip360Preprocess(true).                               // 可选，跳过图生360前置，直接用 input_view 拆分，默认 false
     SetSkipRemoveBackground(false).                           // 可选，是否跳过去背景，默认 false；仅 SetSkip360Preprocess(true) 时生效
-    SetDecompositionPlan("cos/path/plan.json").               // 可选，拆解 plan 的 COS 路径，为空时不下发
+    SetDecompositionPlan("path/to/plan.json").                 // 可选，拆解 plan（json 文件），本地路径自动上传；为空时不下发
     SetOnThinking(onThinking).                                // 可选，处理 thinking 事件的回调
     SetReadTimeout(120)                                       // 可选，SSE 读取超时（秒）
 
