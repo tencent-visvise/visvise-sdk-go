@@ -51,9 +51,7 @@ func main() {
 
 	segModelID, err := client.GenSegment2D(mvModelID, rtx,
 		visvise.NewGenSegment2DOptions().
-			SetSplitType(visvise.SegmentSplitFrontView).      // 1 正视图（默认） / 2 四视图
-			SetGranularity(visvise.SegmentGranularityMedium). // 1 粗 / 2 中（默认） / 3 细
-			SetPrompt("").                                    // 可选：自然语言描述拆分规则
+			SetSplitType(visvise.SegmentSplitFrontView). // 1 正视图（默认） / 2 多视图
 			SetName("example_gen_segment_2d").
 			SetOnThinking(func(thought string) {
 				fmt.Printf("  [thinking] %s\n", thought)
