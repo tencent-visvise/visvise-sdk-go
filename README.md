@@ -317,7 +317,7 @@ opts := visvise.NewGenMeshRefineOptions().
     SetName("my_mesh_refine").                           // 可选，默认 "gen_mesh_refine"
     SetInputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输入模型格式（默认 fbx）
     SetMode(visvise.MeshRefineModeOptimize).             // 可选，布线优化模式
-    SetFaceNum(50000).                                   // 可选，目标面数（仅布线优化 mode=1 生效，0~50000，0=不设置）
+    SetFaceNum(50000).                                   // 可选，目标面数（仅布线优化 mode=1 生效，(0,50000]，0 表示自动面数）
     SetColorModel("path/to/color.fbx")                   // 可选，色彩模型
 
 modelID, err := client.GenMeshRefine("path/to/model.fbx", rtx, opts)

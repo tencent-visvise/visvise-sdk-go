@@ -323,7 +323,7 @@ opts := visvise.NewGenMeshRefineOptions().
     SetName("my_mesh_refine").                          // optional, default "gen_mesh_refine"
     SetInputModelFormat(visvise.OutputModelFormatFBX).  // optional, input format (default fbx)
     SetMode(visvise.MeshRefineModeOptimize).            // optional, refine mode
-    SetFaceNum(50000).                                   // optional, target face count (optimize mode only, 0-50000, 0 = unset)
+    SetFaceNum(50000).                                   // optional, target face count (optimize mode only, (0,50000], 0 = auto)
     SetColorModel("path/to/color.fbx")                   // optional, color model
 
 modelID, err := client.GenMeshRefine("path/to/model.fbx", rtx, opts)
