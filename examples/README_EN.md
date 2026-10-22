@@ -120,8 +120,9 @@ are sent to the segmentation algorithm as-is.
 `split_type=2` accepts 1~6 views; views without a local asset are skipped automatically.
 
 ### gen_segment_2d_zip (2D Segmentation - get the output zip_path)
-Requires running `gen_360` first to get `MV_360_MODEL_ID` (way 2 also needs an available
-2D segmentation algorithm model on the account).
+No `MV_360_MODEL_ID` needed: uploads local six views directly (`SEG_ASSETS_DIR`, defaults to
+`./tests/assets`) and skips the 360 preprocess and background removal (way 2 also needs an
+available 2D segmentation algorithm model on the account).
 Shows two ways to get `zip_path`:
 1. `GenSegment2D` + `WaitModel` → `ModelInfo.SegmentOutput.ZipPath` (recommended; also gives
    per-view components / npz / color preview images)

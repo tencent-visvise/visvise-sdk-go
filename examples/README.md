@@ -104,7 +104,8 @@ go run main.go
 `split_type=2` 支持 1~6 个视图，素材缺失的视图会自动跳过。
 
 ### gen_segment_2d_zip (2D拆分 - 获取拆分产物 zip_path)
-需要先运行 `gen_360` 获取 `MV_360_MODEL_ID`（方式二还需账号下有可用的 2D 拆分算法模型）。
+不需要 `MV_360_MODEL_ID`，直接上传本地六视图原画（`SEG_ASSETS_DIR`，默认 `./tests/assets`），
+跳过 360 前置与去背景预处理；方式二还需账号下有可用的 2D 拆分算法模型。
 演示两种取 zip_path 的方式：
 1. `GenSegment2D` + `WaitModel` → `ModelInfo.SegmentOutput.ZipPath`（推荐，可同时拿到各视图部件表 / npz / 彩色预览图）
 2. 底层 `GetAPI().InitSegment` 自己遍历 SSE 帧，从 `reply` 帧直接取 `zip_path`（生成瞬间拿到，不用再查一次）
