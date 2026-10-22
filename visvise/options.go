@@ -379,7 +379,7 @@ type GenMeshRefineOptions struct {
 	AlgorithmModel   string            // optional, algorithm model name
 	InputModelFormat OutputModelFormat // optional, input model format (default fbx)
 	Mode             *MeshRefineMode   // optional, MeshRefineModeOptimize(1) or MeshRefineModeDensify(2)
-	FaceNum          *int              // optional, target face count for optimize mode (0-50000, 0 = not set)
+	FaceNum          *int              // optional, target face count for optimize mode ((0,50000], 0 = auto)
 	ColorModel       FileInput         // optional, color model for texture preservation
 	BaseColorImage   FileInput         // optional, base color image for texture preservation
 }
@@ -416,7 +416,7 @@ func (o *GenMeshRefineOptions) SetMode(mode MeshRefineMode) *GenMeshRefineOption
 	return o
 }
 
-// SetFaceNum sets the target face count for optimize mode
+// SetFaceNum sets the target face count for optimize mode ((0,50000], 0 = auto)
 func (o *GenMeshRefineOptions) SetFaceNum(faceNum int) *GenMeshRefineOptions {
 	o.FaceNum = &faceNum
 	return o

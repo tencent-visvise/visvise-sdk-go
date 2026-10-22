@@ -182,6 +182,7 @@ type SSEIterator struct {
 	resp     *http.Response
 	reader   *bufio.Reader
 	leftover string
+	received int // 已完整接收的事件帧数
 }
 
 // NewSSEIterator creates a new SSE iterator
@@ -268,6 +269,16 @@ func (iter *SSEIterator) Next() (*SSEEvent, error) {
 				}
 				return nil, io.EOF
 			}
+			// 流被中断：网关空闲读超时 / 服务端重启 / 网络抖动。
+			// 已收到过至少一帧就当作流正常结束 —— 服务端任务仍在跑，
+			// 调用方可以拿 pre_create 里的 model_id 调 WaitModel 轮询最终结果。
+			if iter.received > 0 {
+				logger.Warn("SSE 流在收到若干帧后被中断，服务端任务可能仍在执行，"+
+					"建议用已获取的 model_id 调用 WaitModel 轮询最终结果；"+
+					"常见原因是中间网关空闲读超时（SSE 链路无心跳）",
+					"received", iter.received, "err", err)
+				return nil, io.EOF
+			}
 			return nil, NewNetworkError(fmt.Sprintf("SSE read error: %v", err))
 		}
 
@@ -277,6 +288,7 @@ func (iter *SSEIterator) Next() (*SSEEvent, error) {
 			// Empty line indicates end of frame
 			if event != "" || len(dataLines) > 0 {
 				dataStr := strings.Join(dataLines, "\n")
+				iter.received++
 				return &SSEEvent{Event: event, Data: parseSSELineData(dataStr)}, nil
 			}
 			continue

@@ -1533,6 +1533,11 @@ type ThinkingCallback func(string)
 
 // GenSegment2D performs 2D segmentation (SSE streaming interface)
 // Simplified version using GenSegment2DOptions
+//
+// Note: the returned model id only guarantees the asset was pre-created, not that the
+// segmentation finished. If the SSE stream is interrupted (gateway idle read timeout,
+// server restart, ...), this returns before the "reply" event while the task keeps
+// running on the server — call WaitModel to confirm the status before using it.
 func (c *Client) GenSegment2D(modelID360 string, rtx string, opts *GenSegment2DOptions) (string, error) {
 	if opts == nil {
 		opts = NewGenSegment2DOptions()
