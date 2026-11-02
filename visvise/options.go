@@ -495,6 +495,7 @@ type GenLODOptions struct {
 	AlgorithmModel    string            // optional, algorithm model name
 	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
 	GenTimes          int               // optional, number of generations (default 3)
+	EnableQC          bool              // optional, enable LOD quality check and pick the best candidate
 }
 
 // NewGenLODOptions creates GenLODOptions with common defaults
@@ -527,6 +528,12 @@ func (o *GenLODOptions) SetOutputModelFormat(format OutputModelFormat) *GenLODOp
 // SetGenTimes sets the number of generations
 func (o *GenLODOptions) SetGenTimes(times int) *GenLODOptions {
 	o.GenTimes = times
+	return o
+}
+
+// SetEnableQC sets whether to enable LOD quality check (pick the best candidate)
+func (o *GenLODOptions) SetEnableQC(enable bool) *GenLODOptions {
+	o.EnableQC = enable
 	return o
 }
 

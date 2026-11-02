@@ -259,6 +259,9 @@ type LODFile struct {
 	ReduceLevel int    `json:"reduce_level"`
 	DownloadURL string `json:"download_url"`
 	PreviewImg  string `json:"preview_img,omitempty"`
+	// Version 候选标识 version1/version2/...，按算法返回的原始次序编号，
+	// 与 LODOutput.QcBestVersion 对应，用于定位质检选中了哪个候选
+	Version string `json:"version,omitempty"`
 }
 
 // LODOutput represents the LOD output file collection
@@ -267,6 +270,14 @@ type LODOutput struct {
 	ZipFile       string    `json:"zip_file,omitempty"`
 	DelTimes      int       `json:"del_times,omitempty"`
 	DelCardIndexs []uint32  `json:"del_card_indexs,omitempty"`
+	// 以下为 LOD 质检择优（EnableQC=true）时的结果字段，未开启质检时均为空
+	// 空=未开启质检 / completed=全部候选出分 / partial=部分候选出分 /
+	// failed=质检跑了但无候选出分 / call_failed=质检服务没调通
+	QcStatus string `json:"qc_status,omitempty"`
+	// QcBestVersion 质检选中的最优候选 version，可与 LODFile.Version 比对定位；兜底时为空
+	QcBestVersion string `json:"qc_best_version,omitempty"`
+	// QcFile 质检选中的单个候选（算法侧产物，实测为只含该候选的 zip）；兜底时为第一个候选
+	QcFile string `json:"qc_file,omitempty"`
 }
 
 // ImageGen360Output represents the image to 360 output result
