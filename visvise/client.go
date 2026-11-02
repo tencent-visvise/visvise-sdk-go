@@ -1148,6 +1148,7 @@ func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, rtx strin
 			"output_model_format": opts.OutputModelFormat,
 			"reduce_faces":        reduceFacesData,
 			"gen_times":           opts.GenTimes,
+			"enable_qc":           opts.EnableQC,
 		}},
 		nil, cosURL, "", "", rtx)
 }
