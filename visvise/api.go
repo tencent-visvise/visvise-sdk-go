@@ -298,6 +298,44 @@ func (api *VisviseAPI) RemoveBackground(imageURL string, rtx string) (string, er
 	return "", nil
 }
 
+// ImageCutout removes the background of the given images and returns the processed images.
+// 同步接口，不创建模型资产；imageList 为待抠图图片的 COS URL 数组（1~6 张）。
+// 参数校验由服务端完成（image_list 1~6 张、mode 1~3、background_color 非空）。
+// 需要传入本地图片时，请使用 Client.ImageCutout，由 SDK 自动上传到当前账号的 COS 目录。
+func (api *VisviseAPI) ImageCutout(
+	imageList []string,
+	mode ImageCutoutMode,
+	backgroundColor string,
+	rtx string,
+) (*ImageCutoutResult, error) {
+	body := map[string]interface{}{
+		"image_list":       imageList,
+		"mode":             int(mode),
+		"background_color": backgroundColor,
+	}
+
+	data, err := api.http.Post("openapi/weaver/resource/image_cutout", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+
+	m, ok := data.(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	result := &ImageCutoutResult{
+		BackgroundColor: getString(m, "background_color", ""),
+	}
+	if v, ok := m["image_list"].([]interface{}); ok {
+		result.ImageList = toStringSlice(v)
+	}
+	return result, nil
+}
+
 // StyleTransfer stylizes an input image and returns the processed image COS URL.
 func (api *VisviseAPI) StyleTransfer(inputView string, styleType StyleType, rtx string) (string, error) {
 	body := map[string]interface{}{

@@ -40,6 +40,15 @@ const (
 	StyleTypeCartoon   StyleType = 4 // Cartoon figurine
 )
 
+// ImageCutoutMode represents the image cutout mode (image_cutout)
+type ImageCutoutMode int
+
+const (
+	ImageCutoutModeDirect     ImageCutoutMode = 1 // 直接抠图（输出透明背景）
+	ImageCutoutModeSolidColor ImageCutoutMode = 2 // 纯色底抠图
+	ImageCutoutModeReplace    ImageCutoutMode = 3 // 换底并抠图
+)
+
 // ModelStatus represents the model asset status code
 type ModelStatus int
 

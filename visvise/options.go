@@ -320,6 +320,7 @@ type GenLowModelOptions struct {
 	BackView          FileInput         // optional, back view
 	LeftView          FileInput         // optional, left view
 	RightView         FileInput         // optional, right view
+	FaceNum           *int              // optional, target face count (100-60000, 0 = auto)
 }
 
 // NewGenLowModelOptions creates GenLowModelOptions with common defaults
@@ -346,6 +347,12 @@ func (o *GenLowModelOptions) SetAlgorithmModel(model string) *GenLowModelOptions
 // SetOutputModelFormat sets the output model format
 func (o *GenLowModelOptions) SetOutputModelFormat(format OutputModelFormat) *GenLowModelOptions {
 	o.OutputModelFormat = format
+	return o
+}
+
+// SetFaceNum sets the target face count
+func (o *GenLowModelOptions) SetFaceNum(faceNum int) *GenLowModelOptions {
+	o.FaceNum = &faceNum
 	return o
 }
 

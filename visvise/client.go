@@ -1009,6 +1009,9 @@ func (c *Client) GenLowModel(mainView FileInput, rtx string, opts *GenLowModelOp
 		"output_model_format": opts.OutputModelFormat,
 		"face_type":           opts.FaceType,
 	}
+	if opts.FaceNum != nil {
+		imgParams["face_num"] = *opts.FaceNum
+	}
 
 	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DLow),
 		map[string]interface{}{"image_gen_model_params": imgParams},
@@ -1527,6 +1530,27 @@ func (c *Client) GenPose(modelPath FileInput, inputImages []FileInput, rtx strin
 		"algorithm_model":     resolvedModel,
 		"output_model_format": opts.OutputModelFormat,
 	}, rtx)
+}
+
+// ImageCutout removes the background of the given images and returns the processed images.
+// images 支持本地路径 / bytes / io.Reader / VISVISE 平台 COS URL，本地文件自动上传到当前账号的 COS 目录。
+// 同步接口，不创建模型资产；参数校验由服务端完成。
+func (c *Client) ImageCutout(
+	images []FileInput,
+	mode ImageCutoutMode,
+	backgroundColor string,
+	rtx string,
+) (*ImageCutoutResult, error) {
+	uploadedImages := make([]string, len(images))
+	for i, img := range images {
+		url, err := c.resolveFile(img, false, rtx)
+		if err != nil {
+			return nil, err
+		}
+		uploadedImages[i] = url
+	}
+
+	return c.api.ImageCutout(uploadedImages, mode, backgroundColor, rtx)
 }
 
 // ThinkingCallback is a callback function for SSE thinking events
