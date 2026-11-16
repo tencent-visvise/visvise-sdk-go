@@ -234,6 +234,7 @@ type GenMidModelOptions struct {
 	GroupIDs          FileInput         // optional, custom part grouping NPZ file (final_group_ids.npz)
 	PartMeshPath      FileInput         // optional, OBJ file containing all parts
 	LabelToID         FileInput         // optional, part-name to part-id mapping JSON file
+	ModelSize         *float64          // optional, expected model size in cm (mid model only, default 100.0)
 }
 
 // NewGenMidModelOptions creates GenMidModelOptions with common defaults
@@ -308,6 +309,13 @@ func (o *GenMidModelOptions) SetPartMeshPath(partMeshPath FileInput) *GenMidMode
 // SetLabelToID sets the part-name to part-id mapping JSON file.
 func (o *GenMidModelOptions) SetLabelToID(labelToID FileInput) *GenMidModelOptions {
 	o.LabelToID = labelToID
+	return o
+}
+
+// SetModelSize sets the expected generated model size in centimeters.
+// Mid-poly only (node_type=11); the server falls back to 100.0 when unset.
+func (o *GenMidModelOptions) SetModelSize(size float64) *GenMidModelOptions {
+	o.ModelSize = &size
 	return o
 }
 

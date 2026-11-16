@@ -282,6 +282,7 @@ opts := visvise.NewGenMidModelOptions().
     SetFaceNum(30000).                                   // optional, target face count (0-30000, 0 = default)
     SetSegmentModelID("Model2026...").                   // optional, 2D segmentation asset ID
 	SetModelID360("Model2026...")                        // optional, Gen360 asset ID
+	SetModelSize(120.0).                                  // optional, expected model size in cm (mid model only, default 100.0)
 
 // If you upload reference views manually, mainView is required
 modelID, err := client.GenMidModel(

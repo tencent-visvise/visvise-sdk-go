@@ -922,6 +922,9 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	if opts.FaceNum != nil {
 		imgParams["face_num"] = *opts.FaceNum
 	}
+	if opts.ModelSize != nil {
+		imgParams["model_size"] = *opts.ModelSize
+	}
 	if opts.ComponentLabel != nil {
 		imgParams["component_label"] = *opts.ComponentLabel
 	}

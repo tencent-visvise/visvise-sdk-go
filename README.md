@@ -276,6 +276,7 @@ opts := visvise.NewGenMidModelOptions().
     SetFaceNum(30000).                                   // 可选，目标面数（0~30000，0=默认）
     SetSegmentModelID("Model2026...").                   // 可选，2D 分割资产 ID
 	SetModelID360("Model2026...")                        // 可选，图生360 资产 ID
+	SetModelSize(120.0).                                  // 可选，期望生成的模型尺寸（cm，仅中模生效，默认 100.0）
 
 // 若是用户上传原画视图，则(mainView)必填
 modelID, err := client.GenMidModel(
