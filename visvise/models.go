@@ -255,6 +255,28 @@ type ImageCutoutResult struct {
 	BackgroundColor string `json:"background_color"`
 }
 
+// CondPartAutofitResult represents the cond_part_autofit (裸模拆分) API response
+type CondPartAutofitResult struct {
+	// OutputObjPath 输出 obj 的 COS 路径（带临时签名，24h 有效）
+	OutputObjPath string `json:"output_obj_path"`
+	// BackgroundColor 最终使用的底色（英文色名）；算法未返回时为空字符串
+	BackgroundColor string `json:"background_color"`
+}
+
+// ModelAutoMergeResult represents the model_auto_merge (模型自动合并) API response
+type ModelAutoMergeResult struct {
+	// OutputObjPath 合并后模型的 COS 路径（带临时签名，24h 有效）
+	OutputObjPath string `json:"output_obj_path"`
+	// ElapsedTime 算法耗时，单位秒
+	ElapsedTime float64 `json:"elapsed_time"`
+	// RefFilledParts 参考模型补齐的部件名列表；未传 ref_mesh_path 时为空
+	RefFilledParts []string `json:"ref_filled_parts"`
+	// PartBboxIou 部件名 -> 该部件与参考部件的 bbox IoU
+	PartBboxIou map[string]float64 `json:"part_bbox_iou"`
+	// MeanBboxIou 所有部件的平均 bbox IoU
+	MeanBboxIou float64 `json:"mean_bbox_iou"`
+}
+
 // FailedReason represents the generation failure reason
 type FailedReason struct {
 	Code       int    `json:"code"`

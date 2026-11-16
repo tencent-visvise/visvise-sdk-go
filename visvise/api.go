@@ -728,3 +728,70 @@ func (api *VisviseAPI) OpenSegment(modelID string, rtx string) (*MultiViewSegmen
 	}
 	return &result, nil
 }
+
+// CondPartAutofit 裸模拆分：将原始模型中的指定部件替换为对应的裸模，并输出合并后的模型。
+// 同步接口，不创建模型资产；服务端算法最长执行 5 分钟，客户端超时需放大（建议 >= 300 秒）。
+// originalPartMeshPath / refMeshPath 需为调用账号自己 COS 目录下的模型路径；
+// replacePartNames 为「部件名 -> 裸模文件名」映射，为空时不替换任何部件。
+func (api *VisviseAPI) CondPartAutofit(
+	originalPartMeshPath string,
+	refMeshPath string,
+	replacePartNames map[string]string,
+	rtx string,
+) (*CondPartAutofitResult, error) {
+	body := map[string]interface{}{
+		"original_part_mesh_path": originalPartMeshPath,
+		"ref_mesh_path":           refMeshPath,
+	}
+	if len(replacePartNames) > 0 {
+		body["replace_part_names"] = replacePartNames
+	}
+
+	data, err := api.http.Post("openapi/weaver/resource/cond_part_autofit", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+
+	var result CondPartAutofitResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// ModelAutoMerge 模型自动合并：将拆分得到的多个部件 mesh 合并为一个完整模型（中模 / 高模），
+// 并可使用参考模型补齐原始部件包中缺失的部件。同步接口，不创建模型资产。
+// originalPartMeshPath 服务端要求为 .zip 结尾的部件 mesh 压缩包路径；
+// refMeshPath 可选，传入后算法会使用参考模型补齐缺失部件；
+// supportRotate 表示是否支持旋转，默认 false。
+func (api *VisviseAPI) ModelAutoMerge(
+	originalPartMeshPath string,
+	refMeshPath string,
+	supportRotate bool,
+	rtx string,
+) (*ModelAutoMergeResult, error) {
+	body := map[string]interface{}{
+		"original_part_mesh_path": originalPartMeshPath,
+		"support_rotate":          supportRotate,
+	}
+	if refMeshPath != "" {
+		body["ref_mesh_path"] = refMeshPath
+	}
+
+	data, err := api.http.Post("openapi/weaver/model_auto_merge", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+
+	var result ModelAutoMergeResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}

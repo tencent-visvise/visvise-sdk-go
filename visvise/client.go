@@ -1773,3 +1773,58 @@ func (c *Client) RegenerateModel(modelID string, params map[string]interface{}, 
 func (c *Client) UploadFile(path string, filename string, isTemp bool, rtx string) (string, error) {
 	return c.uploadFile(path, filename, isTemp, rtx)
 }
+
+// CondPartAutofit 裸模拆分：把原始模型中的指定部件替换为对应的裸模，输出合并后的模型。
+// originalPartMesh / refMesh 支持本地路径（自动上传到当前账号 COS 目录）、COS URL 或二进制内容。
+// 同步接口，服务端算法最长 5 分钟，请把客户端超时调大（建议 SetTimeout(360)）。
+func (c *Client) CondPartAutofit(
+	originalPartMesh FileInput,
+	refMesh FileInput,
+	replacePartNames map[string]string,
+	rtx string,
+) (*CondPartAutofitResult, error) {
+	originalURL, err := c.resolveFile(originalPartMesh, false, rtx)
+	if err != nil {
+		return nil, err
+	}
+	refURL, err := c.resolveFile(refMesh, false, rtx)
+	if err != nil {
+		return nil, err
+	}
+	return c.api.CondPartAutofit(originalURL, refURL, replacePartNames, rtx)
+}
+
+// ModelAutoMerge 模型自动合并：将拆分得到的部件 mesh 合并为一个完整模型。
+// originalPartMesh 支持本地路径 / COS URL / 二进制内容（服务端要求 .zip 压缩包）；
+// refMesh 可选，为空时只做部件合并，不使用参考模型补齐缺失部件。
+func (c *Client) ModelAutoMerge(
+	originalPartMesh FileInput,
+	refMesh FileInput,
+	supportRotate bool,
+	rtx string,
+) (*ModelAutoMergeResult, error) {
+	originalURL, err := c.resolveFile(originalPartMesh, false, rtx)
+	if err != nil {
+		return nil, err
+	}
+
+	refURL := ""
+	if !isEmptyFileInput(refMesh) {
+		refURL, err = c.resolveFile(refMesh, false, rtx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.api.ModelAutoMerge(originalURL, refURL, supportRotate, rtx)
+}
+
+// isEmptyFileInput 判断文件输入是否为空（nil 或空字符串），用于处理可选文件参数
+func isEmptyFileInput(source FileInput) bool {
+	if source == nil {
+		return true
+	}
+	if s, ok := source.(string); ok {
+		return s == ""
+	}
+	return false
+}
