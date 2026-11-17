@@ -928,6 +928,12 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 	if opts.ComponentLabel != nil {
 		imgParams["component_label"] = *opts.ComponentLabel
 	}
+	if opts.Skip360Preprocess != nil {
+		imgParams["skip_360_preprocess"] = *opts.Skip360Preprocess
+	}
+	if opts.SkipRemoveBackGround != nil {
+		imgParams["skip_remove_back_ground"] = *opts.SkipRemoveBackGround
+	}
 	if opts.GroupIDs != nil {
 		groupIDsURL, err := c.resolveFile(opts.GroupIDs, false, rtx)
 		if err != nil {

@@ -223,18 +223,20 @@ func (o *GenHighModelOptions) SetComponentLabel(label int32) *GenHighModelOption
 
 // GenMidModelOptions defines optional parameters for GenMidModel
 type GenMidModelOptions struct {
-	Name              string            // optional, task name (auto-generated if empty)
-	AlgorithmModel    string            // optional, algorithm model name
-	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
-	FaceType          FaceType          // optional, face type (default triangle)
-	FaceNum           *int              // optional, target face count (0-30000, 0 = auto)
-	SegmentModelID    string            // optional, 2D segmentation asset ID
-	ModelID360        string            // optional, 360 model ID
-	ComponentLabel    *int32            // optional, target component label within the segmentation asset
-	GroupIDs          FileInput         // optional, custom part grouping NPZ file (final_group_ids.npz)
-	PartMeshPath      FileInput         // optional, OBJ file containing all parts
-	LabelToID         FileInput         // optional, part-name to part-id mapping JSON file
-	ModelSize         *float64          // optional, expected model size in cm (mid model only, default 100.0)
+	Name                 string            // optional, task name (auto-generated if empty)
+	AlgorithmModel       string            // optional, algorithm model name
+	OutputModelFormat    OutputModelFormat // optional, output format (default fbx)
+	FaceType             FaceType          // optional, face type (default triangle)
+	FaceNum              *int              // optional, target face count (0-30000, 0 = auto)
+	SegmentModelID       string            // optional, 2D segmentation asset ID
+	ModelID360           string            // optional, 360 model ID
+	ComponentLabel       *int32            // optional, target component label within the segmentation asset
+	GroupIDs             FileInput         // optional, custom part grouping NPZ file (final_group_ids.npz)
+	PartMeshPath         FileInput         // optional, OBJ file containing all parts
+	LabelToID            FileInput         // optional, part-name to part-id mapping JSON file
+	ModelSize            *float64          // optional, expected model size in cm (mid model only, default 100.0)
+	Skip360Preprocess    *bool             // optional, skip 360 preprocessing (default false)
+	SkipRemoveBackGround *bool             // optional, skip remove background (default false)
 }
 
 // NewGenMidModelOptions creates GenMidModelOptions with common defaults
@@ -316,6 +318,18 @@ func (o *GenMidModelOptions) SetLabelToID(labelToID FileInput) *GenMidModelOptio
 // Mid-poly only (node_type=11); the server falls back to 100.0 when unset.
 func (o *GenMidModelOptions) SetModelSize(size float64) *GenMidModelOptions {
 	o.ModelSize = &size
+	return o
+}
+
+// SetSkip360Preprocess sets whether to skip 360 preprocess
+func (o *GenMidModelOptions) SetSkip360Preprocess(skip bool) *GenMidModelOptions {
+	o.Skip360Preprocess = &skip
+	return o
+}
+
+// SetSkipRemoveBackGround sets whether to skip remove background
+func (o *GenMidModelOptions) SetSkipRemoveBackGround(skip bool) *GenMidModelOptions {
+	o.SkipRemoveBackGround = &skip
 	return o
 }
 
