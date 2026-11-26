@@ -305,6 +305,9 @@ func (c *Client) uploadFile(path string, filename string, isTemp bool, rtx strin
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
 
+	if filename == "" {
+		filename = filepath.Base(path)
+	}
 	return c.uploadWithCred(cred, data, filename)
 }
 
@@ -319,8 +322,10 @@ func (c *Client) uploadBytes(data []byte, filename string, isTemp bool, rtx stri
 
 func (c *Client) uploadWithCred(cred *GetCosCredResult, data []byte, filename string) (string, error) {
 	if filename == "" {
-		filename = fmt.Sprintf("upload_%d.bin", time.Now().UnixNano()%1000000)
+		filename = "upload.bin"
 	}
+	ext := filepath.Ext(filename)
+	filename = strings.TrimSuffix(filename, ext) + "_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:24] + ext
 
 	cosKey := strings.TrimRight(cred.PathPrefix, "/") + "/" + filename
 
