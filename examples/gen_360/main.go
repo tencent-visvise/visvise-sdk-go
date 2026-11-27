@@ -40,7 +40,19 @@ func main() {
 	mainView := assetsDir + "/main_view.png"
 
 	opts := visvise.NewGen360Options().
-		SetName("example_gen_360")
+		SetName("example_gen_360").
+		SetPrompt("一个穿着盔甲的骑士").              // 可选，文本提示词
+		SetStyle(string(visvise.GRAY_MODEL)) // 可选，风格类型（仅 VISVISE 自研模型支持）
+	// 参考图（图片自动上传到当前账号 COS 目录）：
+	// SetExtraReferences([]visvise.ImageGen360ExtraReference{
+	// 	{Path: assetsDir + "/ref.png", Prompt: "参考图说明"},
+	// })
+	// 续改参数（views 图片自动上传）：
+	// SetRevision(&visvise.ImageGen360Revision{
+	// 	Caption: "上一次的 caption 全文",
+	// 	Prompt:  "本次修改指令",
+	// 	Views:   &visvise.ImageGen360RevisionViews{MainView: assetsDir + "/main_view.png"},
+	// })
 
 	fmt.Printf("[gen_360] 开始生成多视图，输入图片：%s\n", mainView)
 

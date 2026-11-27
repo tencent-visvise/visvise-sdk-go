@@ -778,20 +778,120 @@ func (c *Client) Gen360(mainView FileInput, rtx string, opts *Gen360Options) (st
 	}
 
 	img360 := map[string]interface{}{
-		"algorithm_model":     resolvedModel,
-		"output_model_format": opts.OutputModelFormat,
-		"face_type":           opts.FaceType,
+		"algorithm_model": resolvedModel,
 	}
 	if opts.EnableAPose != nil {
 		img360["enable_a_pose"] = *opts.EnableAPose
 	}
+	if opts.Prompt != "" {
+		img360["prompt"] = opts.Prompt
+	}
 	if opts.Style != "" {
 		img360["style"] = opts.Style
+	}
+	if opts.EnableHeadRefinement != nil {
+		img360["enable_head_refinement"] = *opts.EnableHeadRefinement
+	}
+	if opts.AspectRatio != "" {
+		img360["aspect_ratio"] = opts.AspectRatio
+	}
+	if opts.EnableBackgroundRemoval != nil {
+		img360["enable_background_removal"] = *opts.EnableBackgroundRemoval
+	}
+	if opts.Seed != nil {
+		img360["seed"] = *opts.Seed
+	}
+	if opts.Enable15Deg != nil {
+		img360["enable_15deg"] = *opts.Enable15Deg
+	}
+	if len(opts.ExtraReferences) > 0 {
+		extraRefs, err := c.resolveExtraReferences(opts.ExtraReferences, rtx)
+		if err != nil {
+			return "", err
+		}
+		img360["extra_references"] = extraRefs
+	}
+	if opts.Revision != nil {
+		revision, err := c.resolveRevision(opts.Revision, rtx)
+		if err != nil {
+			return "", err
+		}
+		img360["revision"] = revision
 	}
 
 	return c.api.GenMultiViews(opts.Name, view, map[string]interface{}{
 		"image_gen_360_params": img360,
 	}, rtx)
+}
+
+// resolveExtraReferences uploads the image-to-360 reference images and returns
+// the parameter list ready to be sent to the server.
+func (c *Client) resolveExtraReferences(
+	refs []ImageGen360ExtraReference,
+	rtx string,
+) ([]map[string]interface{}, error) {
+	result := make([]map[string]interface{}, 0, len(refs))
+	for _, ref := range refs {
+		path, err := c.resolveFile(ref.Path, false, rtx)
+		if err != nil {
+			return nil, err
+		}
+		item := map[string]interface{}{"path": path}
+		if ref.Prompt != "" {
+			item["prompt"] = ref.Prompt
+		}
+		result = append(result, item)
+	}
+	return result, nil
+}
+
+// resolveRevision uploads the views of the image-to-360 revision parameters and
+// returns the parameter object ready to be sent to the server.
+func (c *Client) resolveRevision(
+	revision *ImageGen360Revision,
+	rtx string,
+) (map[string]interface{}, error) {
+	result := map[string]interface{}{}
+	if revision.Caption != "" {
+		result["caption"] = revision.Caption
+	}
+	if revision.Prompt != "" {
+		result["prompt"] = revision.Prompt
+	}
+	if revision.Views == nil {
+		return result, nil
+	}
+
+	fields := []struct {
+		key   string
+		value FileInput
+	}{
+		{"main_view", revision.Views.MainView},
+		{"back_view", revision.Views.BackView},
+		{"left_view", revision.Views.LeftView},
+		{"right_view", revision.Views.RightView},
+		{"top_view", revision.Views.TopView},
+		{"bottom_view", revision.Views.BottomView},
+		{"front_view", revision.Views.FrontView},
+		{"front_left_view", revision.Views.FrontLeftView},
+		{"front_right_view", revision.Views.FrontRightView},
+	}
+
+	views := map[string]interface{}{}
+	for _, f := range fields {
+		if isEmptyFileInput(f.value) {
+			continue
+		}
+		url, err := c.resolveFile(f.value, false, rtx)
+		if err != nil {
+			return nil, err
+		}
+		views[f.key] = url
+	}
+	if len(views) > 0 {
+		result["views"] = views
+	}
+	return result, nil
 }
 
 // GenHighModel generates a high-detail 3D model from images
@@ -855,9 +955,12 @@ func (c *Client) GenHighModel(mainView FileInput, rtx string, opts *GenHighModel
 		imgParams["component_label"] = *opts.ComponentLabel
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DHigh),
-		map[string]interface{}{"image_gen_model_params": imgParams},
-		view, "", "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:      opts.Name,
+		NodeType:  int(NodeTypeImgTo3DHigh),
+		Params:    map[string]interface{}{"image_gen_model_params": imgParams},
+		InputView: view,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -961,9 +1064,12 @@ func (c *Client) GenMidModel(mainView, backView, leftView, rightView FileInput, 
 		imgParams["label_to_id"] = labelToIDURL
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DMid),
-		map[string]interface{}{"image_gen_model_params": imgParams},
-		view, "", "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:      opts.Name,
+		NodeType:  int(NodeTypeImgTo3DMid),
+		Params:    map[string]interface{}{"image_gen_model_params": imgParams},
+		InputView: view,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1027,9 +1133,12 @@ func (c *Client) GenLowModel(mainView FileInput, rtx string, opts *GenLowModelOp
 		imgParams["face_num"] = *opts.FaceNum
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeImgTo3DLow),
-		map[string]interface{}{"image_gen_model_params": imgParams},
-		view, "", "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:      opts.Name,
+		NodeType:  int(NodeTypeImgTo3DLow),
+		Params:    map[string]interface{}{"image_gen_model_params": imgParams},
+		InputView: view,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1082,9 +1191,12 @@ func (c *Client) GenMeshRefine(modelPath FileInput, rtx string, opts *GenMeshRef
 		params["basecolor_image"] = imageURL
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeMeshRefine),
-		map[string]interface{}{"mesh_refine_params": params},
-		nil, cosURL, "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeMeshRefine),
+		Params:     map[string]interface{}{"mesh_refine_params": params},
+		InputModel: cosURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1123,10 +1235,17 @@ func (c *Client) GenRetopology(modelPath FileInput, rtx string, opts *GenRetopol
 	if opts.FaceNum != nil {
 		params["face_num"] = *opts.FaceNum
 	}
+	if opts.SmoothStrength != nil {
+		params["smooth_strength"] = *opts.SmoothStrength
+	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeReTopology),
-		map[string]interface{}{"re_topology_params": params},
-		nil, cosURL, "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:          opts.Name,
+		NodeType:      int(NodeTypeReTopology),
+		Params:        map[string]interface{}{"re_topology_params": params},
+		ParentModelID: opts.ParentModelID,
+		InputModel:    cosURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1135,6 +1254,69 @@ func (c *Client) GenRetopology(modelPath FileInput, rtx string, opts *GenRetopol
 		return modelIDs[0], nil
 	}
 	return "", nil
+}
+
+// GenRTPConnected creates a re-topology connected-component task (node_type=19).
+// It is the first stage of the two-stage VISVISE (VV) re-topology flow: the task
+// produces the connected-component meshes and the grouping data files (the artifact
+// is returned in the asset's output_model zip).
+//
+// After the artifact is edited on the frontend, call SaveRTPConnected to save it and
+// use the returned model_id as the parent_model_id of GenRetopology (second stage).
+func (c *Client) GenRTPConnected(modelPath FileInput, rtx string, opts *GenRTPConnectedOptions) (string, error) {
+	if opts == nil {
+		opts = NewGenRTPConnectedOptions()
+	}
+
+	cosURL, err := c.resolveModelFile(modelPath, false, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	resolvedModel, err := c.resolveAlgorithmModel(opts.AlgorithmModel, NodeTypeReTopologyConnected, nil, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeReTopologyConnected),
+		Params:     map[string]interface{}{"algorithm_model": resolvedModel},
+		InputModel: cosURL,
+	}, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(modelIDs) > 0 {
+		return modelIDs[0], nil
+	}
+	return "", nil
+}
+
+// SaveRTPConnected saves the edited connected-component artifact as a new
+// re-topology connected-component asset (node_type=19).
+// It is a synchronous interface: on success a new model_id is returned and the asset
+// is created in the generated state (status=3), no polling needed.
+//
+// modelID: the first-stage (connected-component grouping) asset ID.
+// outputModel: the connected-component artifact zip; a local path is uploaded to the
+// current account's COS directory automatically, a COS URL is used as is.
+// name: the name of the new asset.
+func (c *Client) SaveRTPConnected(modelID string, outputModel FileInput, name string, rtx string) (string, error) {
+	outputURL, err := c.resolveFile(outputModel, false, rtx)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := c.api.SaveRTPConnected(modelID, outputURL, name, rtx)
+	if err != nil {
+		return "", err
+	}
+	if result == nil {
+		return "", nil
+	}
+	return result.ModelID, nil
 }
 
 // GenLOD generates LOD (Level of Detail) models
@@ -1159,15 +1341,18 @@ func (c *Client) GenLOD(modelPath FileInput, reduceFaces []ReduceFace, rtx strin
 		reduceFacesData[i] = rf.ToMap()
 	}
 
-	return c.api.Gen3DModel(opts.Name, int(NodeTypeLOD),
-		map[string]interface{}{"lod_params": map[string]interface{}{
+	return c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:     opts.Name,
+		NodeType: int(NodeTypeLOD),
+		Params: map[string]interface{}{"lod_params": map[string]interface{}{
 			"algorithm_model":     resolvedModel,
 			"output_model_format": opts.OutputModelFormat,
 			"reduce_faces":        reduceFacesData,
 			"gen_times":           opts.GenTimes,
 			"enable_qc":           opts.EnableQC,
 		}},
-		nil, cosURL, "", "", rtx)
+		InputModel: cosURL,
+	}, rtx)
 }
 
 // GenUV performs UV unwrapping on a model
@@ -1194,9 +1379,12 @@ func (c *Client) GenUV(modelPath FileInput, rtx string, opts *GenUVOptions) (str
 		uvParams["enable_auto_smoothing"] = *opts.EnableAutoSmoothing
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeUV),
-		map[string]interface{}{"uv_params": uvParams},
-		nil, cosURL, "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeUV),
+		Params:     map[string]interface{}{"uv_params": uvParams},
+		InputModel: cosURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1278,9 +1466,13 @@ func (c *Client) GenTexture(modelPath FileInput, rtx string, opts *GenTextureOpt
 		}
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeTexture),
-		map[string]interface{}{"tex_params": texParams},
-		resolvedView, cosURL, "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeTexture),
+		Params:     map[string]interface{}{"tex_params": texParams},
+		InputView:  resolvedView,
+		InputModel: cosURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1348,9 +1540,12 @@ func (c *Client) GenRigging(modelPath FileInput, rtx string, opts *GenRiggingOpt
 		goRiggingParams["enable_auto_skinning"] = *opts.EnableAutoSkinning
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeRigging),
-		map[string]interface{}{"go_rigging_params": goRiggingParams},
-		nil, cosURL, "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeRigging),
+		Params:     map[string]interface{}{"go_rigging_params": goRiggingParams},
+		InputModel: cosURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1397,9 +1592,12 @@ func (c *Client) GenSkinning(modelPath FileInput, rtx string, opts *GenSkinningO
 		return "", err
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeSkinning),
-		map[string]interface{}{},
-		nil, cosURL, "", "", rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeSkinning),
+		Params:     map[string]interface{}{},
+		InputModel: cosURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1447,9 +1645,13 @@ func (c *Client) GenVideoMotion(modelPath, videoPath FileInput, rtx string, opts
 		framing["rotate_axis_angle"] = opts.RotateAxisAngle
 	}
 
-	modelIDs, err := c.api.Gen3DModel(opts.Name, int(NodeTypeAnimation),
-		map[string]interface{}{"framing_ai_params": framing},
-		nil, modelURL, "", videoURL, rtx)
+	modelIDs, err := c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeAnimation),
+		Params:     map[string]interface{}{"framing_ai_params": framing},
+		InputModel: modelURL,
+		InputVideo: videoURL,
+	}, rtx)
 	if err != nil {
 		return "", err
 	}
@@ -1509,9 +1711,12 @@ func (c *Client) GenTextMotion(modelPath FileInput, rtx string, opts *GenTextMot
 		framing["loop_frames"] = *opts.LoopFrames
 	}
 
-	return c.api.Gen3DModel(opts.Name, int(NodeTypeAnimation),
-		map[string]interface{}{"framing_ai_params": framing},
-		nil, modelURL, "", "", rtx)
+	return c.api.Gen3DModel(&Gen3DModelRequest{
+		Name:       opts.Name,
+		NodeType:   int(NodeTypeAnimation),
+		Params:     map[string]interface{}{"framing_ai_params": framing},
+		InputModel: modelURL,
+	}, rtx)
 }
 
 // GenPose generates poses from reference images

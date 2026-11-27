@@ -20,6 +20,8 @@ const (
 	NodeTypeSegment2D    NodeType = 14 // 2D Segmentation
 	NodeTypeAutoLUV      NodeType = 15 // Auto LUV (2UV, regenerate_model)
 	NodeTypePreprocess2D NodeType = 16 // 2D Preprocess
+	// NodeTypeReTopologyConnected 重拓扑-连通体：两段式自研重拓扑的第一段，产出连通体分组数据
+	NodeTypeReTopologyConnected NodeType = 19
 )
 
 // PreprocessType represents the 2D preprocess type.

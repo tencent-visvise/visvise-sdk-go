@@ -24,6 +24,7 @@ VISVISE Weaver OpenAPI 的 Go SDK，提供：
   - [GenLowModel — 图生低模](#genlowmodel--图生低模)
   - [GenMeshRefine — 重布线](#genmeshrefine--重布线)
   - [GenRetopology — 重拓扑](#genretopology--重拓扑)
+  - [GenRTPConnected — 重拓扑-连通体](#genrtpconnected--重拓扑-连通体)
   - [GenLOD — LOD](#genlod--lod)
   - [GenUV — UV展开](#genuv--uv展开)
   - [GenTexture — 贴图纹理](#gentexture--贴图纹理)
@@ -206,16 +207,29 @@ visvise.MeshCategoryTetrapod // "tetrapod" - 四足
 
 ```go
 // 可选参数通过 Options 结构体传递，支持链式调用
-// 默认 name="gen_360"，输出格式为 fbx，面数类型为三角面
+// 默认 name="gen_360"
+// 参数与后端 ImageGen360Params 一一对应，取值合法性由服务端校验
 opts := visvise.NewGen360Options().
-    SetName("my_360").                                    // 可选，默认 "gen_360"
-    SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式（默认 fbx）
-    SetFaceType(visvise.FaceTypeTriangle).                // 可选，面数类型（默认三角面）
-    SetEnableAPose(true).                                 // 可选，是否开启 A-Pose
-    SetStyle(string(GRAY_MODEL)).                                      // 可选，风格类型（仅 VISVISE 自研模型支持），只接受 ImageGen360Style 枚举：GRAY_MODEL/PHOTOREAL/Q_TOON/PIXEL，传其他值会报错
-    SetBackView("path/to/back.png").                      // 可选，背视图
-    SetLeftView("path/to/left.png").                      // 可选，左视图
-    SetRightView("path/to/right.png")                     // 可选，右视图
+    SetName("my_360").                              // 可选，默认 "gen_360"
+    SetEnableAPose(true).                           // 可选，是否开启 A-Pose
+    SetPrompt("一个穿着盔甲的骑士").                  // 可选，文本提示词
+    SetStyle(string(visvise.GRAY_MODEL)).           // 可选，风格类型（仅 VISVISE 自研模型支持），只接受 ImageGen360Style 枚举：GRAY_MODEL/PHOTOREAL/Q_TOON/PIXEL，传其他值会被服务端拒绝
+    SetEnableHeadRefinement(true).                  // 可选，是否开启脸部增强
+    SetAspectRatio("1:1").                          // 可选，画面比例
+    SetEnableBackgroundRemoval(true).               // 可选，是否开启去背景
+    SetSeed(1234).                                  // 可选，随机种子（不传由算法随机生成）
+    SetEnable15Deg(true).                           // 可选，是否矫正透视
+    SetExtraReferences([]visvise.ImageGen360ExtraReference{ // 可选，参考图（图片自动上传 COS）
+        {Path: "path/to/ref.png", Prompt: "参考图说明"},
+    })
+    SetRevision(&visvise.ImageGen360Revision{        // 可选，续改参数（views 图片自动上传 COS）
+        Caption: "上一次的 caption 全文",
+        Prompt:  "本次修改指令",
+        Views:   &visvise.ImageGen360RevisionViews{MainView: "path/to/main_view.png"},
+    })
+    SetBackView("path/to/back.png").                // 可选，背视图
+    SetLeftView("path/to/left.png").                // 可选，左视图
+    SetRightView("path/to/right.png")               // 可选，右视图
 
 modelID, err := client.Gen360("path/to/character.png", rtx, opts)
 ```
@@ -331,6 +345,8 @@ modelID, err := client.GenMeshRefine("path/to/model.fbx", rtx, opts)
 对高面数模型进行拓扑优化（node_type=1）。→ [示例代码](examples/gen_retopology/main.go)
 
 > 注意：混元模型传 `DetailLevel`，VISVISE 自研模型传 `FaceNum`，二选一。
+>
+> VISVISE 自研（VV）模型为**两段式**：需先执行 [重拓扑-连通体](#genrtpconnected--重拓扑-连通体) 生成连通体分组产物，前端编辑并保存后，以保存得到的连通体资产 ID 作为 `SetParentModelID` 发起本节点。
 
 ```go
 // 混元模型示例
@@ -340,14 +356,50 @@ opts := visvise.NewGenRetopologyOptions().
     SetOutputModelFormat(visvise.OutputModelFormatFBX).   // 可选，输出格式
     SetFaceType(visvise.FaceTypeQuad).                   // 可选，面数类型（默认四边面）
     SetDetailLevel(visvise.DetailLevelMedium)            // 可选，混元模型
+    SetSmoothStrength(1.0).                              // 可选，平滑强度 0.0（不平滑）/ 1.0（完全平滑），默认 1.0
 
-// VISVISE 自研模型示例
+// VISVISE 自研模型示例（两段式：parent_model_id 指向第一段保存后的连通体资产）
 opts := visvise.NewGenRetopologyOptions().
-    SetAlgorithmModel("VISVISE-RTP-V1.0.0").
-    SetFaceNum(50000)                                    // 可选，VISVISE 自研模型
+    SetAlgorithmModel("VV-RTP-V1.5.0").
+    SetFaceNum(10000).                                   // 可选，VISVISE 自研模型
+    SetParentModelID("Model2026112700098765")            // 可选，VV 自研两段式必传
 
-modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
+modelID, err := client.GenRetopology("path/to/model.zip", rtx, opts)
 ```
+
+---
+
+### GenRTPConnected — 重拓扑-连通体
+
+VISVISE 自研（VV）两段式重拓扑的第一段：对高面数模型做连通体分组（node_type=19），产出连通体网格与分组数据。→ [示例代码](examples/gen_rtp_connected/main.go)
+
+调用链路：
+
+1. `GenRTPConnected` 创建连通体分组任务（异步），产物在资产的 `output_model`（zip）中；
+2. 前端下载并编辑连通体分组，重新打包成 zip 上传到当前账号的 COS 目录；
+3. `SaveRTPConnected` 保存该产物（同步接口），返回新的连通体资产 ID（`node_type=19`，`status=3`）；
+4. 以该 ID 作为 `GenRetopology` 的 `SetParentModelID` 发起第二段重拓扑。
+
+```go
+// 第一段：创建重拓扑-连通体任务
+connectedID, err := client.GenRTPConnected("path/to/model.fbx", rtx,
+    visvise.NewGenRTPConnectedOptions().SetName("my_rtp_connected"))
+
+// 等待完成，下载 output_model（连通体分组产物 zip）并在前端编辑
+connected, err := client.WaitModel(connectedID, rtx, &visvise.WaitOptions{Timeout: 900})
+
+// 保存前端编辑后的产物（本地 zip 会自动上传到当前账号的 COS 目录）
+savedID, err := client.SaveRTPConnected(connectedID, "path/to/edited_connected.zip", "my_connected", rtx)
+
+// 第二段：重拓扑（parent_model_id 指向保存后的连通体资产）
+rtpID, err := client.GenRetopology("path/to/edited_connected.zip", rtx,
+    visvise.NewGenRetopologyOptions().
+        SetAlgorithmModel("VV-RTP-V1.5.0").
+        SetFaceNum(10000).
+        SetParentModelID(savedID))
+```
+
+> 参数校验（`model_id` 归属与状态、`output_model` 必须为 `.zip` 且位于本账号 COS 目录等）全部由服务端完成，SDK 只做参数透传与文件上传。
 
 ---
 

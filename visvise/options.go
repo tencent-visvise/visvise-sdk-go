@@ -1,24 +1,43 @@
 package visvise
 
-// Gen360Options defines optional parameters for Gen360
+// Gen360Options defines optional parameters for Gen360 (node_type=7).
+// 字段与后端 ImageGen360Params 保持一一对应；SDK 不做参数校验，取值合法性由服务端校验。
 type Gen360Options struct {
-	Name              string            // optional, task name (auto-generated if empty)
-	AlgorithmModel    string            // optional, algorithm model name; auto-selected if empty
-	OutputModelFormat OutputModelFormat // optional, output format (default fbx)
-	FaceType          FaceType          // optional, face type (default triangle)
-	EnableAPose       *bool             // optional, enable A-Pose
-	Style             string            // optional, style type (VISVISE proprietary models only)
-	BackView          FileInput         // optional, back view to improve quality
-	LeftView          FileInput         // optional, left view
-	RightView         FileInput         // optional, right view
+	Name           string // optional, task name (auto-generated if empty)
+	AlgorithmModel string // optional, algorithm model name; auto-selected if empty
+	// EnableAPose 是否标准化 A-Pose（默认 false）
+	EnableAPose *bool
+	// Prompt 文本提示词
+	Prompt string
+	// Style 风格类型（仅 VISVISE 自研模型支持），可选值：
+	// GRAY_MODEL / PHOTOREAL / Q_TOON / PIXEL
+	Style string
+	// EnableHeadRefinement 是否开启脸部增强
+	EnableHeadRefinement *bool
+	// AspectRatio 画面比例
+	AspectRatio string
+	// EnableBackgroundRemoval 是否开启去背景
+	EnableBackgroundRemoval *bool
+	// Seed 随机种子（不传则由算法随机生成）
+	Seed *int64
+	// ExtraReferences 参考图列表，图片在 Gen360 中自动上传
+	ExtraReferences []ImageGen360ExtraReference
+	// Revision 续改参数，views 图片在 Gen360 中自动上传
+	Revision *ImageGen360Revision
+	// Enable15Deg 是否矫正透视
+	Enable15Deg *bool
+	// BackView 背视图，用于提升生成质量
+	BackView FileInput
+	// LeftView 左视图
+	LeftView FileInput
+	// RightView 右视图
+	RightView FileInput
 }
 
 // NewGen360Options creates Gen360Options with common defaults
 func NewGen360Options() *Gen360Options {
 	return &Gen360Options{
-		Name:              "gen_360",
-		OutputModelFormat: OutputModelFormatFBX,
-		FaceType:          FaceTypeTriangle,
+		Name: "gen_360",
 	}
 }
 
@@ -40,9 +59,57 @@ func (o *Gen360Options) SetEnableAPose(enable bool) *Gen360Options {
 	return o
 }
 
+// SetPrompt sets the text prompt
+func (o *Gen360Options) SetPrompt(prompt string) *Gen360Options {
+	o.Prompt = prompt
+	return o
+}
+
 // SetStyle sets the style type
 func (o *Gen360Options) SetStyle(style string) *Gen360Options {
 	o.Style = style
+	return o
+}
+
+// SetEnableHeadRefinement enables head (face) refinement
+func (o *Gen360Options) SetEnableHeadRefinement(enable bool) *Gen360Options {
+	o.EnableHeadRefinement = &enable
+	return o
+}
+
+// SetAspectRatio sets the aspect ratio of the generated views
+func (o *Gen360Options) SetAspectRatio(aspectRatio string) *Gen360Options {
+	o.AspectRatio = aspectRatio
+	return o
+}
+
+// SetEnableBackgroundRemoval enables background removal
+func (o *Gen360Options) SetEnableBackgroundRemoval(enable bool) *Gen360Options {
+	o.EnableBackgroundRemoval = &enable
+	return o
+}
+
+// SetSeed sets the random seed
+func (o *Gen360Options) SetSeed(seed int64) *Gen360Options {
+	o.Seed = &seed
+	return o
+}
+
+// SetExtraReferences sets the reference images, uploaded automatically in Gen360
+func (o *Gen360Options) SetExtraReferences(refs []ImageGen360ExtraReference) *Gen360Options {
+	o.ExtraReferences = refs
+	return o
+}
+
+// SetRevision sets the revision parameters, views uploaded automatically in Gen360
+func (o *Gen360Options) SetRevision(revision *ImageGen360Revision) *Gen360Options {
+	o.Revision = revision
+	return o
+}
+
+// SetEnable15Deg enables perspective correction
+func (o *Gen360Options) SetEnable15Deg(enable bool) *Gen360Options {
+	o.Enable15Deg = &enable
 	return o
 }
 
@@ -61,18 +128,6 @@ func (o *Gen360Options) SetLeftView(view FileInput) *Gen360Options {
 // SetRightView sets the right view
 func (o *Gen360Options) SetRightView(view FileInput) *Gen360Options {
 	o.RightView = view
-	return o
-}
-
-// SetOutputModelFormat sets the output model format
-func (o *Gen360Options) SetOutputModelFormat(format OutputModelFormat) *Gen360Options {
-	o.OutputModelFormat = format
-	return o
-}
-
-// SetFaceType sets the face type
-func (o *Gen360Options) SetFaceType(faceType FaceType) *Gen360Options {
-	o.FaceType = faceType
 	return o
 }
 
@@ -463,7 +518,7 @@ func (o *GenMeshRefineOptions) SetBaseColorImage(image FileInput) *GenMeshRefine
 	return o
 }
 
-// GenRetopologyOptions defines optional parameters for GenRetopology
+// GenRetopologyOptions defines optional parameters for GenRetopology (node_type=1)
 type GenRetopologyOptions struct {
 	Name              string            // optional, task name (auto-generated if empty)
 	AlgorithmModel    string            // optional, algorithm model name
@@ -471,6 +526,11 @@ type GenRetopologyOptions struct {
 	FaceType          FaceType          // optional, face type (default quad)
 	DetailLevel       *DetailLevel      // optional, for Hunyuan models: DetailLevel.LOW/MEDIUM/HIGH
 	FaceNum           *int              // optional, for VISVISE models: target face count
+	// SmoothStrength 平滑强度，当前只支持 0.0（不平滑）/ 1.0（完全平滑），不传默认 1.0
+	SmoothStrength *float64
+	// ParentModelID 父模型资产 ID：两段式自研（VV）重拓扑必传，
+	// 指向第一段「重拓扑-连通体」资产（node_type=19）的 model_id
+	ParentModelID string
 }
 
 // NewGenRetopologyOptions creates GenRetopologyOptions with common defaults
@@ -515,6 +575,45 @@ func (o *GenRetopologyOptions) SetDetailLevel(level DetailLevel) *GenRetopologyO
 // SetFaceNum sets the target face count for VISVISE models
 func (o *GenRetopologyOptions) SetFaceNum(faceNum int) *GenRetopologyOptions {
 	o.FaceNum = &faceNum
+	return o
+}
+
+// SetSmoothStrength sets the smoothing strength (0.0 no smoothing / 1.0 full smoothing)
+func (o *GenRetopologyOptions) SetSmoothStrength(strength float64) *GenRetopologyOptions {
+	o.SmoothStrength = &strength
+	return o
+}
+
+// SetParentModelID sets the parent model ID.
+// For the two-stage VISVISE (VV) retopology it points to the first-stage
+// 「重拓扑-连通体」asset (node_type=19).
+func (o *GenRetopologyOptions) SetParentModelID(modelID string) *GenRetopologyOptions {
+	o.ParentModelID = modelID
+	return o
+}
+
+// GenRTPConnectedOptions defines optional parameters for GenRTPConnected (重拓扑-连通体, node_type=19)
+type GenRTPConnectedOptions struct {
+	Name           string // optional, task name (auto-generated if empty)
+	AlgorithmModel string // optional, algorithm model name; auto-selected if empty
+}
+
+// NewGenRTPConnectedOptions creates GenRTPConnectedOptions with common defaults
+func NewGenRTPConnectedOptions() *GenRTPConnectedOptions {
+	return &GenRTPConnectedOptions{
+		Name: "gen_rtp_connected",
+	}
+}
+
+// SetName sets the task name
+func (o *GenRTPConnectedOptions) SetName(name string) *GenRTPConnectedOptions {
+	o.Name = name
+	return o
+}
+
+// SetAlgorithmModel sets the algorithm model
+func (o *GenRTPConnectedOptions) SetAlgorithmModel(model string) *GenRTPConnectedOptions {
+	o.AlgorithmModel = model
 	return o
 }
 

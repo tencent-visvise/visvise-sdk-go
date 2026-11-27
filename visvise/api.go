@@ -81,33 +81,28 @@ func (api *VisviseAPI) GetUserQuota(rtx string) (*UserQuota, error) {
 }
 
 // Gen3DModel creates a 3D generation task (async)
-func (api *VisviseAPI) Gen3DModel(
-	name string,
-	nodeType int,
-	params map[string]interface{},
-	inputView *View,
-	inputModel string,
-	inputModelFormat string,
-	inputVideo string,
-	rtx string,
-) ([]string, error) {
+// ParentModelID 用于两段式重拓扑：指向第一段「重拓扑-连通体」资产（node_type=19）的 model_id。
+func (api *VisviseAPI) Gen3DModel(req *Gen3DModelRequest, rtx string) ([]string, error) {
 	body := map[string]interface{}{
-		"name":      name,
-		"node_type": nodeType,
-		"params":    params,
+		"name":      req.Name,
+		"node_type": req.NodeType,
+		"params":    req.Params,
 	}
 
-	if inputView != nil {
-		body["input_view"] = inputView.ToMap()
+	if req.ParentModelID != "" {
+		body["parent_model_id"] = req.ParentModelID
 	}
-	if inputModel != "" {
-		body["input_model"] = inputModel
+	if req.InputView != nil {
+		body["input_view"] = req.InputView.ToMap()
 	}
-	if inputModelFormat != "" {
-		body["input_model_format"] = inputModelFormat
+	if req.InputModel != "" {
+		body["input_model"] = req.InputModel
 	}
-	if inputVideo != "" {
-		body["input_video"] = inputVideo
+	if req.InputModelFormat != "" {
+		body["input_model_format"] = req.InputModelFormat
+	}
+	if req.InputVideo != "" {
+		body["input_video"] = req.InputVideo
 	}
 
 	data, err := api.http.Post("openapi/weaver/resource/gen_3d_model", body, rtx)
@@ -790,6 +785,38 @@ func (api *VisviseAPI) ModelAutoMerge(
 	}
 
 	var result ModelAutoMergeResult
+	if err := decodeData(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// SaveRTPConnected 保存前端编辑后的连通体产物为新的 rtp-连通体资产（node_type=19）。
+// 同步接口：调用成功后即创建一个生成成功（status=3）的模型资产，并返回新的 model_id，无需轮询。
+// modelID 为第一段（连通体分组）资产 ID；
+// outputModel 为前端回传的连通体产物 zip 包 COS 地址（需位于调用账号自己的 COS 目录下）；
+// name 为新资产名称。
+func (api *VisviseAPI) SaveRTPConnected(
+	modelID string,
+	outputModel string,
+	name string,
+	rtx string,
+) (*SaveRTPConnectedResult, error) {
+	body := map[string]interface{}{
+		"model_id":     modelID,
+		"output_model": outputModel,
+		"name":         name,
+	}
+
+	data, err := api.http.Post("openapi/weaver/resource/save_rtp_connected", body, rtx)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+
+	var result SaveRTPConnectedResult
 	if err := decodeData(data, &result); err != nil {
 		return nil, err
 	}

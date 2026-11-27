@@ -13,6 +13,10 @@ type View struct {
 	RightView  string `json:"right_view,omitempty"`
 	TopView    string `json:"top_view,omitempty"`
 	BottomView string `json:"bottom_view,omitempty"`
+	// 以下三个视图目前仅图生3D（中模，node_type=11）会透传给算法
+	FrontView      string `json:"front_view,omitempty"`
+	FrontLeftView  string `json:"front_left_view,omitempty"`
+	FrontRightView string `json:"front_right_view,omitempty"`
 }
 
 // ToMap converts View to map
@@ -33,7 +37,72 @@ func (v *View) ToMap() map[string]interface{} {
 	if v.BottomView != "" {
 		m["bottom_view"] = v.BottomView
 	}
+	if v.FrontView != "" {
+		m["front_view"] = v.FrontView
+	}
+	if v.FrontLeftView != "" {
+		m["front_left_view"] = v.FrontLeftView
+	}
+	if v.FrontRightView != "" {
+		m["front_right_view"] = v.FrontRightView
+	}
 	return m
+}
+
+// ImageGen360ExtraReference 图生360 - 参考图。
+// Path 支持本地路径 / VISVISE 平台 COS URL / 二进制内容，Gen360 会自动上传到当前账号的 COS 目录。
+type ImageGen360ExtraReference struct {
+	Path   FileInput `json:"path"`             // 参考图，Gen360 自动上传
+	Prompt string    `json:"prompt,omitempty"` // 参考图说明
+}
+
+// ImageGen360RevisionViews 图生360 续改参数中的视图。
+// 各视图支持本地路径 / VISVISE 平台 COS URL / 二进制内容，Gen360 会自动上传到当前账号的 COS 目录。
+type ImageGen360RevisionViews struct {
+	MainView       FileInput `json:"main_view,omitempty"`
+	BackView       FileInput `json:"back_view,omitempty"`
+	LeftView       FileInput `json:"left_view,omitempty"`
+	RightView      FileInput `json:"right_view,omitempty"`
+	TopView        FileInput `json:"top_view,omitempty"`
+	BottomView     FileInput `json:"bottom_view,omitempty"`
+	FrontView      FileInput `json:"front_view,omitempty"`
+	FrontLeftView  FileInput `json:"front_left_view,omitempty"`
+	FrontRightView FileInput `json:"front_right_view,omitempty"`
+}
+
+// ImageGen360Revision 图生360 - 续改参数。
+// Caption 为上一次返回的 caption 全文（原样回传），Prompt 为本次修改指令。
+type ImageGen360Revision struct {
+	Caption string                    `json:"caption,omitempty"`
+	Prompt  string                    `json:"prompt,omitempty"`
+	Views   *ImageGen360RevisionViews `json:"views,omitempty"`
+}
+
+// SaveRTPConnectedResult represents the save_rtp_connected API response
+type SaveRTPConnectedResult struct {
+	// ModelID 新创建的 rtp-连通体资产 ID（node_type=19，status=3），
+	// 作为第二段「重拓扑」（node_type=1）的 parent_model_id 使用
+	ModelID string `json:"model_id"`
+}
+
+// Gen3DModelRequest 生成3D模型资产（gen_3d_model）的请求参数
+type Gen3DModelRequest struct {
+	// Name 模型资产名称（必选）
+	Name string
+	// NodeType 节点类型（必选）
+	NodeType int
+	// Params 生成参数（必选），按节点类型填对应的子参数
+	Params map[string]interface{}
+	// ParentModelID 父模型资产 ID（可选），两段式重拓扑时指向 node_type=19 资产
+	ParentModelID string
+	// InputView 输入视图（可选）
+	InputView *View
+	// InputModel 输入模型 COS 地址（zip，可选）
+	InputModel string
+	// InputModelFormat 输入模型格式 fbx/obj/glb（可选）
+	InputModelFormat string
+	// InputVideo 输入视频 COS 地址（可选）
+	InputVideo string
 }
 
 // SegmentParams 2D 拆分的可选参数：跳过 360 前置 + 算法可控参数。
@@ -535,10 +604,15 @@ func parseImageGen360Output(m map[string]interface{}) *ImageGen360Output {
 	}
 	if ov, ok := m["output_view"].(map[string]interface{}); ok {
 		view := &View{
-			MainView:  getString(ov, "main_view", ""),
-			BackView:  getString(ov, "back_view", ""),
-			LeftView:  getString(ov, "left_view", ""),
-			RightView: getString(ov, "right_view", ""),
+			MainView:       getString(ov, "main_view", ""),
+			BackView:       getString(ov, "back_view", ""),
+			LeftView:       getString(ov, "left_view", ""),
+			RightView:      getString(ov, "right_view", ""),
+			TopView:        getString(ov, "top_view", ""),
+			BottomView:     getString(ov, "bottom_view", ""),
+			FrontView:      getString(ov, "front_view", ""),
+			FrontLeftView:  getString(ov, "front_left_view", ""),
+			FrontRightView: getString(ov, "front_right_view", ""),
 		}
 		if view.MainView != "" || view.BackView != "" {
 			output.OutputView = view

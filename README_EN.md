@@ -24,6 +24,7 @@ Go SDK for the VISVISE Weaver OpenAPI. It provides:
   - [GenLowModel — Image to Low-poly](#genlowmodel--image-to-low-poly)
   - [GenMeshRefine — Mesh Refinement](#genmeshrefine--mesh-refinement)
   - [GenRetopology — Retopology](#genretopology--retopology)
+  - [GenRTPConnected](#genrtpconnected--retopology-connected-component)
   - [GenLOD — LOD](#genlod--lod)
   - [GenUV — UV Unwrap](#genuv--uv-unwrap)
   - [GenTexture — Texture Generation](#gentexture--texture-generation)
@@ -206,16 +207,29 @@ Generate 360-degree multi-views from a single image.→ [Example](examples/gen_3
 
 ```go
 // Optional params via Options struct, supports fluent API
-// Default name="gen_360", output format is fbx, face type is triangle
+// Default name="gen_360"
+// Fields map 1:1 to the backend ImageGen360Params; value validation is done by the server
 opts := visvise.NewGen360Options().
-    SetName("my_360").                                    // optional, default "gen_360"
-    SetOutputModelFormat(visvise.OutputModelFormatFBX).  // optional, output format (default fbx)
-    SetFaceType(visvise.FaceTypeTriangle).               // optional, face type (default triangle)
-    SetEnableAPose(true).                                 // optional, enable A-Pose
-    SetStyle(string(GRAY_MODEL)).                         // optional, style (VISVISE proprietary models only). Must be one of ImageGen360Style: GRAY_MODEL/PHOTOREAL/Q_TOON/PIXEL — any other value will be rejected
-    SetBackView("path/to/back.png").                      // optional, back view
-    SetLeftView("path/to/left.png").                      // optional, left view
-    SetRightView("path/to/right.png")                     // optional, right view
+    SetName("my_360").                              // optional, default "gen_360"
+    SetEnableAPose(true).                           // optional, enable A-Pose
+    SetPrompt("a knight in armor").                 // optional, text prompt
+    SetStyle(string(visvise.GRAY_MODEL)).           // optional, style (VISVISE proprietary models only). Must be one of ImageGen360Style: GRAY_MODEL/PHOTOREAL/Q_TOON/PIXEL — any other value will be rejected
+    SetEnableHeadRefinement(true).                  // optional, enable head (face) refinement
+    SetAspectRatio("1:1").                          // optional, aspect ratio
+    SetEnableBackgroundRemoval(true).               // optional, enable background removal
+    SetSeed(1234).                                  // optional, random seed (random when unset)
+    SetEnable15Deg(true).                           // optional, enable perspective correction
+    SetExtraReferences([]visvise.ImageGen360ExtraReference{ // optional, reference images (uploaded automatically)
+        {Path: "path/to/ref.png", Prompt: "reference description"},
+    })
+    SetRevision(&visvise.ImageGen360Revision{        // optional, revision params (views uploaded automatically)
+        Caption: "caption of the previous result",
+        Prompt:  "revision instruction",
+        Views:   &visvise.ImageGen360RevisionViews{MainView: "path/to/main_view.png"},
+    })
+    SetBackView("path/to/back.png").                // optional, back view
+    SetLeftView("path/to/left.png").                // optional, left view
+    SetRightView("path/to/right.png")               // optional, right view
 
 modelID, err := client.Gen360("path/to/character.png", rtx, opts)
 ```
@@ -337,6 +351,8 @@ modelID, err := client.GenMeshRefine("path/to/model.fbx", rtx, opts)
 Retopology of high-poly models (node_type=1).→ [Example](examples/gen_retopology/main.go)
 
 > Note: pass `DetailLevel` for Hunyuan models, `FaceNum` for VISVISE proprietary models — choose one.
+>
+> VISVISE proprietary (VV) models are **two-stage**: first run [Retopology Connected Component](#genrtpconnected--savertpconnected--retopology-connected-component), edit and save the artifact, then pass the saved connected-component asset ID to `SetParentModelID`.
 
 ```go
 // Hunyuan model example
@@ -346,14 +362,50 @@ opts := visvise.NewGenRetopologyOptions().
     SetOutputModelFormat(visvise.OutputModelFormatFBX). // optional, output format
     SetFaceType(visvise.FaceTypeQuad).                  // optional, face type (default quad)
     SetDetailLevel(visvise.DetailLevelMedium)           // optional, for Hunyuan models
+    SetSmoothStrength(1.0).                             // optional, smoothing strength 0.0 (no smoothing) / 1.0 (full smoothing), default 1.0
 
-// VISVISE proprietary model example
+// VISVISE proprietary model example (two-stage: parent_model_id points to the saved connected-component asset)
 opts := visvise.NewGenRetopologyOptions().
-	SetAlgorithmModel("VISVISE-RTP-V1.0.0").            // optional
-    SetFaceNum(50000)                                   // optional, for VISVISE models
+    SetAlgorithmModel("VV-RTP-V1.5.0").                 // optional
+    SetFaceNum(10000).                                  // optional, for VISVISE models
+    SetParentModelID("Model2026112700098765")           // optional, required by the two-stage VV flow
 
-modelID, err := client.GenRetopology("path/to/model.fbx", rtx, opts)
+modelID, err := client.GenRetopology("path/to/model.zip", rtx, opts)
 ```
+
+---
+
+### GenRTPConnected — Retopology Connected Component
+
+The first stage of the two-stage VISVISE (VV) retopology flow: groups the connected components of a high-poly model (node_type=19) and produces the component meshes plus the grouping data.→ [Example](examples/gen_rtp_connected/main.go)
+
+Workflow:
+
+1. `GenRTPConnected` creates the connected-component task (async); the artifact is the asset's `output_model` (zip);
+2. Download the artifact, edit the component grouping on the frontend, repackage it as a zip and upload it to your own COS directory;
+3. `SaveRTPConnected` saves the artifact (synchronous) and returns the new connected-component asset ID (`node_type=19`, `status=3`);
+4. Pass that ID to `GenRetopology` via `SetParentModelID` for the second stage.
+
+```go
+// Stage 1: create the connected-component task
+connectedID, err := client.GenRTPConnected("path/to/model.fbx", rtx,
+    visvise.NewGenRTPConnectedOptions().SetName("my_rtp_connected"))
+
+// Wait for completion, download output_model (connected-component zip) and edit it
+connected, err := client.WaitModel(connectedID, rtx, &visvise.WaitOptions{Timeout: 900})
+
+// Save the edited artifact (a local zip is uploaded to your own COS directory automatically)
+savedID, err := client.SaveRTPConnected(connectedID, "path/to/edited_connected.zip", "my_connected", rtx)
+
+// Stage 2: retopology (parent_model_id points to the saved connected-component asset)
+rtpID, err := client.GenRetopology("path/to/edited_connected.zip", rtx,
+    visvise.NewGenRetopologyOptions().
+        SetAlgorithmModel("VV-RTP-V1.5.0").
+        SetFaceNum(10000).
+        SetParentModelID(savedID))
+```
+
+> All parameter validation (asset ownership and status, `.zip` suffix and COS directory ownership, ...) is done by the server; the SDK only forwards the parameters and uploads files.
 
 ---
 
